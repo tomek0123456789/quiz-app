@@ -17,4 +17,10 @@ Endpointy
 | /quizes/{id} | GET | zwraca konkretny quiz |
 | /quizes/{id} | POST | tworzy nowy quiz|
 | /quizes/{id} | DELETE | usuwa quiz (jeśli uzytkonik autoryzowany) |
-| /quizes/{id} | GET | zwraca konkretny quiz |
+| /quizes/{id} | PUT | updatuje konkretny quiz |
+| /rooms/{id} | GET | zwraca konkretny pokój z rozgrywką |
+| /rooms/{id} | POST | tworzy pokój z rozgrywką |
+| /rooms/{id} | PATCH | updatuje pokój (jeśli uzytkonik autoryzowany) |
+| /rooms/{id} | DELETE | usuwa pokój (jeśli uzytkonik autoryzowany) |
+| /stats/users/{id} | GET | Zwraca globalne statystyki dla uzytkwnika
+
