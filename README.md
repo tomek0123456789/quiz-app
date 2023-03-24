@@ -12,6 +12,7 @@ Endpointy
 | /users  | GET     | zwrócenie wszystkich użytkowników    |
 | /users/{id}     | GET       | zwrócenie konkretnego użytkownika      |
 | /users/{id}  | POST     | stworzenie uzytkownika |
+| /users/{id}  | PATCH     | edycja uzytkownika |
 | /users/{id}  | DELETE     | usunięcie uzytkownika    |
 | /quizes | GET | wszsytkie publiczne quizy |
 | /quizes/{id} | GET | zwraca konkretny quiz |
