@@ -1,12 +1,10 @@
-package app.Quiz.jwzpQuizappProject.models.Users;
+package app.Quiz.jwzpQuizappProject.models.users;
 
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-
-import java.time.LocalDateTime;
 
 @Entity
 public class UserModel {

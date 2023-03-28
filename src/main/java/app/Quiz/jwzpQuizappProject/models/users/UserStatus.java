@@ -1,4 +1,4 @@
-package app.Quiz.jwzpQuizappProject.models.Users;
+package app.Quiz.jwzpQuizappProject.models.users;
 
 public enum UserStatus {
     ACTIVE,
