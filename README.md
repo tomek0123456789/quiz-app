@@ -12,7 +12,7 @@ Endpointy
 | /users  | GET     | zwrócenie wszystkich użytkowników    |
 | /users/{id}     | GET       | zwrócenie konkretnego użytkownika      |
 | /users/{id}  | POST     | stworzenie uzytkownika |
-| /users/{id}  | PATCH     | edycja uzytkownika |
+| /users/{id}  | PUT     | edycja uzytkownika |
 | /users/{id}  | DELETE     | usunięcie uzytkownika    |
 | /quizes | GET | wszsytkie publiczne quizy |
 | /quizes/{id} | GET | zwraca konkretny quiz |
@@ -21,7 +21,7 @@ Endpointy
 | /quizes/{id} | PUT | updatuje konkretny quiz |
 | /rooms/{id} | GET | zwraca konkretny pokój z rozgrywką |
 | /rooms/{id} | POST | tworzy pokój z rozgrywką |
-| /rooms/{id} | PATCH | updatuje pokój (jeśli uzytkonik autoryzowany) |
+| /rooms/{id} | PUT | updatuje pokój (jeśli uzytkonik autoryzowany) |
 | /rooms/{id} | DELETE | usuwa pokój (jeśli uzytkonik autoryzowany) |
 | /stats/users/{id} | GET | Zwraca globalne statystyki dla uzytkwnika
 
