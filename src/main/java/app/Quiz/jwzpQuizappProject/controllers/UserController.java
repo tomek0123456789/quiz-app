@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
@@ -21,7 +22,7 @@ public class UserController {
     }
 
     @GetMapping()
-    public ResponseEntity getAllUsers() {
+    public ResponseEntity<List<UserModel>> getAllUsers() {
         return ResponseEntity.ok(this.userRepository.findAll());
     }
 

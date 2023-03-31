@@ -1,39 +1,67 @@
 package app.Quiz.jwzpQuizappProject.models.users;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import org.springframework.lang.NonNull;
+
+import java.time.LocalDateTime;
 
 @Entity
 public class UserModel {
-//    long id;
-//    String name;
-//    String email;
-//    LocalDateTime createdAt;
-//    Enum<UserStatus> status;
-//    Enum<UserRole> role;
-//    String passwordHash;
-//    String salt;
-//
-//    UserModel(){}
-
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @NonNull
     private String name;
 
-    private String description;
+    @NonNull
+    String email;
+    @NonNull
+    LocalDateTime createdAt;
+    @NonNull
+    Enum<UserStatus> status;
 
-    public UserModel() {
+    @NonNull
+    Enum<UserRole> role;
+
+    @NonNull
+    String passwordHash;
+
+    @NonNull
+    String salt;
+
+    public UserModel(@NonNull String name,@NonNull String email) {
+        this.name = name;
+        this.email = email;
+        this.createdAt = LocalDateTime.now();
+        this.status = UserStatus.ACTIVE;
+        this.role = UserRole.USER;
+        this.passwordHash = "password123";
+        this.salt = "123salt!!";
     }
 
-    public UserModel(Long id, String name, String description) {
+    public UserModel(Long id, @NonNull String name, @NonNull String email,
+                     @NonNull Enum<UserStatus> status, @NonNull Enum<UserRole> role,
+                     @NonNull String passwordHash, @NonNull String salt) {
         this.id = id;
         this.name = name;
-        this.description = description;
+        this.email = email;
+        this.createdAt = LocalDateTime.now();
+        this.status = status;
+        this.role = role;
+        this.passwordHash = passwordHash;
+        this.salt = salt;
+    }
+
+    public UserModel() {
+        this.name = "example_name";
+        this.email = "example@email";
+        this.createdAt = LocalDateTime.now();
+        this.status = UserStatus.ACTIVE;
+        this.role = UserRole.USER;
+        this.passwordHash = "password123";
+        this.salt = "123salt!!";
     }
 
     public Long getId() {
@@ -52,12 +80,51 @@ public class UserModel {
         this.name = name;
     }
 
-    public String getDescription() {
-        return description;
+    public String getEmail() {
+        return email;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Enum<UserStatus> getStatus() {
+        return status;
+    }
+
+    public void setStatus(Enum<UserStatus> status) {
+        this.status = status;
+    }
+
+    public Enum<UserRole> getRole() {
+        return role;
+    }
+
+    public void setRole(Enum<UserRole> role) {
+        this.role = role;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public String getSalt() {
+        return salt;
+    }
+
+    public void setSalt(String salt) {
+        this.salt = salt;
+    }
 }
