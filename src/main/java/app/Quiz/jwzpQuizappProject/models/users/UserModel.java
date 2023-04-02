@@ -1,10 +1,12 @@
 package app.Quiz.jwzpQuizappProject.models.users;
 
 
+import app.Quiz.jwzpQuizappProject.models.quizes.QuizModel;
 import jakarta.persistence.*;
 import org.springframework.lang.NonNull;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Entity
 public class UserModel {
@@ -30,6 +32,10 @@ public class UserModel {
 
     @NonNull
     String salt;
+
+//    @OneToMany(mappedBy = "owner")
+//    Set<QuizModel> quizes;
+
 
     public UserModel(@NonNull String name,@NonNull String email) {
         this.name = name;
@@ -127,4 +133,16 @@ public class UserModel {
     public void setSalt(String salt) {
         this.salt = salt;
     }
+
+//    public Set<QuizModel> getQuizes() {
+//        return quizes;
+//    }
+//
+//    public void setQuizes(Set<QuizModel> quizes) {
+//        this.quizes = quizes;
+//    }
+//
+//    public void addQuiz(QuizModel quiz) {
+//        this.quizes.add(quiz);
+//    }
 }

@@ -1,12 +1,9 @@
 package app.Quiz.jwzpQuizappProject.repositories;
 
-import app.Quiz.jwzpQuizappProject.models.users.UserModel;
+import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-
-
-
 @Repository
-public interface UserRepository extends JpaRepository<UserModel, Long> {
+public interface QuestionRepository extends JpaRepository<QuestionModel, Long> {
 }

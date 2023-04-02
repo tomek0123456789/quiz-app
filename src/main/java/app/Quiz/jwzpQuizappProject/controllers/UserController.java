@@ -1,21 +1,20 @@
 package app.Quiz.jwzpQuizappProject.controllers;
 
-import app.Quiz.jwzpQuizappProject.controllers.UserController;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
+import app.Quiz.jwzpQuizappProject.models.users.UserStatus;
 import app.Quiz.jwzpQuizappProject.repositories.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
     private  final UserRepository userRepository;
-    private static final String template = "Hello, %s!";
-    private final AtomicLong counter = new AtomicLong();
 
     public UserController(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -39,14 +38,19 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity deleteUser(@PathVariable long id) {
-        this.userRepository.deleteAllById(Collections.singleton(id));
+        Optional<UserModel> user = this.userRepository.findById(id);
+        user.ifPresent(userModel -> userModel.setStatus(UserStatus.ARCHIVED));
+
+        user.ifPresent(this.userRepository::save);
+
         return ResponseEntity.ok("ok");
     }
 
-//    @PutMapping("/{id}")
-//    public ResponseEntity updateUser(@RequestBody UserModel updatedUser) {
-//        this.userRepository.upda
-//        return ResponseEntity.ok("ok");
-//    }
+    // TODO: check if authorized (user in request body must be same person as UserModel sent in rb, or admin ofc)
+    @PutMapping()
+    public ResponseEntity updateUser(@RequestBody UserModel user) {
+        this.userRepository.save(user);
+        return ResponseEntity.ok("ok");
+    }
 }
 
