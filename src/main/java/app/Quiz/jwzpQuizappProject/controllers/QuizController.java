@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
 @RestController
+@CrossOrigin        // to allow frontend-backend connections
 @RequestMapping("/quizes")
 public class QuizController {
-
     private final QuizRepository quizRepository;
     private final QuestionRepository questionRepository;
     private final AnswerRepository answerRepository;
@@ -37,8 +37,14 @@ public class QuizController {
     }
 
     @GetMapping()
-    public ResponseEntity getAllQuizes() {
-        return ResponseEntity.ok(this.quizRepository.findAll());
+    public ResponseEntity getAllQuizes(@RequestParam(value="name", required=false) String quizName) {
+
+        if(quizName == null){
+            return ResponseEntity.ok(this.quizRepository.findAll());
+        }else{
+            return ResponseEntity.ok(this.quizRepository.findByName(quizName));
+        }
+
     }
 
     @PostMapping()
