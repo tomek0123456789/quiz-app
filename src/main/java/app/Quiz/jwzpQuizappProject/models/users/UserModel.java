@@ -1,12 +1,14 @@
 package app.Quiz.jwzpQuizappProject.models.users;
 
 
+import app.Quiz.jwzpQuizappProject.models.RoomModel;
 import app.Quiz.jwzpQuizappProject.models.quizes.QuizModel;
 import jakarta.persistence.*;
 import org.springframework.lang.NonNull;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.Stack;
 
 @Entity
 public class UserModel {
@@ -32,6 +34,10 @@ public class UserModel {
 
     @NonNull
     String salt;
+
+    // do jakich pokoi nalzy user
+    @ManyToMany
+    Set<RoomModel> quizesParticipation;
 
 //    @OneToMany(mappedBy = "owner")
 //    Set<QuizModel> quizes;
@@ -132,6 +138,14 @@ public class UserModel {
 
     public void setSalt(String salt) {
         this.salt = salt;
+    }
+
+    public Set<RoomModel> getQuizesParticipation() {
+        return quizesParticipation;
+    }
+
+    public void setQuizesParticipation(Set<RoomModel> quizesParticipation) {
+        this.quizesParticipation = quizesParticipation;
     }
 
 //    public Set<QuizModel> getQuizes() {

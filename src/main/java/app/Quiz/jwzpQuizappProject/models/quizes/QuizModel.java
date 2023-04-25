@@ -1,5 +1,6 @@
 package app.Quiz.jwzpQuizappProject.models.quizes;
 
+import app.Quiz.jwzpQuizappProject.models.RoomModel;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import jakarta.persistence.*;
@@ -7,6 +8,8 @@ import org.springframework.lang.NonNull;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+import java.util.Stack;
 
 @Entity
 public class QuizModel {
@@ -21,6 +24,7 @@ public class QuizModel {
     @NonNull
     private String description;
 
+    // TODO: make it all to lazy (optional = false,fetch=FetchType.LAZY)
     @ManyToOne()
     private UserModel owner;
 
@@ -33,6 +37,10 @@ public class QuizModel {
 
     // @OneToMany(mappedBy = "id")
     private  long categoryId;
+
+    // do jakich pokoi nalezy quiz
+    @ManyToMany
+    Set<RoomModel> rooms;
 
 
     public QuizModel(@NonNull String name, @NonNull String description, UserModel owner, long categoryId) {
@@ -137,4 +145,11 @@ public class QuizModel {
         this.questions.remove(question);
     }
 
+    public Set<RoomModel> getRooms() {
+        return rooms;
+    }
+
+    public void setRooms(Set<RoomModel> rooms) {
+        this.rooms = rooms;
+    }
 }

@@ -3,12 +3,14 @@ package app.Quiz.jwzpQuizappProject.models;
 import app.Quiz.jwzpQuizappProject.models.quizes.QuizModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import jakarta.persistence.*;
+//import org.hibernate.internal.util.collections.Stack;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.Stack;
 
 @Entity
-public class Room {
+public class RoomModel {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     long id;
@@ -16,16 +18,19 @@ public class Room {
     String name;
 
     @ManyToMany
-    Stack<UserModel> participants;
+    Set<UserModel> participants;
 
     @ManyToOne
     UserModel owner;
 
-
     LocalDateTime startTime;
 
     @ManyToMany
-    Stack<QuizModel> quizes;
+    Set<QuizModel> quizes;
+
+    public RoomModel() {
+        this.startTime = LocalDateTime.now();
+    }
 
 
     public long getId() {
@@ -44,11 +49,11 @@ public class Room {
         this.name = name;
     }
 
-    public Stack<UserModel> getParticipants() {
+    public Set<UserModel> getParticipants() {
         return participants;
     }
 
-    public void setParticipants(Stack<UserModel> participants) {
+    public void setParticipants(Set<UserModel> participants) {
         this.participants = participants;
     }
 
@@ -68,11 +73,11 @@ public class Room {
         this.startTime = startTime;
     }
 
-    public Stack<QuizModel> getQuizes() {
+    public Set<QuizModel> getQuizes() {
         return quizes;
     }
 
-    public void setQuizes(Stack<QuizModel> quizes) {
+    public void setQuizes(Set<QuizModel> quizes) {
         this.quizes = quizes;
     }
 }
