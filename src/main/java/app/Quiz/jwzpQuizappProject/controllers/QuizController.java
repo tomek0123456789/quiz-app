@@ -1,5 +1,6 @@
 package app.Quiz.jwzpQuizappProject.controllers;
 
+import app.Quiz.jwzpQuizappProject.models.ScoreModel;
 import app.Quiz.jwzpQuizappProject.models.answers.AnswerModel;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
 import app.Quiz.jwzpQuizappProject.models.quizes.QuizModel;
@@ -74,6 +75,26 @@ public class QuizController {
 
         return ResponseEntity.ok("ok");
     }
+
+    // TODO: zamiast string to powinien byc obiekt typu
+    //       UsersQuizResults w ktorym bedzie lista Quizow
+    //       i do kazdego odpowiedzi jakie user zaznaczyl
+
+    // ta powinna zwracac najleposzy wynik usera
+    @GetMapping("/{id}/results")
+    public ResponseEntity getQuizScore(@PathVariable long id) {
+        return ResponseEntity.ok(new ScoreModel(20 + id));
+    }
+
+
+    @PostMapping("/{id}/results")
+    public ResponseEntity setQuizScore(@PathVariable long id,@RequestBody  String userAnswers) {
+
+        // TODO: save score to db and return evalued score
+
+        return ResponseEntity.ok(new ScoreModel(20 + id));
+    }
+
 
     // TODO: rozdzielic to na rozne pliki jednak - nw czy nie bedzie jakis konfliktow z pathem
     //////  QUESTION    //////
