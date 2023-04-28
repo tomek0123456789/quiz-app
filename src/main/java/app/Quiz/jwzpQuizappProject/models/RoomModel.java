@@ -2,6 +2,7 @@ package app.Quiz.jwzpQuizappProject.models;
 
 import app.Quiz.jwzpQuizappProject.models.quizes.QuizModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 //import org.hibernate.internal.util.collections.Stack;
 
@@ -25,13 +26,19 @@ public class RoomModel {
 
     LocalDateTime startTime;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY,  cascade = {
+            CascadeType.PERSIST,
+            CascadeType.MERGE
+    })
     Set<QuizModel> quizes;
 
     public RoomModel() {
         this.startTime = LocalDateTime.now();
     }
 
+    public void addQuiz(QuizModel quiz){
+        quizes.add(quiz);
+    }
 
     public long getId() {
         return id;

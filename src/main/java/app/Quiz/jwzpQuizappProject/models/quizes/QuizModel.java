@@ -3,6 +3,7 @@ package app.Quiz.jwzpQuizappProject.models.quizes;
 import app.Quiz.jwzpQuizappProject.models.RoomModel;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import org.springframework.lang.NonNull;
 
@@ -39,7 +40,11 @@ public class QuizModel {
     private  long categoryId;
 
     // do jakich pokoi nalezy quiz
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY,  cascade = {
+            CascadeType.PERSIST,
+            CascadeType.MERGE
+    })
+    @JsonIgnore //to prevent infinite recursion
     Set<RoomModel> rooms;
 
 
@@ -56,6 +61,10 @@ public class QuizModel {
         this.description = "no description provided";
         this.createdAt = LocalDateTime.now();
         this.categoryId = 0;
+    }
+
+    public void addRoom(RoomModel room){
+        rooms.add(room);
     }
 
     public Long getId() {
