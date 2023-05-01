@@ -108,7 +108,7 @@ public class QuizController {
         quiz.ifPresent(quizModel -> quizModel.addQuestion(newQuestion));
         quiz.ifPresent(this.quizRepository::save);
 
-        return ResponseEntity.ok("added question");
+        return ResponseEntity.ok(newQuestion);
     }
 
     // TODO: check if user is an owner or an admin
