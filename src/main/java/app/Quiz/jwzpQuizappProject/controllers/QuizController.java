@@ -57,7 +57,7 @@ public class QuizController {
 
         this.quizRepository.save(newQuiz);
 
-        return ResponseEntity.ok("ok");
+        return ResponseEntity.ok(newQuiz);
     }
 
     // TODO: check if user is an owner or an admin
@@ -88,11 +88,11 @@ public class QuizController {
 
 
     @PostMapping("/{id}/results")
-    public ResponseEntity setQuizScore(@PathVariable long id,@RequestBody  String userAnswers) {
+    public ResponseEntity setQuizScore(@PathVariable long id,@RequestBody  String userAnswers) { // add sth like @RequestBody  UserAnserwMode userAnswers
 
-        // TODO: save score to db and return evalued score
+//        System.out.println(userAnswers);
 
-        return ResponseEntity.ok(new ScoreModel(20 + id));
+        return ResponseEntity.ok(new ScoreModel(20 - id));
     }
 
 
