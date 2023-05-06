@@ -40,7 +40,7 @@ public class RoomController {
     public ResponseEntity createRoom(@RequestBody RoomModel newRoom) {
 //        System.out.print(newRoom.getId());
         this.roomRepository.save(newRoom);
-        return ResponseEntity.ok(newRoom.getId());
+        return ResponseEntity.ok(newRoom);
     }
 
     @PostMapping("/{id}/quizes/{quizId}")
