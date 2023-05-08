@@ -4,21 +4,16 @@ import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserStatus;
 import app.Quiz.jwzpQuizappProject.repositories.UserRepository;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Base64;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    private  final UserRepository userRepository;
+    private final UserRepository userRepository;
 
     public UserController(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -30,11 +25,11 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity getSingleuser(@PathVariable long id) {
+    public ResponseEntity getSingleUser(@PathVariable long id) {
         return ResponseEntity.ok(this.userRepository.findById(id));
     }
 
-//    private String getUserName() {
+    //    private String getUserName() {
 //        JwtAuthenticationToken authenticationToken = (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
 //        Jwt jwt = (Jwt) authenticationToken.getCredentials();
 //        String email = (String) jwt.getClaims().get("exp");
@@ -63,7 +58,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity deleteUser(@PathVariable long id) {
         Optional<UserModel> user = this.userRepository.findById(id);
-        user.ifPresent(userModel -> userModel.setStatus(UserStatus.ARCHIVED));
+        user.ifPresent(userModel -> userModel.setStatus(UserStatus.DEACTIVATED));
 
         user.ifPresent(this.userRepository::save);
 

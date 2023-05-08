@@ -4,6 +4,7 @@ import app.Quiz.jwzpQuizappProject.models.quizes.QuizModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Future;
 //import org.hibernate.internal.util.collections.Stack;
 
 import java.time.LocalDateTime;
@@ -25,6 +26,8 @@ public class RoomModel {
     UserModel owner;
 
     LocalDateTime startTime;
+//    @Future
+//    LocalDateTime endTime // TODO ask majkel
 
     @ManyToMany(fetch = FetchType.LAZY,  cascade = {
             CascadeType.PERSIST,

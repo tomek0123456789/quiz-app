@@ -1,38 +1,43 @@
 package app.Quiz.jwzpQuizappProject.models.users;
 
-
 import app.Quiz.jwzpQuizappProject.models.RoomModel;
-import app.Quiz.jwzpQuizappProject.models.quizes.QuizModel;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.lang.NonNull;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
-import java.util.Stack;
 
+
+// TODO add validation to match the @Valid annotation
+// TODO how to add salt etc.
 @Entity
+@Table(name = "users")
 public class UserModel {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
-
-    @NonNull
+    @NotBlank
     private String name;
-
-    @NonNull
+    @NotBlank
+    @Email
+//  does this need @Email validation when RegisterRequest has it already?
     String email;
     @NonNull
     LocalDateTime createdAt;
     @NonNull
-    Enum<UserStatus> status;
-
+    UserStatus status;
     @NonNull
-    Enum<UserRole> role;
-
+    List<UserRole> roles;
     @NonNull
-    String passwordHash;
-
+    @JsonIgnore
+    String password;
     @NonNull
+    @JsonIgnore
     String salt;
 
     // do jakich pokoi nalzy user
@@ -43,36 +48,36 @@ public class UserModel {
 //    Set<QuizModel> quizes;
 
 
-    public UserModel(@NonNull String name,@NonNull String email) {
+    public UserModel(@NotBlank String name, @NotBlank String email, @NonNull String password) {
         this.name = name;
         this.email = email;
         this.createdAt = LocalDateTime.now();
         this.status = UserStatus.ACTIVE;
-        this.role = UserRole.USER;
-        this.passwordHash = "password123";
+        this.roles = List.of(UserRole.USER);
+        this.password = password;
         this.salt = "123salt!!";
     }
 
     public UserModel(Long id, @NonNull String name, @NonNull String email,
-                     @NonNull Enum<UserStatus> status, @NonNull Enum<UserRole> role,
-                     @NonNull String passwordHash, @NonNull String salt) {
+                     @NonNull UserStatus status, @NonNull List<UserRole> roles,
+                     @NonNull String password, @NonNull String salt) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.createdAt = LocalDateTime.now();
         this.status = status;
-        this.role = role;
-        this.passwordHash = passwordHash;
+        this.roles = roles;
+        this.password = password;
         this.salt = salt;
     }
 
     public UserModel() {
         this.name = "example_name";
-        this.email = "example@email";
+        this.email = "example@email.pl";
         this.createdAt = LocalDateTime.now();
         this.status = UserStatus.ACTIVE;
-        this.role = UserRole.USER;
-        this.passwordHash = "password123";
+        this.roles = List.of(UserRole.USER);
+        this.password = new BCryptPasswordEncoder().encode("password123");;
         this.salt = "123salt!!";
     }
 
@@ -112,24 +117,24 @@ public class UserModel {
         return status;
     }
 
-    public void setStatus(Enum<UserStatus> status) {
+    public void setStatus(UserStatus status) {
         this.status = status;
     }
 
-    public Enum<UserRole> getRole() {
-        return role;
+    public List<UserRole> getRoles() {
+        return roles;
     }
 
-    public void setRole(Enum<UserRole> role) {
-        this.role = role;
+    public void setRoles(List<UserRole> roles) {
+        this.roles = roles;
     }
 
-    public String getPasswordHash() {
-        return passwordHash;
+    public String getPassword() {
+        return password;
     }
 
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
+    public void setPassword(String passwordHash) {
+        this.password = passwordHash;
     }
 
     public String getSalt() {
@@ -159,4 +164,19 @@ public class UserModel {
 //    public void addQuiz(QuizModel quiz) {
 //        this.quizes.add(quiz);
 //    }
+
+    @Override
+    public String toString() {
+        return "UserModel{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", createdAt=" + createdAt +
+                ", status=" + status +
+                ", role=" + roles +
+                ", passwordHash='" + password + '\'' +
+                ", salt='" + salt + '\'' +
+//                ", quizesParticipation=" + quizesParticipation +
+                '}';
+    }
 }

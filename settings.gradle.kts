@@ -1,1 +1,1 @@
-rootProject.name = "jwzp-Quizapp-Project"
+rootProject.name = "quiz-app"
