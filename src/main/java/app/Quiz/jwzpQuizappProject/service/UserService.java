@@ -45,7 +45,7 @@ public class UserService implements UserDetailsService {
         }
         return user.get();
     }
-//TODO
+//TODO somehow decode JWT and check if the user in it matches the one in the request body that wants to change something
 
 //    public void updateUser() {
 //        userRepository.
