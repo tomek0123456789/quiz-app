@@ -1,5 +1,6 @@
 package app.Quiz.jwzpQuizappProject.models.answers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -21,6 +22,9 @@ public class AnswerModel {
 
     Integer ordNum;
 
+    @JsonIgnore
+    Integer score;
+
     public AnswerModel(String text) {
         this.text = text;
         this.createdAt = LocalDateTime.now();
@@ -28,6 +32,7 @@ public class AnswerModel {
 
     public AnswerModel() {
         this.createdAt = LocalDateTime.now();
+        this.score = 0;
     }
 
     public Long getId() {
@@ -61,5 +66,13 @@ public class AnswerModel {
 
     public void setOrdNum(Integer ordNum) {
         this.ordNum = ordNum;
+    }
+
+    public Integer getScore() {
+        return score;
+    }
+
+    public void setScore(Integer score) {
+        this.score = score;
     }
 }
