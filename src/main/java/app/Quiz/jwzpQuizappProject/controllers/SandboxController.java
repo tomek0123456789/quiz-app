@@ -48,8 +48,7 @@ public class SandboxController {
         return ResponseEntity.ok(createdQaa);
     }
 
-    // TODO: tam gdzie sa relacje ManyToMany dodac metody typu
-    //       add
+
     @PostMapping("/results")
     public ResponseEntity createResults(@RequestBody ResultsModel newResults) {
 
