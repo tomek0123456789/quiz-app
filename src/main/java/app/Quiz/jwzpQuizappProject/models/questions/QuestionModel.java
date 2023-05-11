@@ -1,6 +1,7 @@
 package app.Quiz.jwzpQuizappProject.models.questions;
 
 import app.Quiz.jwzpQuizappProject.models.answers.AnswerModel;
+import app.Quiz.jwzpQuizappProject.models.results.QuestionAndUsersAnswerModel;
 import jakarta.persistence.*;
 import org.springframework.lang.NonNull;
 
@@ -24,6 +25,9 @@ public class QuestionModel{ // T is type of question, like image or string etc
     @OneToMany
     @OrderBy("ordNum ASC")
     List<AnswerModel> answers;
+
+//    @OneToMany(fetch = FetchType.LAZY, mappedBy = "question")
+//    List<QuestionAndUsersAnswerModel> questionAndUsersAnswers;
 
     public QuestionModel(@NonNull String content) {
         this.content = content;
@@ -97,4 +101,12 @@ public class QuestionModel{ // T is type of question, like image or string etc
     public void deleteAnswer(AnswerModel answer) {
         this.answers.remove(answer);
     }
+
+//    public List<QuestionAndUsersAnswerModel> getQuestionAndUsersAnswers() {
+//        return questionAndUsersAnswers;
+//    }
+//
+//    public void setQuestionAndUsersAnswers(List<QuestionAndUsersAnswerModel> questionAndUsersAnswers) {
+//        this.questionAndUsersAnswers = questionAndUsersAnswers;
+//    }
 }

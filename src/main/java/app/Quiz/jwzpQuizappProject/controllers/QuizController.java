@@ -86,6 +86,23 @@ public class QuizController {
         return ResponseEntity.ok(new ScoreModel(20 + id));
     }
 
+//     dostawac bd rozwiazania usera w postaci typu:
+//     {"userAnswers":
+//         [
+//              {
+//                  "quizId":"2",
+//                  "questionsAndAnswers":
+//                      [
+//                          {"questionId":0,"userAnswer":0},
+//                          {"questionId":1,"userAnswer":0},
+//                          {"questionId":2,"userAnswer":0}
+//                      ]
+//              },
+//
+//          ]
+//      }
+//      To bedzie lista, zeby mozna bylo od razu przy walidacji pokoju zrobic
+//      Quiz powinien miec w sb metode sluzaca do walidacji!!!
 
     @PostMapping("/{id}/results")
     public ResponseEntity setQuizScore(@PathVariable long id,@RequestBody  String userAnswers) { // add sth like @RequestBody  UserAnserwMode userAnswers

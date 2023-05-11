@@ -27,6 +27,19 @@ public class RoomController {
         return ResponseEntity.ok(this.roomRepository.findById(id));
     }
 
+    @GetMapping("/{id}/results")
+    public ResponseEntity getRoomResults(@PathVariable long id) {
+        return ResponseEntity.ok(this.roomRepository.findById(id));
+    }
+
+    // TODO: front bedzie wysylac cos typu liste odpowiedzi (analogicznie jak dla
+    //       wyników quizu). To powinno byc zapisane jakos z kluczami typu
+    //      {Id, roomId, user, QuizScore}
+    @PostMapping("/{id}/results")
+    public ResponseEntity createRoomResults(@PathVariable long id) {
+        return ResponseEntity.ok(this.roomRepository.findById(id));
+    }
+
     // TODO: zeby zwracalo tylko jesli uzytkownik autoryzowany
     //      zwraca wszyskie pokoje ktorych user jest uczestnikiem lub wlascicielem,
     //      najlepiej je posortowac w ten spoosb, najpierw te ktore posiada, potem te w kt jest tylko uczestnikiem
