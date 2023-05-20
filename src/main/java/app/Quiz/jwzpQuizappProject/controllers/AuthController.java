@@ -3,6 +3,7 @@ package app.Quiz.jwzpQuizappProject.controllers;
 import app.Quiz.jwzpQuizappProject.exceptions.UserAlreadyExistsException;
 import app.Quiz.jwzpQuizappProject.models.auth.LoginRequest;
 import app.Quiz.jwzpQuizappProject.models.auth.RegisterRequest;
+import app.Quiz.jwzpQuizappProject.models.responseEntities.LoginResponseEntity;
 import app.Quiz.jwzpQuizappProject.service.TokenService;
 import app.Quiz.jwzpQuizappProject.service.UserService;
 import jakarta.validation.Valid;
@@ -49,11 +50,15 @@ public class AuthController {
     }
 
     @PostMapping(path = "/login")
-    public String login(@Valid @RequestBody LoginRequest loginRequest) {
+    public ResponseEntity login(@Valid @RequestBody LoginRequest loginRequest) {
         var authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password())
         );
-        return tokenService.generateToken(authentication);
+
+
+        LoginResponseEntity token = new LoginResponseEntity(tokenService.generateToken(authentication));
+
+        return ResponseEntity.ok(token);
     }
 
 }

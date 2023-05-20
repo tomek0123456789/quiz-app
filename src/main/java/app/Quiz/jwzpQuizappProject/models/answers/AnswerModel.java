@@ -23,6 +23,7 @@ public class AnswerModel {
     Integer ordNum;
 
     @JsonIgnore
+
     Integer score;
 
     public AnswerModel(String text) {
@@ -32,7 +33,7 @@ public class AnswerModel {
 
     public AnswerModel() {
         this.createdAt = LocalDateTime.now();
-        this.score = 0;
+        score = 0;
     }
 
     public Long getId() {
@@ -69,7 +70,7 @@ public class AnswerModel {
     }
 
     public Integer getScore() {
-        return score;
+        return score == null ? 0 : score;
     }
 
     public void setScore(Integer score) {

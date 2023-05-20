@@ -75,6 +75,13 @@ public class QuestionModel{ // T is type of question, like image or string etc
         return answers;
     }
 
+    public AnswerModel getAnswerByOrdNumber(int ordNum){
+        if(ordNum >= this.answers.size()){
+            return null;
+        }
+        return this.answers.get(ordNum);
+    }
+
     public void setAnswers(List<AnswerModel> answers) {
         this.answers = answers;
     }
@@ -100,6 +107,11 @@ public class QuestionModel{ // T is type of question, like image or string etc
 
     public void deleteAnswer(AnswerModel answer) {
         this.answers.remove(answer);
+
+        for(int i = 0; i < this.answers.size(); i++){
+            this.answers.get(i).setOrdNum(i);
+        }
+
     }
 
 //    public List<QuestionAndUsersAnswerModel> getQuestionAndUsersAnswers() {

@@ -1,14 +1,12 @@
 package app.Quiz.jwzpQuizappProject.controllers;
 
+import app.Quiz.jwzpQuizappProject.models.CategoryModel;
 import app.Quiz.jwzpQuizappProject.models.ScoreModel;
 import app.Quiz.jwzpQuizappProject.models.answers.AnswerModel;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
 import app.Quiz.jwzpQuizappProject.models.quizes.QuizModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
-import app.Quiz.jwzpQuizappProject.repositories.AnswerRepository;
-import app.Quiz.jwzpQuizappProject.repositories.QuestionRepository;
-import app.Quiz.jwzpQuizappProject.repositories.QuizRepository;
-import app.Quiz.jwzpQuizappProject.repositories.UserRepository;
+import app.Quiz.jwzpQuizappProject.repositories.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,12 +19,14 @@ public class QuizController {
     private final QuizRepository quizRepository;
     private final QuestionRepository questionRepository;
     private final AnswerRepository answerRepository;
+    private final CategoryRepository categoryRepository;
     private final UserRepository userRepository; //delete once auth system done
 
-    public QuizController(QuizRepository quizRepository, QuestionRepository questionRepository, AnswerRepository answerRepository, UserRepository userRepository) {
+    public QuizController(QuizRepository quizRepository, QuestionRepository questionRepository, AnswerRepository answerRepository, CategoryRepository categoryRepository, UserRepository userRepository) {
         this.quizRepository = quizRepository;
         this.questionRepository = questionRepository;
         this.answerRepository = answerRepository;
+        this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
     }
 
@@ -50,6 +50,14 @@ public class QuizController {
 
     @PostMapping()
     public ResponseEntity createQuiz(@RequestBody QuizModel newQuiz) {
+        long categoryId = newQuiz.getCategoryId();
+
+        Optional<CategoryModel> category = this.categoryRepository.findById(categoryId);
+
+        if(category.isEmpty()){
+            return ResponseEntity.badRequest().body("Invalid category ID: " + categoryId);
+        }
+        newQuiz.setCategory(category.get());
 
         // TODO: user should be read from jwt token somehow
         Optional<UserModel> user = userRepository.findById(Long.valueOf(52));
@@ -80,6 +88,7 @@ public class QuizController {
     //       UsersQuizResults w ktorym bedzie lista Quizow
     //       i do kazdego odpowiedzi jakie user zaznaczyl
 
+    // TODO: usunac te rezultaty stad!
     // ta powinna zwracac najleposzy wynik usera
     @GetMapping("/{id}/results")
     public ResponseEntity getQuizScore(@PathVariable long id) {
@@ -160,18 +169,25 @@ public class QuizController {
 
     //////  ANSWER    //////
     // TODO: check if user is an owner or an admin
-    @PostMapping("/{questionId}/questions/{ordNum}/answers")
-    public ResponseEntity addAnswerToQuestionInQuiz(@PathVariable long questionId,@PathVariable Integer ordNum, @RequestBody AnswerModel newAnswer) {
-        Optional<QuizModel> quiz = this.quizRepository.findById(questionId);
+    @PostMapping("/{quizId}/questions/{ordNum}/answers")
+    public ResponseEntity addAnswerToQuestionInQuiz(@PathVariable long quizId,@PathVariable Integer ordNum, @RequestBody AnswerModel newAnswer) {
+        Optional<QuizModel> quiz = this.quizRepository.findById(quizId);
 
-        if(quiz.isPresent()){
-            this.answerRepository.save(newAnswer);
-            QuestionModel question = quiz.get().getQuestionByOrdNum(ordNum);
-            question.addAnswer(newAnswer);
-            this.questionRepository.save(question);
+        if(quiz.isEmpty()){
+            return ResponseEntity.badRequest().body("quiz ID is not valid");
         }
 
+        QuestionModel question = quiz.get().getQuestionByOrdNum(ordNum);
+
+        if(question == null){
+            return ResponseEntity.badRequest().body("question ord num out of bounds");
+        }
+
+        this.answerRepository.save(newAnswer);
+        question.addAnswer(newAnswer);
+        this.questionRepository.save(question);
         return ResponseEntity.ok("added answer");
+
     }
 
     @DeleteMapping("/questions/{questionId}/answers/{answerOrdNum}")

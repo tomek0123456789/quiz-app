@@ -1,7 +1,9 @@
 package app.Quiz.jwzpQuizappProject.models.results;
 
 import app.Quiz.jwzpQuizappProject.models.quizes.QuizModel;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.micrometer.common.lang.Nullable;
 import jakarta.persistence.*;
 import org.springframework.lang.NonNull;
 
@@ -24,7 +26,14 @@ public class QuizResultsModel {
     @OneToMany
     Set<QuestionAndUsersAnswerModel> questionsAndAnswers;
 
-    public QuizResultsModel() {}
+    @ManyToMany
+    @JsonIgnore
+    Set<ResultsModel> results;
+
+    long score;
+
+    public QuizResultsModel() {
+    }
 
     public long getId() {
         return id;
@@ -50,11 +59,31 @@ public class QuizResultsModel {
         this.questionsAndAnswers = questionsAndAnswers;
     }
 
+    public void addQAA(QuestionAndUsersAnswerModel qaa){
+        this.questionsAndAnswers.add(qaa);
+    }
+
     public long getQuizId() {
         return quizId;
     }
 
     public void setQuizId(long quizId) {
         this.quizId = quizId;
+    }
+
+    public Set<ResultsModel> getResults() {
+        return results;
+    }
+
+    public void setResults(Set<ResultsModel> results) {
+        this.results = results;
+    }
+
+    public long getScore() {
+        return score;
+    }
+
+    public void setScore(long score) {
+        this.score = score;
     }
 }

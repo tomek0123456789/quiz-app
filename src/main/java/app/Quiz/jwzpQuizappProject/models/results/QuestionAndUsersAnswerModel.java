@@ -1,5 +1,6 @@
 package app.Quiz.jwzpQuizappProject.models.results;
 
+import app.Quiz.jwzpQuizappProject.models.answers.AnswerModel;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -18,10 +19,22 @@ public class QuestionAndUsersAnswerModel {
 
     @Transient
 //    @JsonIgnore
-    @JsonProperty("questionId")
-    long questionId;
+    @JsonProperty("questionOrdNum")
+    long questionOrdNum;            // to jest ordNumber, nie ID! dzieki temu nie musimyu sprawdzac czy question nalezy do quizu
 
-    public QuestionAndUsersAnswerModel() {}
+    @ManyToOne
+    @JoinColumn(name = "answer")
+    AnswerModel answer;
+
+    @Transient
+//    @JsonIgnore
+    @JsonProperty("userAnswerOrdNum")
+    long userAnswerOrdNum;       // to jest ordNumber, nie ID! dzieki temu nie musimyu sprawdzac czy answer nalezy do question
+
+    public QuestionAndUsersAnswerModel() {
+        userAnswerOrdNum = -1;      // gdy odpowiednie pola nie beda podane w JSONie, to bedzie mozna
+        questionOrdNum = -1;        // to latwo sprawdzic
+    }
 
 
     public void setQuestion(QuestionModel question) {
@@ -39,12 +52,27 @@ public class QuestionAndUsersAnswerModel {
         this.id = id;
     }
 
-    public void setQuestionId(long questionId) {
-        this.questionId = questionId;
+    public AnswerModel getAnswer() {
+        return answer;
     }
 
-    public long getQuestionId() {
-        return questionId;
+    public void setAnswer(AnswerModel answer) {
+        this.answer = answer;
     }
 
+    public long getUserAnswerOrdNum() {
+        return userAnswerOrdNum;
+    }
+
+    public void setUserAnswerOrdNum(long userAnswerOrdNum) {
+        this.userAnswerOrdNum = userAnswerOrdNum;
+    }
+
+    public long getQuestionOrdNum() {
+        return questionOrdNum;
+    }
+
+    public void setQuestionOrdNum(long questionOrdNum) {
+        this.questionOrdNum = questionOrdNum;
+    }
 }

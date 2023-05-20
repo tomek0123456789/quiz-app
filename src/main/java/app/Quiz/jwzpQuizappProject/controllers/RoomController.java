@@ -2,8 +2,11 @@ package app.Quiz.jwzpQuizappProject.controllers;
 
 import app.Quiz.jwzpQuizappProject.models.RoomModel;
 import app.Quiz.jwzpQuizappProject.models.quizes.QuizModel;
+import app.Quiz.jwzpQuizappProject.models.results.ResultsModel;
 import app.Quiz.jwzpQuizappProject.repositories.QuizRepository;
+import app.Quiz.jwzpQuizappProject.repositories.ResultsRepository;
 import app.Quiz.jwzpQuizappProject.repositories.RoomRepository;
+import app.Quiz.jwzpQuizappProject.service.ResultsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,9 +19,15 @@ public class RoomController {
     private  final RoomRepository roomRepository;
     private final QuizRepository quizRepository;    //is it correct to have 2 quizRespository?
 
-    public RoomController(RoomRepository roomRepository, QuizRepository quizRepository) {
+    private final ResultsRepository resultsRepository;
+
+    private final ResultsService resultsService;
+
+    public RoomController(RoomRepository roomRepository, QuizRepository quizRepository, ResultsRepository resultsRepository, ResultsService resultsService) {
         this.roomRepository = roomRepository;
         this.quizRepository = quizRepository;
+        this.resultsRepository = resultsRepository;
+        this.resultsService = resultsService;
     }
 
     // TODO: zeby zwracalo tylko jesli uzytkownik autoryzowany
@@ -35,9 +44,15 @@ public class RoomController {
     // TODO: front bedzie wysylac cos typu liste odpowiedzi (analogicznie jak dla
     //       wyników quizu). To powinno byc zapisane jakos z kluczami typu
     //      {Id, roomId, user, QuizScore}
+
+    // TODO: (2) - powiazac jakos ID przekazane w path'ie z wynikami
     @PostMapping("/{id}/results")
-    public ResponseEntity createRoomResults(@PathVariable long id) {
-        return ResponseEntity.ok(this.roomRepository.findById(id));
+    public ResponseEntity createRoomResults(@PathVariable long id, @RequestBody ResultsModel results) {
+        // TODO:  CO MU TU NIE PASUJE??
+
+
+
+        return resultsService.createResults(results);
     }
 
     // TODO: zeby zwracalo tylko jesli uzytkownik autoryzowany

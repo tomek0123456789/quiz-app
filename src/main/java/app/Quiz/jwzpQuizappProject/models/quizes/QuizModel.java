@@ -1,10 +1,12 @@
 package app.Quiz.jwzpQuizappProject.models.quizes;
 
+import app.Quiz.jwzpQuizappProject.models.CategoryModel;
 import app.Quiz.jwzpQuizappProject.models.RoomModel;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jdk.jfr.Category;
 import org.springframework.lang.NonNull;
 
 import java.time.LocalDateTime;
@@ -37,7 +39,11 @@ public class QuizModel {
     LocalDateTime createdAt;
 
     // @OneToMany(mappedBy = "id")
-    private  long categoryId;
+    long categoryId;
+
+    @ManyToOne
+    @JoinColumn(name = "category")
+    CategoryModel category;
 
     // do jakich pokoi nalezy quiz
     @ManyToMany(fetch = FetchType.LAZY,  cascade = {
@@ -146,12 +152,19 @@ public class QuizModel {
     }
 
     public QuestionModel getQuestionByOrdNum(Integer ordNum) {
-
+        if(ordNum >= this.questions.size()){
+            return null;
+        }
         return this.questions.get(ordNum);
     }
 
     public void deleteQuestion(QuestionModel question) {
         this.questions.remove(question);
+
+        for(int i = 0; i < this.questions.size(); i++){
+            this.questions.get(i).setOrdNum(i);
+        }
+
     }
 
     public Set<RoomModel> getRooms() {
@@ -160,5 +173,13 @@ public class QuizModel {
 
     public void setRooms(Set<RoomModel> rooms) {
         this.rooms = rooms;
+    }
+
+    public void setCategory(CategoryModel category) {
+        this.category = category;
+    }
+
+    public CategoryModel getCategory() {
+        return category;
     }
 }

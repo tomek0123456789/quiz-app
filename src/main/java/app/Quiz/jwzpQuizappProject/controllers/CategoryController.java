@@ -31,7 +31,7 @@ public class CategoryController {
             return (ResponseEntity) ResponseEntity.badRequest();
         }else{
             this.categoryRepository.save(newCategory);
-            return ResponseEntity.ok("ok");
+            return ResponseEntity.ok(newCategory);
         }
 
     }
