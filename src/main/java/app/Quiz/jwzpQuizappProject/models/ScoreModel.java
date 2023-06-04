@@ -1,6 +1,5 @@
 package app.Quiz.jwzpQuizappProject.models;
 
-import app.Quiz.jwzpQuizappProject.models.quizes.QuizModel;
 import jakarta.persistence.*;
 import org.springframework.lang.NonNull;
 

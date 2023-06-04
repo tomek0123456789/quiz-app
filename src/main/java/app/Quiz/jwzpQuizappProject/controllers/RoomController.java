@@ -1,97 +1,131 @@
 package app.Quiz.jwzpQuizappProject.controllers;
 
-import app.Quiz.jwzpQuizappProject.models.RoomModel;
-import app.Quiz.jwzpQuizappProject.models.quizes.QuizModel;
+import app.Quiz.jwzpQuizappProject.exceptions.answers.AnswerAlreadyExists;
+import app.Quiz.jwzpQuizappProject.exceptions.answers.AnswerNotFoundException;
+import app.Quiz.jwzpQuizappProject.exceptions.auth.PermissionDeniedException;
+import app.Quiz.jwzpQuizappProject.exceptions.questions.QuestionNotFoundException;
+import app.Quiz.jwzpQuizappProject.exceptions.quizzes.QuizNotFoundException;
+import app.Quiz.jwzpQuizappProject.exceptions.rooms.RoomNotFoundException;
+import app.Quiz.jwzpQuizappProject.exceptions.users.UserNotFoundException;
+import app.Quiz.jwzpQuizappProject.models.results.ResultsDto;
+import app.Quiz.jwzpQuizappProject.models.rooms.RoomDto;
+import app.Quiz.jwzpQuizappProject.models.rooms.RoomModel;
 import app.Quiz.jwzpQuizappProject.models.results.ResultsModel;
 import app.Quiz.jwzpQuizappProject.repositories.QuizRepository;
 import app.Quiz.jwzpQuizappProject.repositories.ResultsRepository;
 import app.Quiz.jwzpQuizappProject.repositories.RoomRepository;
 import app.Quiz.jwzpQuizappProject.service.ResultsService;
+import app.Quiz.jwzpQuizappProject.service.RoomService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
+import java.util.List;
 
 @RestController
 @RequestMapping("/myrooms")
 public class RoomController {
 
     private  final RoomRepository roomRepository;
-    private final QuizRepository quizRepository;    //is it correct to have 2 quizRespository?
-
+    private final QuizRepository quizRepository;
     private final ResultsRepository resultsRepository;
-
     private final ResultsService resultsService;
+    private final RoomService roomService;
 
-    public RoomController(RoomRepository roomRepository, QuizRepository quizRepository, ResultsRepository resultsRepository, ResultsService resultsService) {
+    public RoomController(RoomRepository roomRepository, QuizRepository quizRepository, ResultsRepository resultsRepository, ResultsService resultsService, RoomService roomService) {
         this.roomRepository = roomRepository;
         this.quizRepository = quizRepository;
         this.resultsRepository = resultsRepository;
         this.resultsService = resultsService;
+        this.roomService = roomService;
     }
 
-    // TODO: zeby zwracalo tylko jesli uzytkownik autoryzowany
-    @GetMapping("/{id}")
-    public ResponseEntity getSingleRoom(@PathVariable long id) {
-        return ResponseEntity.ok(this.roomRepository.findById(id));
+    @GetMapping("/{roomId}")
+    public ResponseEntity<?> getSingleRoom(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @PathVariable long roomId
+    ) throws RoomNotFoundException, PermissionDeniedException {
+        return new ResponseEntity<>(roomService.getSingleRoom(roomId, token), HttpStatus.OK);
+    }
+
+    @PostMapping
+    public ResponseEntity<RoomModel> createRoom(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @RequestBody RoomDto roomDto
+    ) {
+        return new ResponseEntity<>(roomService.createRoom(roomDto, token), HttpStatus.CREATED);
+    }
+
+    //////////////////////////////////////
+    //todo
+    @PutMapping("/{roomId}")
+    public ResponseEntity<String> updateRoom(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @PathVariable long roomId
+    ) {
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+    }
+    //////////////////////////////////////
+
+    @DeleteMapping("/{roomId}")
+    public ResponseEntity<?> deleteRoom(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @PathVariable long roomId
+    ) throws RoomNotFoundException, PermissionDeniedException {
+        roomService.deleteRoom(roomId, token);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    @PatchMapping("/{roomId}/users/{userId}")
+    public ResponseEntity<?> addParticipantToRoom(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @PathVariable long roomId,
+            @PathVariable long userId
+    ) throws UserNotFoundException, RoomNotFoundException, PermissionDeniedException {
+        roomService.addUserToRoom(roomId, userId, token);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{roomId}/users/{userId}")
+    public ResponseEntity<?> removeParticipantFromRoom(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @PathVariable long roomId,
+            @PathVariable long userId
+    ) throws UserNotFoundException, RoomNotFoundException, PermissionDeniedException {
+        roomService.removeUserFromRoom(roomId, userId, token);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @GetMapping("/{id}/results")
-    public ResponseEntity getRoomResults(@PathVariable long id) {
-        return ResponseEntity.ok(this.roomRepository.findById(id));
+    public ResponseEntity<?> getRoomResults( @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+                                             @PathVariable long id) throws RoomNotFoundException, PermissionDeniedException {
+
+        List<ResultsModel> results = this.resultsService.getResultsForRoom(token, id);
+        return ResponseEntity.ok(results);
     }
 
-    // TODO: front bedzie wysylac cos typu liste odpowiedzi (analogicznie jak dla
-    //       wyników quizu). To powinno byc zapisane jakos z kluczami typu
-    //      {Id, roomId, user, QuizScore}
-
-    // TODO: (2) - powiazac jakos ID przekazane w path'ie z wynikami
     @PostMapping("/{id}/results")
-    public ResponseEntity createRoomResults(@PathVariable long id, @RequestBody ResultsModel results) {
-        // TODO:  CO MU TU NIE PASUJE??
+    public ResponseEntity<?> createResults(
+            @PathVariable long id,
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @RequestBody ResultsDto results) throws RoomNotFoundException, AnswerNotFoundException, QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists {
+        var newResult = this.resultsService.createResultsForRoom(results,id, token);
+        return ResponseEntity.ok(newResult);
 
-
-
-        return resultsService.createResults(results);
     }
 
-    // TODO: zeby zwracalo tylko jesli uzytkownik autoryzowany
-    //      zwraca wszyskie pokoje ktorych user jest uczestnikiem lub wlascicielem,
-    //      najlepiej je posortowac w ten spoosb, najpierw te ktore posiada, potem te w kt jest tylko uczestnikiem
     @GetMapping()
-    public ResponseEntity getAllRooms() {
-        return ResponseEntity.ok(this.roomRepository.findAll());    //temp
+    public ResponseEntity<?> getAllRooms( @RequestHeader(HttpHeaders.AUTHORIZATION) String token) throws RoomNotFoundException, PermissionDeniedException {
+        var myRooms = this.roomService.getMyRooms(token);
+        return ResponseEntity.ok(myRooms);
     }
 
-    // TODO: Read user from token
-    @PostMapping()
-    public ResponseEntity createRoom(@RequestBody RoomModel newRoom) {
-//        System.out.print(newRoom.getId());
-        this.roomRepository.save(newRoom);
-        return ResponseEntity.ok(newRoom);
+    @PostMapping("/{id}/quizzes/{quizId}")
+    public ResponseEntity<?> addQuizToRoom(@RequestHeader(HttpHeaders.AUTHORIZATION) String token, @PathVariable long id, @PathVariable long quizId) throws RoomNotFoundException, QuizNotFoundException, PermissionDeniedException {
+        roomService.addQuizToRoom(token, id, quizId);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
-
-    @PostMapping("/{id}/quizes/{quizId}")
-    public ResponseEntity addQuizToRoom(@PathVariable long id, @PathVariable long quizId) {
-        Optional<RoomModel> room = this.roomRepository.findById(id);
-
-        if (room.isPresent()){
-            Optional<QuizModel> quiz = this.quizRepository.findById(quizId);
-            quiz.ifPresent(quizModel -> room.get().addQuiz(quizModel));
-            quiz.get().addRoom(room.get());
-            this.roomRepository.save(room.get());
-            this.quizRepository.save(quiz.get());
-
-            return ResponseEntity.ok("ok");
-        }
-
-        return ResponseEntity.ok("coudnt add");
-    }
-
-    @DeleteMapping()
-    public ResponseEntity deleteAllRooms() {
-        this.roomRepository.deleteAll();
-        return ResponseEntity.ok("ok");
-    }
-
 }

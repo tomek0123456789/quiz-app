@@ -1,5 +1,6 @@
 package app.Quiz.jwzpQuizappProject.models.results;
 
+import app.Quiz.jwzpQuizappProject.models.rooms.RoomModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -8,17 +9,18 @@ import jakarta.persistence.*;
 import org.springframework.lang.NonNull;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Set;
 
 @Entity
-public class ResultsModel {
+public class ResultsModel{
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
     @ManyToMany
-    private Set<QuizResultsModel> quizesResults;
+    private Set<QuizResultsModel> quizzesResults;
 
     @ManyToOne
     UserModel owner;
@@ -26,16 +28,22 @@ public class ResultsModel {
     @NonNull
     LocalDateTime createdAt;
 
+    @ManyToOne
+    RoomModel room;
+
 
     long score;
 
     @JsonCreator
-    public ResultsModel(@JsonProperty("quizesResults") Set<QuizResultsModel> quizesResults) {
-        this.quizesResults = quizesResults;
+    public ResultsModel(@JsonProperty("quizzesResults") Set<QuizResultsModel> quizesResults) {
+        this.quizzesResults = quizesResults;
         this.createdAt = LocalDateTime.now();
     }
 
-    public ResultsModel() {this.createdAt = LocalDateTime.now();}
+    public ResultsModel() {
+        this.createdAt = LocalDateTime.now();
+        this.quizzesResults = Collections.emptySet();
+    }
 
     public long getId() {
         return id;
@@ -45,12 +53,12 @@ public class ResultsModel {
         this.id = id;
     }
 
-    public Set<QuizResultsModel> getQuizesResults() {
-        return quizesResults;
+    public Set<QuizResultsModel> getQuizzesResults() {
+        return quizzesResults;
     }
 
-    public void setQuizesResults(Set<QuizResultsModel> quizesResults) {
-        this.quizesResults = quizesResults;
+    public void setQuizzesResults(Set<QuizResultsModel> quizesResults) {
+        this.quizzesResults = quizesResults;
     }
 
     public UserModel getOwner() {
@@ -76,5 +84,24 @@ public class ResultsModel {
 
     public void setCreatedAt(@NonNull LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    @Override
+    public String toString() {
+        return "ResultsModel{" +
+                "id=" + id +
+                ", quizzesResults=" + quizzesResults +
+                ", owner=" + owner +
+                ", createdAt=" + createdAt +
+                ", score=" + score +
+                '}';
+    }
+
+    public RoomModel getRoom() {
+        return room;
+    }
+
+    public void setRoom(RoomModel room) {
+        this.room = room;
     }
 }

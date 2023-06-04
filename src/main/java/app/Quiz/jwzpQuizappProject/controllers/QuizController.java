@@ -1,209 +1,132 @@
 package app.Quiz.jwzpQuizappProject.controllers;
 
-import app.Quiz.jwzpQuizappProject.models.CategoryModel;
-import app.Quiz.jwzpQuizappProject.models.ScoreModel;
+import app.Quiz.jwzpQuizappProject.exceptions.answers.AnswerNotFoundException;
+import app.Quiz.jwzpQuizappProject.exceptions.answers.AnswersLimitException;
+import app.Quiz.jwzpQuizappProject.exceptions.auth.PermissionDeniedException;
+import app.Quiz.jwzpQuizappProject.exceptions.categories.CategoryNotFoundException;
+import app.Quiz.jwzpQuizappProject.exceptions.questions.QuestionNotFoundException;
+import app.Quiz.jwzpQuizappProject.exceptions.questions.QuestionsLimitException;
+import app.Quiz.jwzpQuizappProject.exceptions.quizzes.QuizNotFoundException;
+import app.Quiz.jwzpQuizappProject.models.answers.AnswerDto;
 import app.Quiz.jwzpQuizappProject.models.answers.AnswerModel;
+import app.Quiz.jwzpQuizappProject.models.questions.QuestionDto;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
-import app.Quiz.jwzpQuizappProject.models.quizes.QuizModel;
-import app.Quiz.jwzpQuizappProject.models.users.UserModel;
-import app.Quiz.jwzpQuizappProject.repositories.*;
+import app.Quiz.jwzpQuizappProject.models.quizzes.QuizDto;
+import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
+import app.Quiz.jwzpQuizappProject.service.QuizService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
 @CrossOrigin        // to allow frontend-backend connections
-@RequestMapping("/quizes")
+@RequestMapping("/quizzes")
 public class QuizController {
-    private final QuizRepository quizRepository;
-    private final QuestionRepository questionRepository;
-    private final AnswerRepository answerRepository;
-    private final CategoryRepository categoryRepository;
-    private final UserRepository userRepository; //delete once auth system done
+    private final QuizService quizService;
 
-    public QuizController(QuizRepository quizRepository, QuestionRepository questionRepository, AnswerRepository answerRepository, CategoryRepository categoryRepository, UserRepository userRepository) {
-        this.quizRepository = quizRepository;
-        this.questionRepository = questionRepository;
-        this.answerRepository = answerRepository;
-        this.categoryRepository = categoryRepository;
-        this.userRepository = userRepository;
+    public QuizController(QuizService quizService) {
+        this.quizService = quizService;
     }
 
     //////  QUIZ    //////
 
-    @GetMapping("/{id}")
-    public ResponseEntity getSingleQuiz(@PathVariable long id) {
-        return ResponseEntity.ok(this.quizRepository.findById(id));
+    @GetMapping("/{quizId}")
+    public QuizModel getSingleQuiz(@PathVariable long quizId) throws QuizNotFoundException {
+        return quizService.getSingleQuiz(quizId);
     }
 
-    @GetMapping()
-    public ResponseEntity getAllQuizes(@RequestParam(value="name", required=false) String quizName) {
-
-        if(quizName == null){
-            return ResponseEntity.ok(this.quizRepository.findAll());
-        }else{
-            return ResponseEntity.ok(this.quizRepository.findByName(quizName));
-        }
-
+    @GetMapping
+    public List<QuizModel> getMultipleQuizzes(
+            @RequestParam(value = "name", required = false) Optional<String> titlePart,
+            @RequestParam(value = "category", required = false) Optional<String> categoryName
+    ) {
+        return quizService.getQuizzesByTitleOrCategory(titlePart, categoryName);
     }
 
-    @PostMapping()
-    public ResponseEntity createQuiz(@RequestBody QuizModel newQuiz) {
-        long categoryId = newQuiz.getCategoryId();
-
-        Optional<CategoryModel> category = this.categoryRepository.findById(categoryId);
-
-        if(category.isEmpty()){
-            return ResponseEntity.badRequest().body("Invalid category ID: " + categoryId);
-        }
-        newQuiz.setCategory(category.get());
-
-        // TODO: user should be read from jwt token somehow
-        Optional<UserModel> user = userRepository.findById(Long.valueOf(52));
-        user.ifPresent(newQuiz::setOwner);
-
-        this.quizRepository.save(newQuiz);
-
-        return ResponseEntity.ok(newQuiz);
+    @GetMapping("/my")
+    public List<QuizModel> getMyQuizzes(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+        return quizService.getUserQuizzes(token);
     }
+
+    @PostMapping
+    public QuizModel createQuiz(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @RequestBody QuizDto quizDto
+    ) throws CategoryNotFoundException {
+        return quizService.addQuiz(quizDto, token);
+    }
+
+    @DeleteMapping("/{quizId}")
+    public ResponseEntity<String> deleteQuiz(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @PathVariable long quizId
+    ) throws QuizNotFoundException, PermissionDeniedException {
+        // todo validate if user sending the request is the actual user
+        quizService.deleteQuiz(quizId, token);
+        return new ResponseEntity<>("Successfully deleted a quiz with id: " + quizId + ".", HttpStatus.NO_CONTENT);
+    }
+
+//    ----------------------TODO-------------------------------------
 
     // TODO: check if user is an owner or an admin
-    @DeleteMapping("/{id}")
-    public ResponseEntity deleteQuiz(@PathVariable long id) {
-        this.quizRepository.deleteById(id);
-
-        return ResponseEntity.ok("ok");
+    @PutMapping
+    public ResponseEntity<HttpStatus> updateQuiz(@RequestBody QuizModel quiz) {
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
     }
 
-    // TODO: check if user is an owner or an admin
-    @PutMapping()
-    public ResponseEntity updateQuiz(@RequestBody QuizModel quiz) {
-        this.quizRepository.save(quiz);
-
-        return ResponseEntity.ok("ok");
-    }
-
-    // TODO: zamiast string to powinien byc obiekt typu
-    //       UsersQuizResults w ktorym bedzie lista Quizow
-    //       i do kazdego odpowiedzi jakie user zaznaczyl
-
-    // TODO: usunac te rezultaty stad!
-    // ta powinna zwracac najleposzy wynik usera
-    @GetMapping("/{id}/results")
-    public ResponseEntity getQuizScore(@PathVariable long id) {
-        return ResponseEntity.ok(new ScoreModel(20 + id));
-    }
-
-//     dostawac bd rozwiazania usera w postaci typu:
-//     {"userAnswers":
-//         [
-//              {
-//                  "quizId":"2",
-//                  "questionsAndAnswers":
-//                      [
-//                          {"questionId":0,"userAnswer":0},
-//                          {"questionId":1,"userAnswer":0},
-//                          {"questionId":2,"userAnswer":0}
-//                      ]
-//              },
-//
-//          ]
-//      }
-//      To bedzie lista, zeby mozna bylo od razu przy walidacji pokoju zrobic
-//      Quiz powinien miec w sb metode sluzaca do walidacji!!!
-
-    @PostMapping("/{id}/results")
-    public ResponseEntity setQuizScore(@PathVariable long id,@RequestBody  String userAnswers) { // add sth like @RequestBody  UserAnserwMode userAnswers
-
-//        System.out.println(userAnswers);
-
-        return ResponseEntity.ok(new ScoreModel(20 - id));
-    }
+//    ----------------------TODO-------------------------------------
 
 
-    // TODO: rozdzielic to na rozne pliki jednak - nw czy nie bedzie jakis konfliktow z pathem
     //////  QUESTION    //////
 
-    // TODO: check if user is an owner or an admin
-    @PostMapping("/{id}/questions")
-    public ResponseEntity addQuestionToQuiz(@PathVariable long id, @RequestBody QuestionModel newQuestion) {
-        Optional<QuizModel> quiz = this.quizRepository.findById(id);
-
-        this.questionRepository.save(newQuestion);
-        quiz.ifPresent(quizModel -> quizModel.addQuestion(newQuestion));
-        quiz.ifPresent(this.quizRepository::save);
-
-        return ResponseEntity.ok(newQuestion);
+    @PostMapping("/{quizId}/questions")
+    public ResponseEntity<?> addQuestionToQuiz(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @PathVariable long quizId,
+            @RequestBody QuestionDto questionDto
+    ) throws QuizNotFoundException, PermissionDeniedException, QuestionsLimitException {
+        QuestionModel model = quizService.addQuestionToQuiz(quizId, questionDto, token);
+        return new ResponseEntity<>(model, HttpStatus.CREATED);
     }
 
-    // TODO: check if user is an owner or an admin
-    @PostMapping("/{id}/questions/{ind}")
-    public ResponseEntity insertQuestionToQuizAtIndex(@PathVariable long id,@PathVariable Integer ind, @RequestBody QuestionModel newQuestion) {
-        Optional<QuizModel> quiz = this.quizRepository.findById(id);
+    @DeleteMapping("/{quizId}/questions/{questionOrdNum}")
+    public ResponseEntity<String> removeQuestionFromQuiz(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @PathVariable long quizId,
+            @PathVariable int questionOrdNum
+    ) throws QuizNotFoundException, QuestionNotFoundException, PermissionDeniedException, QuestionsLimitException {
+        quizService.removeQuestionFromQuiz(quizId, questionOrdNum, token);
 
-        this.questionRepository.save(newQuestion);
-        quiz.ifPresent(quizModel -> quizModel.addQuestionAt(newQuestion, ind));
-        quiz.ifPresent(this.quizRepository::save);
-
-        // saving updated ordNums for all questions
-        quiz.ifPresent(quizModel -> this.questionRepository.saveAll(quizModel.getQuestions()));
-
-        return ResponseEntity.ok("added question");
-    }
-
-    // TODO: check if user is an owner or an admin
-    @DeleteMapping("/{quizId}/questions/{ordNum}")
-    public ResponseEntity deleteQuestionFromQuiz(@PathVariable long quizId, @PathVariable Integer ordNum) {
-        Optional<QuizModel> quiz = this.quizRepository.findById(quizId);
-
-        if (quiz.isPresent()) {
-            QuestionModel question = quiz.get().getQuestionByOrdNum(ordNum);
-            quiz.get().deleteQuestion(question);
-            this.quizRepository.save(quiz.get());
-            this.questionRepository.delete(question);
-        }
-
-        return ResponseEntity.ok("question deleted");
+        return new ResponseEntity<>("Successfully deleted a question no. " + questionOrdNum + " from a quiz with id: " + quizId + ".", HttpStatus.NO_CONTENT);
     }
 
     //////  ANSWER    //////
     // TODO: check if user is an owner or an admin
-    @PostMapping("/{quizId}/questions/{ordNum}/answers")
-    public ResponseEntity addAnswerToQuestionInQuiz(@PathVariable long quizId,@PathVariable Integer ordNum, @RequestBody AnswerModel newAnswer) {
-        Optional<QuizModel> quiz = this.quizRepository.findById(quizId);
-
-        if(quiz.isEmpty()){
-            return ResponseEntity.badRequest().body("quiz ID is not valid");
-        }
-
-        QuestionModel question = quiz.get().getQuestionByOrdNum(ordNum);
-
-        if(question == null){
-            return ResponseEntity.badRequest().body("question ord num out of bounds");
-        }
-
-        this.answerRepository.save(newAnswer);
-        question.addAnswer(newAnswer);
-        this.questionRepository.save(question);
-        return ResponseEntity.ok("added answer");
-
+    @PostMapping("/{quizId}/questions/{questionOrdNum}/answers")
+    public ResponseEntity<AnswerModel> addAnswerToQuestion(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @PathVariable long quizId,
+            @PathVariable int questionOrdNum,
+            @RequestBody AnswerDto answerDto
+    ) throws QuizNotFoundException, QuestionNotFoundException, PermissionDeniedException, AnswersLimitException {
+        AnswerModel answer;
+        answer = quizService.addAnswerToQuestion(quizId, questionOrdNum, answerDto, token);
+        return new ResponseEntity<>(answer,HttpStatus.CREATED);
     }
 
-    @DeleteMapping("/questions/{questionId}/answers/{answerOrdNum}")
-    public ResponseEntity deleteAnswerFromQuestion( @PathVariable Long questionId, @PathVariable Integer answerOrdNum) {
-        Optional<QuestionModel> question = this.questionRepository.findById(questionId);
-
-        if (question.isPresent()) {
-            AnswerModel answer =  question.get().getAnswerByOrdNum(answerOrdNum);
-
-            question.get().deleteAnswer(answer);
-
-            this.questionRepository.save(question.get());
-            this.answerRepository.delete(answer);
-        }
-
-        return ResponseEntity.ok("question deleted");
+    @DeleteMapping("/{quizId}/questions/{questionOrdNum}/answers/{answerOrdNum}")
+    public ResponseEntity<String> removeAnswerFromQuestion(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @PathVariable long quizId,
+            @PathVariable int questionOrdNum,
+            @PathVariable int answerOrdNum
+    ) throws AnswerNotFoundException, QuizNotFoundException, QuestionNotFoundException, PermissionDeniedException, AnswersLimitException {
+        quizService.removeAnswerFromQuestion(quizId, questionOrdNum, answerOrdNum, token);
+        return new ResponseEntity<>("Successfully deleted an answer no. " + answerOrdNum + " from a question no. " + questionOrdNum + " from a quiz with id: " + quizId + ".", HttpStatus.NO_CONTENT);
     }
 
 

@@ -75,4 +75,15 @@ public class QuestionAndUsersAnswerModel {
     public void setQuestionOrdNum(long questionOrdNum) {
         this.questionOrdNum = questionOrdNum;
     }
+
+    @Override
+    public String toString() {
+        return "QuestionAndUsersAnswerModel{" +
+                "id=" + id +
+                ", question=" + question +
+                ", questionOrdNum=" + questionOrdNum +
+                ", answer=" + answer +
+                ", userAnswerOrdNum=" + userAnswerOrdNum +
+                '}';
+    }
 }

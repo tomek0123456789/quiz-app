@@ -1,4 +1,4 @@
-package app.Quiz.jwzpQuizappProject.exceptions;
+package app.Quiz.jwzpQuizappProject.exceptions.users;
 
 import javax.naming.AuthenticationException;
 

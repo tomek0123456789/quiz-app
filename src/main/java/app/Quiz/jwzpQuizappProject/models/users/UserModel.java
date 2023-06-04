@@ -1,6 +1,6 @@
 package app.Quiz.jwzpQuizappProject.models.users;
 
-import app.Quiz.jwzpQuizappProject.models.RoomModel;
+import app.Quiz.jwzpQuizappProject.models.rooms.RoomModel;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -15,11 +15,15 @@ import java.util.Set;
 
 // TODO add validation to match the @Valid annotation
 // TODO how to add salt etc.
+
+// TODO too much info is being returned when quiz is being added
+// consider JsonIgnore there (QuizModel.owner) or here
 @Entity
-@Table(name = "users")
+//@Table(name = "users")
 public class UserModel {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO)
+//    todo change the strategy or add a generator
     private Long id;
     @NotBlank
     private String name;
@@ -42,12 +46,13 @@ public class UserModel {
 
     // do jakich pokoi nalzy user
     @ManyToMany
-    Set<RoomModel> quizesParticipation;
+    @JsonIgnore
+    Set<RoomModel> quizzesParticipation;
 
 //    @OneToMany(mappedBy = "owner")
 //    Set<QuizModel> quizes;
 
-
+//todo add constructor to add an admin, also add time parameter (no injection to model?)
     public UserModel(@NotBlank String name, @NotBlank String email, @NonNull String password) {
         this.name = name;
         this.email = email;
@@ -145,12 +150,18 @@ public class UserModel {
         this.salt = salt;
     }
 
-    public Set<RoomModel> getQuizesParticipation() {
-        return quizesParticipation;
+    public Set<RoomModel> getQuizzesParticipation() {
+        return quizzesParticipation;
     }
 
-    public void setQuizesParticipation(Set<RoomModel> quizesParticipation) {
-        this.quizesParticipation = quizesParticipation;
+    public void setQuizzesParticipation(Set<RoomModel> quizesParticipation) {
+        this.quizzesParticipation = quizesParticipation;
+    }
+    public void addRoomParticipation(RoomModel room) {
+        quizzesParticipation.add(room);
+    }
+    public void removeRoomParticipation(RoomModel room) {
+        quizzesParticipation.remove(room);
     }
 
 //    public Set<QuizModel> getQuizes() {
@@ -165,6 +176,9 @@ public class UserModel {
 //        this.quizes.add(quiz);
 //    }
 
+    public boolean isAdmin() {
+        return roles.contains(UserRole.ADMIN);
+    }
     @Override
     public String toString() {
         return "UserModel{" +

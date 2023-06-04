@@ -22,5 +22,3 @@ services:
       - 8080
 networks:
   spring-postgres: {}
-
-#  TODO is it possible to not cache the images in between each run?

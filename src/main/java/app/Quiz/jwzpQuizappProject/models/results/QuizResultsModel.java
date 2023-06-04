@@ -1,11 +1,9 @@
 package app.Quiz.jwzpQuizappProject.models.results;
 
-import app.Quiz.jwzpQuizappProject.models.quizes.QuizModel;
+import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.micrometer.common.lang.Nullable;
 import jakarta.persistence.*;
-import org.springframework.lang.NonNull;
 
 import java.util.Set;
 
@@ -85,5 +83,17 @@ public class QuizResultsModel {
 
     public void setScore(long score) {
         this.score = score;
+    }
+
+    @Override
+    public String toString() {
+        return "QuizResultsModel{" +
+                "id=" + id +
+                ", quiz=" + quiz +
+                ", quizId=" + quizId +
+                ", questionsAndAnswers=" + questionsAndAnswers +
+                ", results=" + results +
+                ", score=" + score +
+                '}';
     }
 }
