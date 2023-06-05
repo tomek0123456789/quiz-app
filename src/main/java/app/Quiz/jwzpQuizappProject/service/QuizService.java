@@ -13,13 +13,12 @@ import app.Quiz.jwzpQuizappProject.models.questions.QuestionDto;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizDto;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
+import app.Quiz.jwzpQuizappProject.models.quizzes.QuizPatchDto;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import app.Quiz.jwzpQuizappProject.repositories.*;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 
 
 @Service
@@ -99,9 +98,37 @@ public class QuizService {
     }
 
 //    // todo finish that
-//    public QuizModel updateQuiz(QuizDto newQuiz) {
-//        var quiz = quizRepository.findByName()
-//    }
+    public QuizModel updateQuiz(QuizPatchDto quizPatchDto, String token) throws QuizNotFoundException, PermissionDeniedException, CategoryNotFoundException {
+        var user = tokenService.getUserFromToken(token);
+        var quiz = quizRepository.findById(quizPatchDto.quizId()).orElseThrow(() -> getPreparedQuizNotFoundException(quizPatchDto.quizId()));
+        if (!validateUserQuizAuthorities(user, quiz.getId())) {
+            throwPermissionDeniedException(quiz.getId());
+        }
+        //todo extract lines above to another method
+//        if (!Objects.isNull(quizPatchDto.title())) //?
+        if (quizPatchDto.title() != null) {
+            quiz.setTitle(quizPatchDto.title());
+        }
+        if (quizPatchDto.description() != null) {
+            quiz.setTitle(quizPatchDto.description());
+        }
+        if (quizPatchDto.categoryId() != null) {
+            quiz.setCategory(categoryService.getSingleCategory(quizPatchDto.categoryId()));
+        }
+        if (quizPatchDto.questions() != null) {
+            quiz.setQuestions(quizPatchDto.questions());
+        }
+        //todo maybe reflection? doesn't scale well in case more fields were added
+        quizRepository.save(quiz);
+        return quiz;
+    }
+
+    public QuizModel updateQuiz(QuizModel quiz) throws CategoryNotFoundException {
+        //validates if category exists
+        categoryService.getSingleCategory(quiz.getCategory().getId());
+        quiz.setQuestions(Collections.emptyList());
+        return quizRepository.save(quiz);
+    }
 
     public void deleteQuiz(long quizId, String token) throws PermissionDeniedException, QuizNotFoundException {
         // todo validate if user sending the request is the actual user or an admin

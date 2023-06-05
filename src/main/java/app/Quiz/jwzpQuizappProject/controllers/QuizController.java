@@ -13,10 +13,12 @@ import app.Quiz.jwzpQuizappProject.models.questions.QuestionDto;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizDto;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
+import app.Quiz.jwzpQuizappProject.models.quizzes.QuizPatchDto;
 import app.Quiz.jwzpQuizappProject.service.QuizService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -74,9 +76,24 @@ public class QuizController {
 
     // TODO: check if user is an owner or an admin
     @PutMapping
-    public ResponseEntity<HttpStatus> updateQuiz(@RequestBody QuizModel quiz) {
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public QuizModel updateQuiz(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @RequestBody QuizModel quiz
+    ) throws CategoryNotFoundException {
+        //technically we don't need to validate token here, because of the @PreAuthorize annotation
+        //so i guess we skip it?
+        return quizService.updateQuiz(quiz);
     }
+
+    @PatchMapping
+    public QuizModel patchQuiz(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @RequestBody QuizPatchDto quizPatchDto
+    ) throws QuizNotFoundException, CategoryNotFoundException, PermissionDeniedException {
+        return quizService.updateQuiz(quizPatchDto, token);
+    }
+
 
 //    ----------------------TODO-------------------------------------
 
@@ -118,6 +135,7 @@ public class QuizController {
         return new ResponseEntity<>(answer,HttpStatus.CREATED);
     }
 
+    // todo maybe patch?
     @DeleteMapping("/{quizId}/questions/{questionOrdNum}/answers/{answerOrdNum}")
     public ResponseEntity<String> removeAnswerFromQuestion(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
