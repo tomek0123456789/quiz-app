@@ -92,11 +92,8 @@ public class QuizService {
     public QuizModel addQuiz(QuizDto quizDto, String token) throws CategoryNotFoundException {
         UserModel user = tokenService.getUserFromToken(token);
         var category = categoryService.getSingleCategory(quizDto.categoryId());
-        if (category.isEmpty()) {
-            throw new CategoryNotFoundException("Category with id: " + quizDto.categoryId() + " was not found.");
-        }
         // TODO: validate is category exists (do it here or somwhere else?
-        QuizModel quizModel = new QuizModel(user, quizDto.name(), quizDto.description(), category.get(), timeService.getCurrentTime());
+        QuizModel quizModel = new QuizModel(user, quizDto.name(), quizDto.description(), category, timeService.getCurrentTime());
         quizRepository.save(quizModel);
         return quizModel;
     }
