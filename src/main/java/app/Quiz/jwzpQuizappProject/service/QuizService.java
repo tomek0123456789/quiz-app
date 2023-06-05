@@ -62,15 +62,6 @@ public class QuizService {
     public QuizModel getSingleQuiz(Long quizId) throws QuizNotFoundException {
         return quizRepository.findById(quizId).orElseThrow(() -> getPreparedQuizNotFoundException(quizId));
     }
-
-    public List<QuizModel> getAllQuizzes() {
-        return quizRepository.findAll();
-    }
-
-    public List<QuizModel> getQuizzesWithTitleContaining(String titlePart) {
-        return quizRepository.findAllByTitleContaining(titlePart);
-    }
-
     public List<QuizModel> getQuizzesByTitleOrCategory(Optional<String> titlePart, Optional<String> categoryName) {
         List<QuizModel> quizzes;
         if (titlePart.isPresent()) {
@@ -87,6 +78,10 @@ public class QuizService {
             }
         }
         return quizzes;
+    }
+    public List<QuizModel> getUserQuizzes(String token){
+        var user = tokenService.getUserFromToken(token);
+        return quizRepository.findAllByOwner(user);
     }
     public QuizModel addQuiz(QuizDto quizDto, String token) throws CategoryNotFoundException {
         UserModel user = tokenService.getUserFromToken(token);
@@ -145,10 +140,9 @@ public class QuizService {
 
     // maybe in QuestionService?
     public QuestionModel addQuestionToQuiz(long quizId, QuestionDto questionDto, String token) throws PermissionDeniedException, QuestionsLimitException, QuizNotFoundException {
-        // implement question limit to a quiz
-        //
         var user = tokenService.getUserFromToken(token);
         var quiz = quizRepository.findById(quizId).orElseThrow(() -> getPreparedQuizNotFoundException(quizId));
+        //todo change the quiz ord num to auto generate or something
         var question = new QuestionModel(questionDto.content(), quiz.getQuestionsSize(), quiz.getId(), timeService.getCurrentTime());
         if (!validateUserQuizAuthorities(user, quiz.getOwnerId())) {
             throwPermissionDeniedException(quiz.getId());
@@ -245,10 +239,4 @@ public class QuizService {
         // does quiz need to be saved after deleting a question?
         answerRepository.delete(answer);
     }
-
-    public List<QuizModel> getUserQuizzes(String token){
-        var user = tokenService.getUserFromToken(token);
-        return quizRepository.findAllByOwner(user);
-    }
-
 }
