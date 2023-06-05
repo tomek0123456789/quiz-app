@@ -180,10 +180,6 @@ public class ResultsService {
 
         return resultsModel;
     }
-
-
-
-
     public ResultsModel createResultsForRoom(ResultsDto newResults,long roomId, String token) throws RoomNotFoundException, AnswerNotFoundException, QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists {
         var resultsModel = createResults(newResults, token);
         var room = roomRepository.findById(roomId).orElseThrow(() -> new RoomNotFoundException("no room with ID:" + roomId));
@@ -194,9 +190,11 @@ public class ResultsService {
         return resultsModel;
     }
 
-    public void deleteResult(ResultsModel result){
+    public void deleteSingleResult(ResultsModel result){
         this.resultsRepository.delete(result);
-
+    }
+    public void deleteAllResults(List<ResultsModel> results) {
+        resultsRepository.deleteAll(results);
     }
 
 

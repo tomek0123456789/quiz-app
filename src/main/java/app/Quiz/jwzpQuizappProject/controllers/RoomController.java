@@ -42,11 +42,11 @@ public class RoomController {
     }
 
     @GetMapping("/{roomId}")
-    public ResponseEntity<?> getSingleRoom(
+    public RoomModel getSingleRoom(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @PathVariable long roomId
     ) throws RoomNotFoundException, PermissionDeniedException {
-        return new ResponseEntity<>(roomService.getSingleRoom(roomId, token), HttpStatus.OK);
+        return roomService.getSingleRoom(roomId, token);
     }
 
     @PostMapping
@@ -69,7 +69,7 @@ public class RoomController {
     //////////////////////////////////////
 
     @DeleteMapping("/{roomId}")
-    public ResponseEntity<?> deleteRoom(
+    public ResponseEntity<String> deleteRoom(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @PathVariable long roomId
     ) throws RoomNotFoundException, PermissionDeniedException {
@@ -80,7 +80,7 @@ public class RoomController {
     ////////////////////////////////////////////////////////////////////////////
 
     @PatchMapping("/{roomId}/users/{userId}")
-    public ResponseEntity<?> addParticipantToRoom(
+    public ResponseEntity<String> addParticipantToRoom(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @PathVariable long roomId,
             @PathVariable long userId
@@ -90,7 +90,7 @@ public class RoomController {
     }
 
     @DeleteMapping("/{roomId}/users/{userId}")
-    public ResponseEntity<?> removeParticipantFromRoom(
+    public ResponseEntity<HttpStatus> removeParticipantFromRoom(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @PathVariable long roomId,
             @PathVariable long userId
@@ -100,32 +100,37 @@ public class RoomController {
     }
 
     @GetMapping("/{id}/results")
-    public ResponseEntity<?> getRoomResults( @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
-                                             @PathVariable long id) throws RoomNotFoundException, PermissionDeniedException {
-
-        List<ResultsModel> results = this.resultsService.getResultsForRoom(token, id);
-        return ResponseEntity.ok(results);
+    public List<ResultsModel> getRoomResults(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @PathVariable long id
+    ) throws RoomNotFoundException, PermissionDeniedException {
+        return resultsService.getResultsForRoom(token, id);
     }
 
     @PostMapping("/{id}/results")
-    public ResponseEntity<?> createResults(
+    public ResultsModel createResults(
             @PathVariable long id,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
-            @RequestBody ResultsDto results) throws RoomNotFoundException, AnswerNotFoundException, QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists {
-        var newResult = this.resultsService.createResultsForRoom(results,id, token);
-        return ResponseEntity.ok(newResult);
+            @RequestBody ResultsDto results
+    ) throws RoomNotFoundException, AnswerNotFoundException, QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists {
+        return resultsService.createResultsForRoom(results, id, token);
 
     }
 
-    @GetMapping()
-    public ResponseEntity<?> getAllRooms( @RequestHeader(HttpHeaders.AUTHORIZATION) String token) throws RoomNotFoundException, PermissionDeniedException {
-        var myRooms = this.roomService.getMyRooms(token);
-        return ResponseEntity.ok(myRooms);
+    @GetMapping
+    public List<RoomModel> getAllRooms(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token
+    ) {
+        return roomService.getUserRooms(token);
     }
 
     @PostMapping("/{id}/quizzes/{quizId}")
-    public ResponseEntity<?> addQuizToRoom(@RequestHeader(HttpHeaders.AUTHORIZATION) String token, @PathVariable long id, @PathVariable long quizId) throws RoomNotFoundException, QuizNotFoundException, PermissionDeniedException {
-        roomService.addQuizToRoom(token, id, quizId);
+    public ResponseEntity<?> addQuizToRoom(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @PathVariable long id,
+            @PathVariable long quizId
+    ) throws RoomNotFoundException, QuizNotFoundException, PermissionDeniedException {
+        roomService.addQuizToRoom(id, quizId, token);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

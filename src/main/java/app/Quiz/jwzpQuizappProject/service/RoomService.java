@@ -65,10 +65,9 @@ public class RoomService {
         return room;
     }
 
-    public List<RoomModel> getMyRooms(String token) throws RoomNotFoundException, PermissionDeniedException {
+    public List<RoomModel> getUserRooms (String token) {
         var user = tokenService.getUserFromToken(token);
-
-        return roomRepository.findAll().stream().filter(roomModel -> roomAuthoritiesValidator.validateUserRoomInfoAuthorities(user, roomModel)).toList();
+        return roomRepository.findAllByOwner(user);
     }
 
     public List<RoomModel> getAllRooms(String token) throws PermissionDeniedException {
@@ -100,7 +99,9 @@ public class RoomService {
             throwPermissionDeniedException(roomId);
         }
 
-        this.resultsService.getResultsForRoom(token, roomId).forEach(this.resultsService::deleteResult);
+        //todo delete everything in bulk in each delete function
+        resultsService.deleteAllResults(resultsService.getResultsForRoom(token, roomId));
+
 
         room.getQuizzes().forEach(quizModel -> {
                             quizModel.removeRoom(room);
@@ -153,7 +154,7 @@ public class RoomService {
         userRepository.save(userToRemove);
     }
 
-    public void addQuizToRoom(String token, long roomId, long quizId) throws RoomNotFoundException, QuizNotFoundException, PermissionDeniedException {
+    public void addQuizToRoom(long roomId, long quizId, String token) throws RoomNotFoundException, QuizNotFoundException, PermissionDeniedException {
         var user = tokenService.getUserFromToken(token);
         var quiz = quizRepository.findById(quizId).orElseThrow(() -> new QuizNotFoundException("quiz with id=" + quizId + "not found"));
         var room = roomRepository.findById(roomId).orElseThrow(() -> getPreparedRoomNotFoundException(roomId));
