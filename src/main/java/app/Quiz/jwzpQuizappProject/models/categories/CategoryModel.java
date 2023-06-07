@@ -10,10 +10,10 @@ public class CategoryModel {
     long id;
 
     @Column(unique = true)
-    String categoryName;
+    String name;
 
-    public CategoryModel(String categoryName) {
-        this.categoryName = categoryName;
+    public CategoryModel(String name) {
+        this.name = name;
     }
 
     protected CategoryModel() {
@@ -29,10 +29,10 @@ public class CategoryModel {
     }
 
     public String getName() {
-        return categoryName;
+        return name;
     }
 
     public void setName(String categoryName) {
-        this.categoryName = categoryName;
+        this.name = name;
     }
 }
