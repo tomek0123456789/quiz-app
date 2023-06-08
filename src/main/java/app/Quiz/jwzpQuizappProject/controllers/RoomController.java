@@ -11,6 +11,8 @@ import app.Quiz.jwzpQuizappProject.models.results.ResultsDto;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomDto;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomModel;
 import app.Quiz.jwzpQuizappProject.models.results.ResultsModel;
+import app.Quiz.jwzpQuizappProject.models.rooms.RoomPatchDto;
+import app.Quiz.jwzpQuizappProject.models.rooms.RoomPutDto;
 import app.Quiz.jwzpQuizappProject.repositories.QuizRepository;
 import app.Quiz.jwzpQuizappProject.repositories.ResultsRepository;
 import app.Quiz.jwzpQuizappProject.repositories.RoomRepository;
@@ -19,6 +21,7 @@ import app.Quiz.jwzpQuizappProject.service.RoomService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,16 +30,10 @@ import java.util.List;
 @RequestMapping("/myrooms")
 public class RoomController {
 
-    private  final RoomRepository roomRepository;
-    private final QuizRepository quizRepository;
-    private final ResultsRepository resultsRepository;
     private final ResultsService resultsService;
     private final RoomService roomService;
 
-    public RoomController(RoomRepository roomRepository, QuizRepository quizRepository, ResultsRepository resultsRepository, ResultsService resultsService, RoomService roomService) {
-        this.roomRepository = roomRepository;
-        this.quizRepository = quizRepository;
-        this.resultsRepository = resultsRepository;
+    public RoomController(ResultsService resultsService, RoomService roomService) {
         this.resultsService = resultsService;
         this.roomService = roomService;
     }
@@ -57,16 +54,25 @@ public class RoomController {
         return new ResponseEntity<>(roomService.createRoom(roomDto, token), HttpStatus.CREATED);
     }
 
-    //////////////////////////////////////
-    //todo
-    @PutMapping("/{roomId}")
-    public ResponseEntity<String> updateRoom(
-            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
-            @PathVariable long roomId
-    ) {
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+    @PutMapping()
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<RoomModel> updateRoom(    // No need for checking token since endpoint is admin only
+            @RequestBody RoomPutDto roomPutDto
+            ) throws RoomNotFoundException, PermissionDeniedException, UserNotFoundException {
+
+        var updatedRoom = roomService.updateRoom(roomPutDto);
+        return new ResponseEntity<>(updatedRoom, HttpStatus.OK);
     }
-    //////////////////////////////////////
+
+    @PatchMapping()
+    public ResponseEntity<RoomModel> updateRoom(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @RequestBody RoomPatchDto roomPatchDto
+    ) throws RoomNotFoundException, PermissionDeniedException, UserNotFoundException {
+
+        var updatedRoom = roomService.updateRoom(token,roomPatchDto);
+        return new ResponseEntity<>(updatedRoom, HttpStatus.OK);
+    }
 
     @DeleteMapping("/{roomId}")
     public ResponseEntity<String> deleteRoom(

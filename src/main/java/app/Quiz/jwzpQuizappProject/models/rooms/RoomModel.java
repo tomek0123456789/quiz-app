@@ -120,4 +120,17 @@ public class RoomModel {
 
         return maxscore;
     }
+
+    public void updateWithPutDto(RoomPutDto roomPutDto) {
+        this.roomName = roomPutDto.roomName();
+        this.startTime = roomPutDto.startTime();
+        this.endTime = roomPutDto.endTime();
+    }
+
+    public void updateWithPatchDto(RoomPatchDto roomPatchDto) {
+        this.roomName = roomPatchDto.roomName() != null ? roomPatchDto.roomName() : this.roomName;
+        this.startTime = roomPatchDto.startTime()!= null ? roomPatchDto.startTime() : this.startTime;
+        this.endTime = roomPatchDto.endTime()!= null ? roomPatchDto.endTime() : this.endTime;
+    }
+
 }
