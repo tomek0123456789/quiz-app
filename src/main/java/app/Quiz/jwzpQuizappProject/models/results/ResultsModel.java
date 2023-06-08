@@ -104,4 +104,10 @@ public class ResultsModel{
     public void setRoom(RoomModel room) {
         this.room = room;
     }
+
+    public void update(ResultsPatchDto resultsPatchDto, UserModel owner,RoomModel room){
+        this.owner = owner != null ? owner : this.owner;
+        this.room = room != null ? room : this.room;
+        this.score = resultsPatchDto.score() != null ? resultsPatchDto.score() : this.score;
+    }
 }

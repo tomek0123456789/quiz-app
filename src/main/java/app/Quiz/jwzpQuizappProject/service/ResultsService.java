@@ -11,12 +11,10 @@ import app.Quiz.jwzpQuizappProject.exceptions.rooms.RoomNotFoundException;
 import app.Quiz.jwzpQuizappProject.models.answers.AnswerModel;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
-import app.Quiz.jwzpQuizappProject.models.results.QuestionAndUsersAnswerModel;
-import app.Quiz.jwzpQuizappProject.models.results.QuizResultsModel;
-import app.Quiz.jwzpQuizappProject.models.results.ResultsDto;
-import app.Quiz.jwzpQuizappProject.models.results.ResultsModel;
+import app.Quiz.jwzpQuizappProject.models.results.*;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import app.Quiz.jwzpQuizappProject.repositories.*;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -34,8 +32,9 @@ public class ResultsService {
     final TokenService tokenService;
     final RoomAuthoritiesValidator roomAuthoritiesValidator;
     final RoomRepository roomRepository;
+    final UserRepository userRepository;
 
-    public ResultsService(QuestionRepository questionRepository, QuestionAndUsersAnswerRepository questionAndUsersAnswerRepository, QuizResultsRepository quizResultsRepository, ResultsRepository resultsRepository, QuizRepository quizRepository, AnswerRepository answerRepository, TokenService tokenService, RoomAuthoritiesValidator roomAuthoritiesValidator, RoomRepository roomRepository) {
+    public ResultsService(QuestionRepository questionRepository, QuestionAndUsersAnswerRepository questionAndUsersAnswerRepository, QuizResultsRepository quizResultsRepository, ResultsRepository resultsRepository, QuizRepository quizRepository, AnswerRepository answerRepository, TokenService tokenService, RoomAuthoritiesValidator roomAuthoritiesValidator, RoomRepository roomRepository, UserRepository userRepository) {
         this.questionRepository = questionRepository;
         this.questionAndUsersAnswerRepository = questionAndUsersAnswerRepository;
         this.quizResultsRepository = quizResultsRepository;
@@ -45,6 +44,7 @@ public class ResultsService {
         this.tokenService = tokenService;
         this.roomAuthoritiesValidator = roomAuthoritiesValidator;
         this.roomRepository = roomRepository;
+        this.userRepository = userRepository;
     }
 
     private boolean validateUserInfoResultAuthorities(UserModel user, ResultsModel resultsModel){
@@ -197,6 +197,44 @@ public class ResultsService {
     public void deleteResult(ResultsModel result){
         this.resultsRepository.delete(result);
 
+    }
+
+    public QuestionAndUsersAnswerModel updateQuestionAndUsersAnswer(QuestionAndUsersAnswerPatchDto questionAndUsersAnswerPatchDto) throws AnswerNotFoundException, QuizNotFoundException, QuestionNotFoundException {
+        var originalQuestionAndUsersAnswer = questionAndUsersAnswerRepository.findById(questionAndUsersAnswerPatchDto.id()).orElseThrow(() -> new AnswerNotFoundException("no QuestionAndUsersAnswerModel with ID:" + questionAndUsersAnswerPatchDto.id() ));
+        var quiz = quizRepository.findById(questionAndUsersAnswerPatchDto.quizId());
+
+        if(quiz.isEmpty()){
+            throw  new QuizNotFoundException("no quiz with id=" + questionAndUsersAnswerPatchDto.quizId());
+        }
+        originalQuestionAndUsersAnswer.update(questionAndUsersAnswerPatchDto, quiz.get());
+
+        questionAndUsersAnswerRepository.save(originalQuestionAndUsersAnswer);
+
+        return originalQuestionAndUsersAnswer;
+    }
+
+    public QuizResultsModel updateQuizResults(QuizResultsPatchDto quizResultsPatchDto) throws AnswerNotFoundException, QuizNotFoundException {
+        var originalQuizResults = quizResultsRepository.findById(quizResultsPatchDto.quizResultsId()).orElseThrow(() -> new AnswerNotFoundException("no QuestionAndUsersAnswerModel with ID:" + quizResultsPatchDto.quizResultsId() ));
+        var quiz = quizResultsPatchDto.quizId() != null ?
+                quizRepository.findById(quizResultsPatchDto.quizId()).orElseThrow(() -> new QuizNotFoundException("no quiz with id=" + quizResultsPatchDto.quizId()))
+                : null;
+        originalQuizResults.update(quizResultsPatchDto, quiz);
+        quizResultsRepository.save(originalQuizResults);
+        return originalQuizResults;
+    }
+
+    public ResultsModel updateResults(ResultsPatchDto resultsPatchDto) throws ResultNotFoundException, RoomNotFoundException {
+        var originalResults = resultsRepository.findById(resultsPatchDto.resultsId()).orElseThrow(() -> new ResultNotFoundException("no QuestionAndUsersAnswerModel with ID:" + resultsPatchDto.resultsId() ));
+        var room = resultsPatchDto.roomId() != null ?
+                roomRepository.findById(resultsPatchDto.roomId()).orElseThrow(() -> new RoomNotFoundException("no room with id=" + resultsPatchDto.roomId()))
+                : null;
+        var owner = resultsPatchDto.ownerId() != null ?
+                userRepository.findById(resultsPatchDto.ownerId()).orElseThrow(() -> new UsernameNotFoundException("no user with id=" + resultsPatchDto.roomId()))
+                : null;
+
+        originalResults.update(resultsPatchDto, owner, room);
+        resultsRepository.save(originalResults);
+        return originalResults;
     }
 
 

@@ -85,6 +85,12 @@ public class QuizResultsModel {
         this.score = score;
     }
 
+    public void update(QuizResultsPatchDto quizResultsPatchDto, QuizModel quizModel){
+        this.quizId = quizResultsPatchDto.quizId() != null ? quizResultsPatchDto.quizId() : this.quizId;
+        this.quiz = quizModel != null ? quizModel : this.quiz;
+        this.score = quizResultsPatchDto.score() != null ? quizResultsPatchDto.score() : this.score;
+    }
+
     @Override
     public String toString() {
         return "QuizResultsModel{" +
