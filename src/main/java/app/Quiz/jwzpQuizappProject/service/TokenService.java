@@ -26,7 +26,7 @@ public class TokenService {
         this.userRepository = userRepository;
     }
 
-    public String generateToken(Authentication authentication) {
+    public String generateToken(Authentication authentication, long timeAmount, String timeUnit) {
         Instant now = Instant.now();
         String scope = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -34,7 +34,7 @@ public class TokenService {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("self")
                 .issuedAt(now)
-                .expiresAt(now.plus(10, ChronoUnit.HOURS))
+                .expiresAt(now.plus(timeAmount, ChronoUnit.valueOf(timeUnit)))
                 .subject(authentication.getName())
                 .claim("scope", scope)
                 .build();
