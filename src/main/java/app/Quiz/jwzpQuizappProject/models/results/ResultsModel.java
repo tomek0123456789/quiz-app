@@ -3,6 +3,7 @@ package app.Quiz.jwzpQuizappProject.models.results;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.micrometer.common.lang.Nullable;
 import jakarta.persistence.*;
@@ -19,7 +20,7 @@ public class ResultsModel{
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
-    @ManyToMany
+    @OneToMany
     private Set<QuizResultsModel> quizzesResults;
 
     @ManyToOne
@@ -55,6 +56,10 @@ public class ResultsModel{
 
     public Set<QuizResultsModel> getQuizzesResults() {
         return quizzesResults;
+    }
+
+    public void removeQuizResults(QuizResultsModel quizResults) {
+        quizzesResults.remove(quizResults);
     }
 
     public void setQuizzesResults(Set<QuizResultsModel> quizesResults) {

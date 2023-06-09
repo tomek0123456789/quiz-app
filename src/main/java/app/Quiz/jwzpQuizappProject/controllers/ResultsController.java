@@ -6,9 +6,8 @@ import app.Quiz.jwzpQuizappProject.exceptions.auth.PermissionDeniedException;
 import app.Quiz.jwzpQuizappProject.exceptions.questions.QuestionNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.quizzes.QuizNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.results.ResultNotFoundException;
-import app.Quiz.jwzpQuizappProject.models.results.QuizResultsModel;
-import app.Quiz.jwzpQuizappProject.models.results.ResultsDto;
-import app.Quiz.jwzpQuizappProject.models.results.ResultsModel;
+import app.Quiz.jwzpQuizappProject.exceptions.rooms.RoomNotFoundException;
+import app.Quiz.jwzpQuizappProject.models.results.*;
 import app.Quiz.jwzpQuizappProject.repositories.*;
 import app.Quiz.jwzpQuizappProject.service.ResultsService;
 import org.springframework.http.HttpHeaders;
@@ -67,5 +66,47 @@ public class ResultsController {
     public ResponseEntity<?> createResults(@RequestHeader(HttpHeaders.AUTHORIZATION) String token,
                                         @RequestBody ResultsDto results) throws AnswerNotFoundException, QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists {
         return ResponseEntity.ok( this.resultsService.createResults(results, token));
+    }
+
+    @PatchMapping
+    public ResponseEntity<?> updateQaa(@RequestBody QuestionAndUsersAnswerPatchDto questionAndUsersAnswerPatchDto) throws AnswerNotFoundException, QuizNotFoundException, QuestionNotFoundException {
+        this.resultsService.updateQuestionAndUsersAnswer(questionAndUsersAnswerPatchDto);
+        return ResponseEntity.ok("");
+    }
+
+    @PatchMapping
+    public ResponseEntity<?> updateQuizResults(@RequestBody QuizResultsPatchDto quizResultsPatchDto) throws AnswerNotFoundException, QuizNotFoundException, QuestionNotFoundException {
+        this.resultsService.updateQuizResults(quizResultsPatchDto);
+        return ResponseEntity.ok("");
+    }
+
+    @PatchMapping
+    public ResponseEntity<?> updateResults(@RequestBody ResultsPatchDto resultsPatchDto) throws RoomNotFoundException, ResultNotFoundException {
+        this.resultsService.updateResults(resultsPatchDto);
+        return ResponseEntity.ok("");
+    }
+
+    //TODO: admin only
+    //tested: works
+    @DeleteMapping("/quizresults/{quizResultsId}/qaa/{qaaId}")
+    public ResponseEntity<?> deleteQuestionAndAnswer(@PathVariable long quizResultsId,
+                                                  @PathVariable long qaaId) throws AnswerNotFoundException {
+        this.resultsService.deleteQuestionAndAnswer(qaaId, quizResultsId);
+        return ResponseEntity.ok("");
+    }
+
+    @DeleteMapping("/{resultsId}/quizresults/{quizResultsId}")
+    public ResponseEntity<?> deleteQuizResults(@PathVariable long resultsId,
+                                                     @PathVariable long quizResultsId
+    ) throws AnswerNotFoundException, ResultNotFoundException {
+        this.resultsService.deleteQuizResults(quizResultsId,resultsId);
+        return ResponseEntity.ok("");
+    }
+
+    @DeleteMapping("/{resultsId}")
+    public ResponseEntity<?> deleteResults(@PathVariable long resultsId
+    ) throws ResultNotFoundException {
+        this.resultsService.deleteResults(resultsId);
+        return ResponseEntity.ok("");
     }
 }

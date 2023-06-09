@@ -47,6 +47,15 @@ public class ResultsService {
         this.userRepository = userRepository;
     }
 
+    private QuizResultsModel getQuizResultsWithId(long id) throws AnswerNotFoundException {
+        return quizResultsRepository.findById(id).orElseThrow(() -> new AnswerNotFoundException("no quizResults with ID:" + id ));
+    }
+
+    private ResultsModel getResultsWithId(long id) throws ResultNotFoundException {
+        return resultsRepository.findById(id).orElseThrow(() -> new ResultNotFoundException("no QuestionAndUsersAnswerModel with ID:" + id ));
+
+    }
+
     private boolean validateUserInfoResultAuthorities(UserModel user, ResultsModel resultsModel){
         return user.isAdmin() || resultsModel.getOwner() == user;
     }
@@ -214,7 +223,7 @@ public class ResultsService {
     }
 
     public QuizResultsModel updateQuizResults(QuizResultsPatchDto quizResultsPatchDto) throws AnswerNotFoundException, QuizNotFoundException {
-        var originalQuizResults = quizResultsRepository.findById(quizResultsPatchDto.quizResultsId()).orElseThrow(() -> new AnswerNotFoundException("no QuestionAndUsersAnswerModel with ID:" + quizResultsPatchDto.quizResultsId() ));
+        var originalQuizResults = getQuizResultsWithId(quizResultsPatchDto.quizResultsId());
         var quiz = quizResultsPatchDto.quizId() != null ?
                 quizRepository.findById(quizResultsPatchDto.quizId()).orElseThrow(() -> new QuizNotFoundException("no quiz with id=" + quizResultsPatchDto.quizId()))
                 : null;
@@ -235,6 +244,34 @@ public class ResultsService {
         originalResults.update(resultsPatchDto, owner, room);
         resultsRepository.save(originalResults);
         return originalResults;
+    }
+
+    public void deleteQuestionAndAnswer(long qaaId, long quizResultsId) throws AnswerNotFoundException {
+        var qaa = questionAndUsersAnswerRepository.findById(qaaId).orElseThrow(() -> new AnswerNotFoundException("no QuestionAndUsersAnswerModel with ID:" + qaaId ));
+        var quizResults = getQuizResultsWithId(quizResultsId);
+
+        quizResults.deleteQuestionsAndAnswers(qaa);
+        questionAndUsersAnswerRepository.delete(qaa);
+
+        quizResultsRepository.save(quizResults);
+    }
+
+    public void deleteQuizResults(long quizResultsId, long resultsId) throws AnswerNotFoundException, ResultNotFoundException {
+        var quizResults = getQuizResultsWithId(quizResultsId);
+        // qaas are deleted on cascade
+        var results = getResultsWithId(resultsId);
+        results.removeQuizResults(quizResults);
+        resultsRepository.save(results);
+        quizResults.setQuiz(null);
+        quizResultsRepository.delete(quizResults);
+    }
+
+    public void deleteResults(long resultsId) throws ResultNotFoundException {
+        var results = getResultsWithId(resultsId);
+        results.setOwner(null);
+        results.setRoom(null);
+
+        resultsRepository.delete(results);
     }
 
 

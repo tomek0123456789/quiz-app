@@ -21,12 +21,12 @@ public class QuizResultsModel {
     @JsonProperty("quizId")
     long quizId;
 
-    @OneToMany
+    @OneToMany(orphanRemoval = true, cascade = CascadeType.PERSIST)
     Set<QuestionAndUsersAnswerModel> questionsAndAnswers;
 
-    @ManyToMany
-    @JsonIgnore
-    Set<ResultsModel> results;
+//    @ManyToMany
+//    @JsonIgnore
+//    Set<ResultsModel> results;
 
     long score;
 
@@ -57,6 +57,10 @@ public class QuizResultsModel {
         this.questionsAndAnswers = questionsAndAnswers;
     }
 
+    public void deleteQuestionsAndAnswers(QuestionAndUsersAnswerModel qaa){
+        this.questionsAndAnswers.remove(qaa);
+    }
+
     public void addQAA(QuestionAndUsersAnswerModel qaa){
         this.questionsAndAnswers.add(qaa);
     }
@@ -69,13 +73,13 @@ public class QuizResultsModel {
         this.quizId = quizId;
     }
 
-    public Set<ResultsModel> getResults() {
-        return results;
-    }
-
-    public void setResults(Set<ResultsModel> results) {
-        this.results = results;
-    }
+//    public Set<ResultsModel> getResults() {
+//        return results;
+//    }
+//
+//    public void setResults(Set<ResultsModel> results) {
+//        this.results = results;
+//    }
 
     public long getScore() {
         return score;
@@ -98,7 +102,7 @@ public class QuizResultsModel {
                 ", quiz=" + quiz +
                 ", quizId=" + quizId +
                 ", questionsAndAnswers=" + questionsAndAnswers +
-                ", results=" + results +
+//                ", results=" + results +
                 ", score=" + score +
                 '}';
     }
