@@ -67,36 +67,25 @@ public class QuizController {
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @PathVariable long quizId
     ) throws QuizNotFoundException, PermissionDeniedException {
-        // todo validate if user sending the request is the actual user
         quizService.deleteQuiz(quizId, token);
         return new ResponseEntity<>("Successfully deleted a quiz with id: " + quizId + ".", HttpStatus.NO_CONTENT);
     }
-
-//    ----------------------TODO-------------------------------------
-
-    // TODO: check if user is an owner or an admin
     @PutMapping
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public QuizModel updateQuiz(
-            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @RequestBody QuizModel quiz
     ) throws CategoryNotFoundException {
-        //technically we don't need to validate token here, because of the @PreAuthorize annotation
-        //so i guess we skip it?
         return quizService.updateQuiz(quiz);
     }
 
-    @PatchMapping
+    @PatchMapping("/{quizId}")
     public QuizModel patchQuiz(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @PathVariable long quizId,
             @RequestBody QuizPatchDto quizPatchDto
     ) throws QuizNotFoundException, CategoryNotFoundException, PermissionDeniedException {
-        return quizService.updateQuiz(quizPatchDto, token);
+        return quizService.updateQuiz(quizId, quizPatchDto, token);
     }
-
-
-//    ----------------------TODO-------------------------------------
-
 
     //////  QUESTION    //////
 

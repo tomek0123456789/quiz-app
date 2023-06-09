@@ -3,6 +3,7 @@ package app.Quiz.jwzpQuizappProject.models.categories;
 import jakarta.persistence.*;
 
 @Entity
+@Table
 public class CategoryModel {
 
     @Id
@@ -33,6 +34,6 @@ public class CategoryModel {
     }
 
     public void setName(String categoryName) {
-        this.name = name;
+        this.name = categoryName;
     }
 }

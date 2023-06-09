@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Set;
 
 @Entity
+@Table(name = "rooms")
 public class RoomModel {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -21,8 +22,7 @@ public class RoomModel {
     @ManyToOne
     UserModel owner;
     Instant startTime;
-//    @Future //ASK todo
-    Instant endTime; // TODO ask majkel
+    Instant endTime;
 
     @ManyToMany(fetch = FetchType.LAZY,  cascade = {
             CascadeType.PERSIST,

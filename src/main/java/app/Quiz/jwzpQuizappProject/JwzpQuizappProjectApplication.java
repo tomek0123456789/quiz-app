@@ -1,7 +1,9 @@
 package app.Quiz.jwzpQuizappProject;
 
 import app.Quiz.jwzpQuizappProject.config.RsaKeyProperties;
+import app.Quiz.jwzpQuizappProject.models.categories.CategoryModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
+import app.Quiz.jwzpQuizappProject.repositories.CategoryRepository;
 import app.Quiz.jwzpQuizappProject.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
@@ -14,8 +16,9 @@ import org.springframework.context.annotation.Bean;
 @EnableConfigurationProperties(RsaKeyProperties.class)
 public class JwzpQuizappProjectApplication {
 
-	public JwzpQuizappProjectApplication(UserRepository userRepository, @Value("${app.debug}") boolean debug) {
+	public JwzpQuizappProjectApplication(UserRepository userRepository, CategoryRepository categoryRepository, @Value("${app.debug}") boolean debug) {
 		this.userRepository = userRepository;
+		this.categoryRepository = categoryRepository;
 		DEBUG = debug;
 	}
 
@@ -24,6 +27,7 @@ public class JwzpQuizappProjectApplication {
 	}
 
 	private final UserRepository userRepository;
+	private final CategoryRepository categoryRepository;
 
 	private final boolean DEBUG;
 
@@ -31,9 +35,11 @@ public class JwzpQuizappProjectApplication {
 	public CommandLineRunner cli() {
 		return args -> {
 			if (DEBUG) {
-				var user = new UserModel();
-				System.out.println(user.getPassword());
-				userRepository.save(user);
+				if (userRepository.findByEmail("admin@admin.com").isEmpty()) {
+					var user = new UserModel();
+					userRepository.save(user);
+					categoryRepository.save(new CategoryModel("Art"));
+				}
 			}
 		};
 	}

@@ -11,6 +11,7 @@ import app.Quiz.jwzpQuizappProject.models.answers.AnswerDto;
 import app.Quiz.jwzpQuizappProject.models.answers.AnswerModel;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionDto;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
+import app.Quiz.jwzpQuizappProject.models.questions.QuestionStatus;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizDto;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizPatchDto;
@@ -31,6 +32,7 @@ public class QuizService {
     private final TokenService tokenService;
 
     private final int QUESTIONS_LIMIT = 50;
+    private final int VALID_QUESTION_LIMIT = 2;
     private final int ANSWERS_LIMIT = 4;
 
     public QuizService(AnswerRepository answerRepository, QuestionRepository questionRepository, QuizRepository quizRepository, CategoryService categoryService, TimeService timeService, TokenService tokenService) {
@@ -55,6 +57,17 @@ public class QuizService {
 
     private QuizNotFoundException getPreparedQuizNotFoundException(long quizId) {
         return new QuizNotFoundException("Quiz with id: " + quizId + " was not found.");
+    }
+
+    // this method does two things: validates and returns a quiz
+    // because there's no reason to query db twice just to get a quiz again in any other method
+    private QuizModel validateUserAgainstQuiz(String token, long quizId) throws QuizNotFoundException, PermissionDeniedException {
+        var user = tokenService.getUserFromToken(token);
+        var quiz = quizRepository.findById(quizId).orElseThrow(() -> getPreparedQuizNotFoundException(quizId));
+        if (!validateUserQuizAuthorities(user, quiz.getId())) {
+            throwPermissionDeniedException(quiz.getId());
+        }
+        return quiz;
     }
 
     ////////////////////////
@@ -86,19 +99,18 @@ public class QuizService {
     public QuizModel addQuiz(QuizDto quizDto, String token) throws CategoryNotFoundException {
         UserModel user = tokenService.getUserFromToken(token);
         var category = categoryService.getSingleCategory(quizDto.categoryId());
-        // TODO: validate is category exists (do it here or somwhere else?
-        QuizModel quizModel = new QuizModel(user, quizDto.name(), quizDto.description(), category, timeService.getCurrentTime());
+        QuizModel quizModel = new QuizModel(quizDto.name(), quizDto.description(), user, category, timeService.getCurrentTime());
         quizRepository.save(quizModel);
         return quizModel;
     }
 
-//    // todo finish that
-    public QuizModel updateQuiz(QuizPatchDto quizPatchDto, String token) throws QuizNotFoundException, PermissionDeniedException, CategoryNotFoundException {
-        var user = tokenService.getUserFromToken(token);
-        var quiz = quizRepository.findById(quizPatchDto.quizId()).orElseThrow(() -> getPreparedQuizNotFoundException(quizPatchDto.quizId()));
-        if (!validateUserQuizAuthorities(user, quiz.getId())) {
-            throwPermissionDeniedException(quiz.getId());
-        }
+    public QuizModel updateQuiz(long quizId, QuizPatchDto quizPatchDto, String token) throws QuizNotFoundException, PermissionDeniedException, CategoryNotFoundException {
+//        var user = tokenService.getUserFromToken(token);
+//        var quiz = quizRepository.findById(quizPatchDto.quizId()).orElseThrow(() -> getPreparedQuizNotFoundException(quizPatchDto.quizId()));
+//        if (!validateUserQuizAuthorities(user, quiz.getId())) {
+//            throwPermissionDeniedException(quiz.getId());
+//        }
+        var quiz = validateUserAgainstQuiz(token, quizId);
         //todo extract lines above to another method
 //        if (!Objects.isNull(quizPatchDto.title())) //?
         if (quizPatchDto.title() != null) {
@@ -111,7 +123,20 @@ public class QuizService {
             quiz.setCategory(categoryService.getSingleCategory(quizPatchDto.categoryId()));
         }
         if (quizPatchDto.questions() != null) {
+            // save new questions
+            var newQuestions = new ArrayList<>(quizPatchDto.questions());
+            newQuestions.removeAll(quiz.getQuestions());
+            // retain all questions to delete
+            quiz.getQuestions().removeAll(quizPatchDto.questions());
+            answerRepository.deleteAll(quiz.getQuestions().stream().flatMap((it) -> it.getAnswers().stream()).toList());
+            questionRepository.deleteAll(quiz.getQuestions());
+            // set new questions
             quiz.setQuestions(quizPatchDto.questions());
+            // save new questions and answers
+            questionRepository.saveAll(newQuestions);
+            answerRepository.saveAll(newQuestions.stream().flatMap(questionModel -> questionModel.getAnswers().stream()).toList());
+
+            //or would it be better to simply delete all and add all?
         }
         //todo maybe reflection? doesn't scale well in case more fields were added
         quizRepository.save(quiz);
@@ -119,57 +144,53 @@ public class QuizService {
     }
 
     public QuizModel updateQuiz(QuizModel quiz) throws CategoryNotFoundException {
-        //validates if category exists
+        // validate if category exists
         categoryService.getSingleCategory(quiz.getCategory().getId());
         quiz.setQuestions(Collections.emptyList());
         return quizRepository.save(quiz);
     }
 
     public void deleteQuiz(long quizId, String token) throws PermissionDeniedException, QuizNotFoundException {
-        // todo validate if user sending the request is the actual user or an admin
-        var user = tokenService.getUserFromToken(token);
-        var quizToDelete = quizRepository.findById(quizId).orElseThrow(() -> getPreparedQuizNotFoundException(quizId));
-        if (!validateUserQuizAuthorities(user, quizToDelete.getOwnerId())) {
-            throwPermissionDeniedException(quizToDelete.getId());
-        }
-        quizRepository.delete(quizToDelete);
-        // todo remove questions and answers from the quiz
+//        var quizToDelete = validateUserAgainstQuiz(token, quizId);
+//        answerRepository.deleteAll(
+//                quizToDelete.getQuestions()
+//                    .stream()
+//                    .flatMap(questionModel -> questionModel.getAnswers().stream())
+//                    .toList()
+//        );
+//        questionRepository.deleteAll(quizToDelete.getQuestions());
+//        quizRepository.delete(quizToDelete);
+        quizRepository.delete(validateUserAgainstQuiz(token, quizId));
     }
 
     // questions
 
     // maybe in QuestionService?
     public QuestionModel addQuestionToQuiz(long quizId, QuestionDto questionDto, String token) throws PermissionDeniedException, QuestionsLimitException, QuizNotFoundException {
-        var user = tokenService.getUserFromToken(token);
-        var quiz = quizRepository.findById(quizId).orElseThrow(() -> getPreparedQuizNotFoundException(quizId));
+//        var user = tokenService.getUserFromToken(token);
+//        var quiz = quizRepository.findById(quizId).orElseThrow(() -> getPreparedQuizNotFoundException(quizId));
         //todo change the quiz ord num to auto generate or something
-        var question = new QuestionModel(questionDto.content(), quiz.getQuestionsSize(), quiz.getId(), timeService.getCurrentTime());
-        if (!validateUserQuizAuthorities(user, quiz.getOwnerId())) {
-            throwPermissionDeniedException(quiz.getId());
-        }
-        // == or >=?
-        if (quiz.getQuestionsSize() >= QUESTIONS_LIMIT) {
+//        if (!validateUserQuizAuthorities(user, quiz.getOwnerId())) {
+//            throwPermissionDeniedException(quiz.getId());
+//        }
+        var quiz = validateUserAgainstQuiz(token, quizId);
+        var question = new QuestionModel(quiz.nextQuestionOrdinalNumber(), questionDto.content(), timeService.getCurrentTime(), quiz.getId());
+        if (quiz.questionsSize() >= QUESTIONS_LIMIT) {
             throw new QuestionsLimitException("A quiz cannot have more than 50 questions");
         }
-        //todo add question duplicate check
+        //todo add question duplicate check - now i think it isn't necessary?
         questionRepository.save(question);
-        //todo remove that with update
         quiz.addQuestion(question);
         quizRepository.save(quiz);
         return question;
-        // is it automatically added because of the annotation?
     }
 
     public void removeQuestionFromQuiz(long quizId, int questionOrdinalNumber, String token) throws PermissionDeniedException, QuestionsLimitException, QuizNotFoundException, QuestionNotFoundException {
-        var user = tokenService.getUserFromToken(token);
-        var quiz = quizRepository.findById(quizId).orElseThrow(() -> getPreparedQuizNotFoundException(quizId));
-        if (!validateUserQuizAuthorities(user, quiz.getOwnerId())) {
-            throwPermissionDeniedException(quiz.getId());
-        }
-        var quizQuestionsSize = quiz.getQuestionsSize();
-        // is it necessary since quiz.removeQuestion throws when it doesn't find a valid quiz?
-        // the message is more informative than just not found
-        // if so, add to removeAnswerFromQuestion
+        var quiz = validateUserAgainstQuiz(token, quizId);
+        var quizQuestionsSize = quiz.questionsSize();
+        // todo is it necessary since quiz.removeQuestion throws when it doesn't find a valid quiz?
+        //  the message is more informative than just not found
+        //  if so, add to removeAnswerFromQuestion
         if (questionOrdinalNumber > quizQuestionsSize) {
             throw new QuestionsLimitException("You tried to delete question no. " + questionOrdinalNumber + ", but this quiz has only " + quizQuestionsSize + " questions.");
         }
@@ -179,64 +200,63 @@ public class QuizService {
         } catch (NoSuchElementException e) {
             throw new QuestionNotFoundException("Question with ordinal number: " + questionOrdinalNumber + "  was not found in quiz with id: " + quizId + ".");
         }
-        // does quiz need to be saved after deleting a question?
-        // does order of deletions matter here, will it crash?
-        questionRepository.delete(question); // or questionService.deleteQuestion(question) | questionService.deleteQuestionWithId(questionId.getId())
-//        TODO uncomment line below after implementing answerService
-//        answerService.removeQuizAnswers(question.getAnswers());
-        answerRepository.deleteAll(question.getAnswers());
+        questionRepository.delete(question);
     }
 
     // answers
 
     public AnswerModel addAnswerToQuestion(long quizId, int questionOrdinalNumber, AnswerDto answerDto, String token) throws PermissionDeniedException, QuizNotFoundException, AnswersLimitException, QuestionNotFoundException {
-        var user = tokenService.getUserFromToken(token);
-        var quiz = quizRepository.findById(quizId).orElseThrow(() -> getPreparedQuizNotFoundException(quizId));
-        if (!validateUserQuizAuthorities(user, quiz.getOwnerId())) {
-            throwPermissionDeniedException(quiz.getId());
-        }
+//        var user = tokenService.getUserFromToken(token);
+//        var quiz = quizRepository.findById(quizId).orElseThrow(() -> getPreparedQuizNotFoundException(quizId));
+//        if (!validateUserQuizAuthorities(user, quiz.getOwnerId())) {
+//            throwPermissionDeniedException(quiz.getId());
+//        }
+        var quiz = validateUserAgainstQuiz(token, quizId);
         QuestionModel question;
         try {
-            question = quiz.removeQuestion(questionOrdinalNumber);
+            question = quiz.getSingleQuestionByOrdNum(questionOrdinalNumber);
         } catch (QuestionNotFoundException e) {
             // stinky, can you change exception message without throwing another exception?
             throw new QuestionNotFoundException("Question with ordinal number: " + questionOrdinalNumber + "  was not found in quiz with id: " + quizId + ".");
         }
-        // == or >=?
-        if (question.getAnswersSize() >= ANSWERS_LIMIT) {
+        if (question.answersSize() >= ANSWERS_LIMIT) {
             throw new AnswersLimitException("A question cannot have more than 4 answers.");
         }
-        var answer = new AnswerModel(answerDto.text(), answerDto.score(), question.getAnswersSize(), timeService.getCurrentTime());
-        // does quiz need to be saved after deleting a question?    // u mean adding a question?
+
+        var answer = new AnswerModel(question.nextAnswerOrdinalNumber(), answerDto.text(), answerDto.score(), timeService.getCurrentTime(), question.getId());
         answerRepository.save(answer);
         question.addAnswer(answer);
-        questionRepository.save(question);      // without it it doesnt work
+        if (question.answersSize() >= VALID_QUESTION_LIMIT) {
+            question.setQuestionStatus(QuestionStatus.VALID);
+        }
+        questionRepository.save(question);
         return answer;
     }
 
     public void removeAnswerFromQuestion(long quizId, int questionOrdinalNumber, int answerOrdinalNumber, String token) throws QuizNotFoundException, PermissionDeniedException, QuestionNotFoundException, AnswerNotFoundException, AnswersLimitException {
-        var user = tokenService.getUserFromToken(token);
-        var quiz = quizRepository.findById(quizId).orElseThrow(() -> getPreparedQuizNotFoundException(quizId));
-        if (!validateUserQuizAuthorities(user, quiz.getOwnerId())) {
-            throwPermissionDeniedException(quiz.getId());
-        }
+//        var user = tokenService.getUserFromToken(token);
+//        var quiz = quizRepository.findById(quizId).orElseThrow(() -> getPreparedQuizNotFoundException(quizId));
+//        if (!validateUserQuizAuthorities(user, quiz.getOwnerId())) {
+//            throwPermissionDeniedException(quiz.getId());
+//        }
+        var quiz = validateUserAgainstQuiz(token, quizId);
         QuestionModel question;
         AnswerModel answer;
         try {
             question = quiz.getSingleQuestionByOrdNum(questionOrdinalNumber);
             answer = question.getSingleAnswerByOrdNum(answerOrdinalNumber);
         } catch (QuestionNotFoundException e) {
-            throw new QuestionNotFoundException("Question with ordinal number: " + questionOrdinalNumber + "  was not found in quiz with id: " + quizId + ".");
+            throw new QuestionNotFoundException("Question with ordinal number: " + questionOrdinalNumber + " was not found in quiz with id: " + quizId + ".");
         } catch (AnswerNotFoundException e) {
             throw new AnswerNotFoundException("Answer with ordinal number: " + answerOrdinalNumber + " in question with ordinal number: " + questionOrdinalNumber + " in quiz with id: " + quizId + " was not found.");
         }
-
-        if(question.getAnswersSize() <=2){
-            throw new AnswersLimitException("A question cannot have less than 2 answers.");
+        if (question.answersSize() < VALID_QUESTION_LIMIT) {
+            question.setQuestionStatus(QuestionStatus.INVALID);
+//            throw new AnswersLimitException("A question cannot have less than 2 answers.");
         }
 
         question.removeAnswer(answer);
-        // does quiz need to be saved after deleting a question?
         answerRepository.delete(answer);
+        questionRepository.save(question); // does quiz need to be saved after deleting a question?
     }
 }

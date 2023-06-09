@@ -19,17 +19,19 @@ import java.util.Set;
 // TODO too much info is being returned when quiz is being added
 // consider JsonIgnore there (QuizModel.owner) or here
 @Entity
-//@Table(name = "users")
+@Table(name = "users")
 public class UserModel {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
 //    todo change the strategy or add a generator
     private Long id;
     @NotBlank
+    @Column(unique = true)
     private String name;
     @NotBlank
     @Email
 //  does this need @Email validation when RegisterRequest has it already?
+    @Column(unique = true)
     String email;
     @NonNull
     LocalDateTime createdAt;
@@ -77,12 +79,12 @@ public class UserModel {
     }
 
     public UserModel() {
-        this.name = "example_name";
-        this.email = "example@email.pl";
+        this.name = "admin";
+        this.email = "admin@admin.com";
         this.createdAt = LocalDateTime.now();
         this.status = UserStatus.ACTIVE;
-        this.roles = List.of(UserRole.USER);
-        this.password = new BCryptPasswordEncoder().encode("password123");;
+        this.roles = List.of(UserRole.USER, UserRole.ADMIN);
+        this.password = new BCryptPasswordEncoder().encode("admin");;
         this.salt = "123salt!!";
     }
 

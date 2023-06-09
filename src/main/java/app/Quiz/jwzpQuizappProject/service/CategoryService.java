@@ -18,7 +18,7 @@ public class CategoryService {
     }
 
     public CategoryModel getSingleCategory(long categoryId) throws CategoryNotFoundException {
-        return categoryRepository.findById(categoryId).orElseThrow(() -> new CategoryNotFoundException("Category with id:" + categoryId + " was not found."));
+        return categoryRepository.findById(categoryId).orElseThrow(() -> new CategoryNotFoundException("Category with id: " + categoryId + " was not found."));
     }
 
     public List<CategoryModel> getAllCategories() {

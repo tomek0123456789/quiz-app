@@ -7,6 +7,8 @@ import app.Quiz.jwzpQuizappProject.models.rooms.RoomModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.lang.NonNull;
 
 import java.time.Instant;
@@ -15,6 +17,7 @@ import java.util.List;
 import java.util.Set;
 
 @Entity
+@Table(name = "quizzes")
 public class QuizModel {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -29,6 +32,7 @@ public class QuizModel {
     private UserModel owner;
     @OneToMany(mappedBy = "quizId")
     @OrderBy("ordNum ASC")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private List<QuestionModel> questions;
     @NonNull
     Instant createdAt;
@@ -44,7 +48,7 @@ public class QuizModel {
     @JsonIgnore //to prevent infinite recursion
     Set<RoomModel> rooms;
 
-    public QuizModel(UserModel owner, @NonNull String title, @NonNull String description, CategoryModel category, Instant createdAt) {
+    public QuizModel(@NonNull String title, @NonNull String description, UserModel owner, CategoryModel category, Instant createdAt) {
         this.title = title;
         this.description = description;
         this.owner = owner;
@@ -102,8 +106,11 @@ public class QuizModel {
     public List<QuestionModel> getQuestions() {
         return questions;
     }
-    public int getQuestionsSize() {
+    public int questionsSize() {
         return questions.size();
+    }
+    public int nextQuestionOrdinalNumber() {
+        return questions.size() + 1;
     }
     public void setQuestions(List<QuestionModel> questions) {
         this.questions = questions;
@@ -112,11 +119,6 @@ public class QuizModel {
         questions.add(question);
     }
     public QuestionModel getSingleQuestionByOrdNum(int questionOrdNum) throws QuestionNotFoundException {
-
-        for(int i = 0; i <getQuestionsSize(); i++){
-            System.out.println(questions.get(i).getContent());
-        }
-
         return questions.stream()
                 .filter(q -> q.getOrdNum() == questionOrdNum)
                 .findFirst()
@@ -141,7 +143,7 @@ public class QuizModel {
         return category;
     }
     private void setQuestionOrderNumbers() {
-        for (int i = 0; i < getQuestionsSize(); i++) {
+        for (int i = 0; i < questionsSize(); i++) {
             questions.get(i).setOrdNum(i);
         }
     }
