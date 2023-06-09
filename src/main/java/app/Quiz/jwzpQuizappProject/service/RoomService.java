@@ -7,6 +7,8 @@ import app.Quiz.jwzpQuizappProject.exceptions.rooms.RoomNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.users.UserNotFoundException;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomDto;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomModel;
+import app.Quiz.jwzpQuizappProject.models.rooms.RoomPatchDto;
+import app.Quiz.jwzpQuizappProject.models.rooms.RoomPutDto;
 import app.Quiz.jwzpQuizappProject.repositories.*;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.springframework.stereotype.Service;
@@ -88,9 +90,7 @@ public class RoomService {
         return room;
     }
 
-    public RoomModel updateRoom(String token, long roomId, RoomDto updatedRoom){
-        throw new NotYetImplementedException();
-    }
+
 
     public void deleteRoom(long roomId, String token) throws RoomNotFoundException, PermissionDeniedException {
         var user = tokenService.getUserFromToken(token);
@@ -115,7 +115,33 @@ public class RoomService {
     }
 
 
-    //////////////////////////////////////
+    public RoomModel updateRoom(RoomPutDto roomDto) throws PermissionDeniedException, RoomNotFoundException, UserNotFoundException {
+        var originalRoom = roomRepository.findById(roomDto.id()).orElseThrow(() -> getPreparedRoomNotFoundException(roomDto.id()));
+
+        var newOwner = userRepository.findById(roomDto.owner().getId()).orElseThrow(() -> new UserNotFoundException("No user with id=" + roomDto.owner().getId()));
+        originalRoom.updateWithPutDto(roomDto);
+
+        originalRoom.setOwner(newOwner);
+
+        roomRepository.save(originalRoom);
+
+        return originalRoom;
+    }
+
+
+    public RoomModel updateRoom(String token, RoomPatchDto roomDto) throws PermissionDeniedException, RoomNotFoundException, UserNotFoundException {
+        var user = tokenService.getUserFromToken(token);
+        var originalRoom = roomRepository.findById(roomDto.id()).orElseThrow(() -> getPreparedRoomNotFoundException(roomDto.id()));
+
+        if (!roomAuthoritiesValidator.validateUserRoomEditAuthorities(user, originalRoom.getOwnerId())) {
+            throwPermissionDeniedException(originalRoom.getId());
+        }
+        originalRoom.updateWithPatchDto(roomDto);
+
+        roomRepository.save(originalRoom);
+
+        return originalRoom;
+    }
 
 
     public void addUserToRoom(long roomId, long userId, String token) throws RoomNotFoundException, PermissionDeniedException, UserNotFoundException {
