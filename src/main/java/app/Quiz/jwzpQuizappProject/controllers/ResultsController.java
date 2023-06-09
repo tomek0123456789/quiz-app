@@ -76,7 +76,7 @@ public class ResultsController {
         return ResponseEntity.ok("");
     }
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @PatchMapping("/quizresults")
+    @PatchMapping("/quiz")
     public ResponseEntity<?> updateQuizResults(@RequestBody QuizResultsPatchDto quizResultsPatchDto) throws AnswerNotFoundException, QuizNotFoundException, QuestionNotFoundException {
         this.resultsService.updateQuizResults(quizResultsPatchDto);
         return ResponseEntity.ok("");

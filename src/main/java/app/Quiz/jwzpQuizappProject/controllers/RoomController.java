@@ -59,9 +59,7 @@ public class RoomController {
     public ResponseEntity<RoomModel> updateRoom(    // No need for checking token since endpoint is admin only
             @RequestBody RoomPutDto roomPutDto
             ) throws RoomNotFoundException, PermissionDeniedException, UserNotFoundException {
-
-        var updatedRoom = roomService.updateRoom(roomPutDto);
-        return new ResponseEntity<>(updatedRoom, HttpStatus.OK);
+        return new ResponseEntity<>(roomService.updateRoom(roomPutDto), HttpStatus.OK);
     }
 
     @PatchMapping()
@@ -69,9 +67,7 @@ public class RoomController {
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @RequestBody RoomPatchDto roomPatchDto
     ) throws RoomNotFoundException, PermissionDeniedException, UserNotFoundException {
-
-        var updatedRoom = roomService.updateRoom(token,roomPatchDto);
-        return new ResponseEntity<>(updatedRoom, HttpStatus.OK);
+        return new ResponseEntity<>(roomService.updateRoom(token,roomPatchDto), HttpStatus.OK);
     }
 
     @DeleteMapping("/{roomId}")
@@ -108,9 +104,7 @@ public class RoomController {
     @GetMapping("/{id}/results")
     public ResponseEntity<?> getRoomResults( @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
                                              @PathVariable long id) throws RoomNotFoundException, PermissionDeniedException {
-
-        List<ResultsModel> results = this.resultsService.getResultsForRoom(token, id);
-        return ResponseEntity.ok(results);
+        return ResponseEntity.ok(this.resultsService.getResultsForRoom(token, id));
     }
 
     @PostMapping("/{id}/results")

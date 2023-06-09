@@ -118,14 +118,10 @@ public class RoomService {
     public RoomModel updateRoom(RoomPutDto roomDto) throws PermissionDeniedException, RoomNotFoundException, UserNotFoundException {
         var originalRoom = roomRepository.findById(roomDto.id()).orElseThrow(() -> getPreparedRoomNotFoundException(roomDto.id()));
 
-        var newOwner = userRepository.findById(roomDto.owner().getId());
+        var newOwner = userRepository.findById(roomDto.owner().getId()).orElseThrow(() -> new UserNotFoundException("No user with id=" + roomDto.owner().getId()));
         originalRoom.updateWithPutDto(roomDto);
 
-        if(newOwner.isEmpty()){
-            throw new UserNotFoundException("No user with id=" + roomDto.owner().getId());
-        }
-
-        originalRoom.setOwner(newOwner.get());
+        originalRoom.setOwner(newOwner);
 
         roomRepository.save(originalRoom);
 

@@ -76,13 +76,13 @@ public class QuizService {
         List<QuizModel> quizzes;
         if (titlePart.isPresent()) {
             if (categoryName.isPresent()) {
-                quizzes = quizRepository.findAllByTitleContainingAndCategoryCategoryName(titlePart.get(), categoryName.get());
+                quizzes = quizRepository.findAllByTitleContainingAndCategoryName(titlePart.get(), categoryName.get());
             } else {
                 quizzes = quizRepository.findAllByTitleContaining(titlePart.get());
             }
         } else {
             if (categoryName.isPresent()) {
-                quizzes = quizRepository.findAllByCategoryCategoryName(categoryName.get());
+                quizzes = quizRepository.findAllByCategoryName(categoryName.get());
             } else {
                 quizzes = quizRepository.findAll();
             }
