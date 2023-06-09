@@ -1,7 +1,10 @@
 package app.Quiz.jwzpQuizappProject.models.results;
 
+import app.Quiz.jwzpQuizappProject.exceptions.answers.AnswerNotFoundException;
+import app.Quiz.jwzpQuizappProject.exceptions.questions.QuestionNotFoundException;
 import app.Quiz.jwzpQuizappProject.models.answers.AnswerModel;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
+import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
@@ -74,6 +77,18 @@ public class QuestionAndUsersAnswerModel {
 
     public void setQuestionOrdNum(long questionOrdNum) {
         this.questionOrdNum = questionOrdNum;
+    }
+
+    public void update(QuestionAndUsersAnswerPatchDto questionAndUsersAnswerPatchDto, QuizModel quiz) throws QuestionNotFoundException, AnswerNotFoundException {
+        if(questionAndUsersAnswerPatchDto.questionOrdNum() != null){
+            question = quiz.getSingleQuestionByOrdNum(questionAndUsersAnswerPatchDto.questionOrdNum());
+            questionOrdNum = questionAndUsersAnswerPatchDto.questionOrdNum();
+        }
+
+        if(questionAndUsersAnswerPatchDto.userAnswerOrdNum() != null){
+            answer = question.getSingleAnswerByOrdNum(questionAndUsersAnswerPatchDto.userAnswerOrdNum());
+            userAnswerOrdNum = questionAndUsersAnswerPatchDto.questionOrdNum();
+        }
     }
 
     @Override
