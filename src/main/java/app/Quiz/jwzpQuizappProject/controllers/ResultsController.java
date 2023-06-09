@@ -68,13 +68,13 @@ public class ResultsController {
         return ResponseEntity.ok( this.resultsService.createResults(results, token));
     }
 
-    @PatchMapping
+    @PatchMapping("/qaa")
     public ResponseEntity<?> updateQaa(@RequestBody QuestionAndUsersAnswerPatchDto questionAndUsersAnswerPatchDto) throws AnswerNotFoundException, QuizNotFoundException, QuestionNotFoundException {
         this.resultsService.updateQuestionAndUsersAnswer(questionAndUsersAnswerPatchDto);
         return ResponseEntity.ok("");
     }
 
-    @PatchMapping
+    @PatchMapping("/quizresults")
     public ResponseEntity<?> updateQuizResults(@RequestBody QuizResultsPatchDto quizResultsPatchDto) throws AnswerNotFoundException, QuizNotFoundException, QuestionNotFoundException {
         this.resultsService.updateQuizResults(quizResultsPatchDto);
         return ResponseEntity.ok("");
