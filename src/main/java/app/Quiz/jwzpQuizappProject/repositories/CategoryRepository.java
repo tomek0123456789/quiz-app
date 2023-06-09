@@ -10,8 +10,7 @@ import java.util.Optional;
 @Repository
 public interface CategoryRepository  extends JpaRepository<CategoryModel, Long> {
 
-    List<CategoryModel> findAllByNameContaining(String name);
-    Optional<CategoryModel> findByName(String name);
+    List<CategoryModel> findAllByCategoryNameContaining(String name);
+    Optional<CategoryModel> findByCategoryName(String categoryName);
     void deleteById(long id);
 }
-

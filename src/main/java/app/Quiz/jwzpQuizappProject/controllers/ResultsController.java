@@ -12,6 +12,7 @@ import app.Quiz.jwzpQuizappProject.repositories.*;
 import app.Quiz.jwzpQuizappProject.service.ResultsService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -68,33 +69,34 @@ public class ResultsController {
         return ResponseEntity.ok( this.resultsService.createResults(results, token));
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PatchMapping("/qaa")
     public ResponseEntity<?> updateQaa(@RequestBody QuestionAndUsersAnswerPatchDto questionAndUsersAnswerPatchDto) throws AnswerNotFoundException, QuizNotFoundException, QuestionNotFoundException {
         this.resultsService.updateQuestionAndUsersAnswer(questionAndUsersAnswerPatchDto);
         return ResponseEntity.ok("");
     }
-
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PatchMapping("/quizresults")
     public ResponseEntity<?> updateQuizResults(@RequestBody QuizResultsPatchDto quizResultsPatchDto) throws AnswerNotFoundException, QuizNotFoundException, QuestionNotFoundException {
         this.resultsService.updateQuizResults(quizResultsPatchDto);
         return ResponseEntity.ok("");
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PatchMapping
     public ResponseEntity<?> updateResults(@RequestBody ResultsPatchDto resultsPatchDto) throws RoomNotFoundException, ResultNotFoundException {
         this.resultsService.updateResults(resultsPatchDto);
         return ResponseEntity.ok("");
     }
 
-    //TODO: admin only
-    //tested: works
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping("/quizresults/{quizResultsId}/qaa/{qaaId}")
     public ResponseEntity<?> deleteQuestionAndAnswer(@PathVariable long quizResultsId,
                                                   @PathVariable long qaaId) throws AnswerNotFoundException {
         this.resultsService.deleteQuestionAndAnswer(qaaId, quizResultsId);
         return ResponseEntity.ok("");
     }
-
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping("/{resultsId}/quizresults/{quizResultsId}")
     public ResponseEntity<?> deleteQuizResults(@PathVariable long resultsId,
                                                      @PathVariable long quizResultsId
@@ -103,6 +105,7 @@ public class ResultsController {
         return ResponseEntity.ok("");
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping("/{resultsId}")
     public ResponseEntity<?> deleteResults(@PathVariable long resultsId
     ) throws ResultNotFoundException {

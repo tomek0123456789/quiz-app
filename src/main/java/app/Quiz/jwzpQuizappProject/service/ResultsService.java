@@ -52,8 +52,12 @@ public class ResultsService {
     }
 
     private ResultsModel getResultsWithId(long id) throws ResultNotFoundException {
-        return resultsRepository.findById(id).orElseThrow(() -> new ResultNotFoundException("no QuestionAndUsersAnswerModel with ID:" + id ));
-
+        return resultsRepository.findById(id).orElseThrow(() -> new ResultNotFoundException("no Results with ID:" + id ));
+    }
+    
+    private QuestionAndUsersAnswerModel getQaaById(long id) throws AnswerNotFoundException {
+        return questionAndUsersAnswerRepository.findById(id).orElseThrow(() -> new AnswerNotFoundException("no QuestionAndUsersAnswerModel with ID:" + id ));
+        
     }
 
     private boolean validateUserInfoResultAuthorities(UserModel user, ResultsModel resultsModel){
@@ -180,7 +184,6 @@ public class ResultsService {
             }
             quizResult.setScore(quizScore);
             roomScore += quizScore;
-//            results.add(quizResult);
             this.quizResultsRepository.save(quizResult);
         }
         resultsModel.setQuizzesResults(newResults.quizzesResults());
@@ -209,7 +212,7 @@ public class ResultsService {
     }
 
     public QuestionAndUsersAnswerModel updateQuestionAndUsersAnswer(QuestionAndUsersAnswerPatchDto questionAndUsersAnswerPatchDto) throws AnswerNotFoundException, QuizNotFoundException, QuestionNotFoundException {
-        var originalQuestionAndUsersAnswer = questionAndUsersAnswerRepository.findById(questionAndUsersAnswerPatchDto.id()).orElseThrow(() -> new AnswerNotFoundException("no QuestionAndUsersAnswerModel with ID:" + questionAndUsersAnswerPatchDto.id() ));
+        var originalQuestionAndUsersAnswer = getQaaById(questionAndUsersAnswerPatchDto.id());
         var quiz = quizRepository.findById(questionAndUsersAnswerPatchDto.quizId());
 
         if(quiz.isEmpty()){
@@ -233,7 +236,7 @@ public class ResultsService {
     }
 
     public ResultsModel updateResults(ResultsPatchDto resultsPatchDto) throws ResultNotFoundException, RoomNotFoundException {
-        var originalResults = resultsRepository.findById(resultsPatchDto.resultsId()).orElseThrow(() -> new ResultNotFoundException("no QuestionAndUsersAnswerModel with ID:" + resultsPatchDto.resultsId() ));
+        var originalResults = getResultsWithId(resultsPatchDto.resultsId());
         var room = resultsPatchDto.roomId() != null ?
                 roomRepository.findById(resultsPatchDto.roomId()).orElseThrow(() -> new RoomNotFoundException("no room with id=" + resultsPatchDto.roomId()))
                 : null;
@@ -247,7 +250,7 @@ public class ResultsService {
     }
 
     public void deleteQuestionAndAnswer(long qaaId, long quizResultsId) throws AnswerNotFoundException {
-        var qaa = questionAndUsersAnswerRepository.findById(qaaId).orElseThrow(() -> new AnswerNotFoundException("no QuestionAndUsersAnswerModel with ID:" + qaaId ));
+        var qaa = getQaaById(qaaId);
         var quizResults = getQuizResultsWithId(quizResultsId);
 
         quizResults.deleteQuestionsAndAnswers(qaa);

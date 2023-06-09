@@ -10,13 +10,13 @@ public class CategoryModel {
     long id;
 
     @Column(unique = true)
-    String name;
+    String categoryName;
 
-    public CategoryModel(String name) {
-        this.name = name;
+    public CategoryModel(String categoryName) {
+        this.categoryName = categoryName;
     }
 
-    protected CategoryModel() {
+    public CategoryModel() {
 // ASK todo should an exception be thrown here? or how can i restrict this constructor
     }
 
@@ -29,10 +29,10 @@ public class CategoryModel {
     }
 
     public String getName() {
-        return name;
+        return categoryName;
     }
 
     public void setName(String categoryName) {
-        this.name = name;
+        this.categoryName = categoryName;
     }
 }

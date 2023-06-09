@@ -25,11 +25,11 @@ public class CategoryService {
         return categoryRepository.findAll();
     }
     public List<CategoryModel> getCategoriesByNameContaining(String namePart) {
-        return categoryRepository.findAllByNameContaining(namePart);
+        return categoryRepository.findAllByCategoryNameContaining(namePart);
     }
 
     public CategoryModel addCategory(CategoryDto categoryDto) throws CategoryAlreadyExistsException {
-        if (categoryRepository.findByName(categoryDto.categoryName()).isPresent()) {
+        if (categoryRepository.findByCategoryName(categoryDto.categoryName()).isPresent()) {
             throw new CategoryAlreadyExistsException("Category with name: " + categoryDto.categoryName() + " already exists.");
         }
         return categoryRepository.save(new CategoryModel(categoryDto.categoryName()));
