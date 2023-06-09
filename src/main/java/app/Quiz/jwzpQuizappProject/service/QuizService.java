@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-
 @Service
 public class QuizService {
     private final AnswerRepository answerRepository;
@@ -105,14 +104,7 @@ public class QuizService {
     }
 
     public QuizModel updateQuiz(long quizId, QuizPatchDto quizPatchDto, String token) throws QuizNotFoundException, PermissionDeniedException, CategoryNotFoundException {
-//        var user = tokenService.getUserFromToken(token);
-//        var quiz = quizRepository.findById(quizPatchDto.quizId()).orElseThrow(() -> getPreparedQuizNotFoundException(quizPatchDto.quizId()));
-//        if (!validateUserQuizAuthorities(user, quiz.getId())) {
-//            throwPermissionDeniedException(quiz.getId());
-//        }
         var quiz = validateUserAgainstQuiz(token, quizId);
-        //todo extract lines above to another method
-//        if (!Objects.isNull(quizPatchDto.title())) //?
         if (quizPatchDto.title() != null) {
             quiz.setTitle(quizPatchDto.title());
         }
@@ -151,34 +143,18 @@ public class QuizService {
     }
 
     public void deleteQuiz(long quizId, String token) throws PermissionDeniedException, QuizNotFoundException {
-//        var quizToDelete = validateUserAgainstQuiz(token, quizId);
-//        answerRepository.deleteAll(
-//                quizToDelete.getQuestions()
-//                    .stream()
-//                    .flatMap(questionModel -> questionModel.getAnswers().stream())
-//                    .toList()
-//        );
-//        questionRepository.deleteAll(quizToDelete.getQuestions());
-//        quizRepository.delete(quizToDelete);
-        quizRepository.delete(validateUserAgainstQuiz(token, quizId));
+        var quizToDelete = validateUserAgainstQuiz(token, quizId);
+        quizRepository.delete(quizToDelete);
     }
 
     // questions
 
-    // maybe in QuestionService?
     public QuestionModel addQuestionToQuiz(long quizId, QuestionDto questionDto, String token) throws PermissionDeniedException, QuestionsLimitException, QuizNotFoundException {
-//        var user = tokenService.getUserFromToken(token);
-//        var quiz = quizRepository.findById(quizId).orElseThrow(() -> getPreparedQuizNotFoundException(quizId));
-        //todo change the quiz ord num to auto generate or something
-//        if (!validateUserQuizAuthorities(user, quiz.getOwnerId())) {
-//            throwPermissionDeniedException(quiz.getId());
-//        }
         var quiz = validateUserAgainstQuiz(token, quizId);
         var question = new QuestionModel(quiz.nextQuestionOrdinalNumber(), questionDto.content(), timeService.getCurrentTime(), quiz.getId());
         if (quiz.questionsSize() >= QUESTIONS_LIMIT) {
             throw new QuestionsLimitException("A quiz cannot have more than 50 questions");
         }
-        //todo add question duplicate check - now i think it isn't necessary?
         questionRepository.save(question);
         quiz.addQuestion(question);
         quizRepository.save(quiz);
@@ -206,17 +182,13 @@ public class QuizService {
     // answers
 
     public AnswerModel addAnswerToQuestion(long quizId, int questionOrdinalNumber, AnswerDto answerDto, String token) throws PermissionDeniedException, QuizNotFoundException, AnswersLimitException, QuestionNotFoundException {
-//        var user = tokenService.getUserFromToken(token);
-//        var quiz = quizRepository.findById(quizId).orElseThrow(() -> getPreparedQuizNotFoundException(quizId));
-//        if (!validateUserQuizAuthorities(user, quiz.getOwnerId())) {
-//            throwPermissionDeniedException(quiz.getId());
-//        }
         var quiz = validateUserAgainstQuiz(token, quizId);
         QuestionModel question;
         try {
             question = quiz.getSingleQuestionByOrdNum(questionOrdinalNumber);
         } catch (QuestionNotFoundException e) {
             // stinky, can you change exception message without throwing another exception?
+            // i dont want to pass unnecessary arguments to that function especially it is used elsewhere
             throw new QuestionNotFoundException("Question with ordinal number: " + questionOrdinalNumber + "  was not found in quiz with id: " + quizId + ".");
         }
         if (question.answersSize() >= ANSWERS_LIMIT) {
@@ -234,11 +206,6 @@ public class QuizService {
     }
 
     public void removeAnswerFromQuestion(long quizId, int questionOrdinalNumber, int answerOrdinalNumber, String token) throws QuizNotFoundException, PermissionDeniedException, QuestionNotFoundException, AnswerNotFoundException, AnswersLimitException {
-//        var user = tokenService.getUserFromToken(token);
-//        var quiz = quizRepository.findById(quizId).orElseThrow(() -> getPreparedQuizNotFoundException(quizId));
-//        if (!validateUserQuizAuthorities(user, quiz.getOwnerId())) {
-//            throwPermissionDeniedException(quiz.getId());
-//        }
         var quiz = validateUserAgainstQuiz(token, quizId);
         QuestionModel question;
         AnswerModel answer;
@@ -250,13 +217,11 @@ public class QuizService {
         } catch (AnswerNotFoundException e) {
             throw new AnswerNotFoundException("Answer with ordinal number: " + answerOrdinalNumber + " in question with ordinal number: " + questionOrdinalNumber + " in quiz with id: " + quizId + " was not found.");
         }
+        question.removeAnswer(answer);
         if (question.answersSize() < VALID_QUESTION_LIMIT) {
             question.setQuestionStatus(QuestionStatus.INVALID);
-//            throw new AnswersLimitException("A question cannot have less than 2 answers.");
         }
-
-        question.removeAnswer(answer);
         answerRepository.delete(answer);
-        questionRepository.save(question); // does quiz need to be saved after deleting a question?
+        questionRepository.save(question);
     }
 }

@@ -94,11 +94,11 @@ public class QuestionModel{ // T is type of question, like image or string etc
     }
     public void removeAnswer(AnswerModel answer) {
         answers.remove(answer);
-        setOrderNumbers();
+        setAnswersOrderNumbers();
     }
-    private void setOrderNumbers() {
+    private void setAnswersOrderNumbers() {
         for (int i = 0; i < answersSize(); i++) {
-            answers.get(i).setOrdNum(i);
+            answers.get(i).setOrdNum(i + 1);
         }
     }
 //    public List<QuestionAndUsersAnswerModel> getQuestionAndUsersAnswers() {

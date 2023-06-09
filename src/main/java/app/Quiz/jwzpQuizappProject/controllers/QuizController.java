@@ -106,12 +106,10 @@ public class QuizController {
             @PathVariable int questionOrdNum
     ) throws QuizNotFoundException, QuestionNotFoundException, PermissionDeniedException, QuestionsLimitException {
         quizService.removeQuestionFromQuiz(quizId, questionOrdNum, token);
-
         return new ResponseEntity<>("Successfully deleted a question no. " + questionOrdNum + " from a quiz with id: " + quizId + ".", HttpStatus.NO_CONTENT);
     }
 
     //////  ANSWER    //////
-    // TODO: check if user is an owner or an admin
     @PostMapping("/{quizId}/questions/{questionOrdNum}/answers")
     public ResponseEntity<AnswerModel> addAnswerToQuestion(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
@@ -119,9 +117,8 @@ public class QuizController {
             @PathVariable int questionOrdNum,
             @RequestBody AnswerDto answerDto
     ) throws QuizNotFoundException, QuestionNotFoundException, PermissionDeniedException, AnswersLimitException {
-        AnswerModel answer;
-        answer = quizService.addAnswerToQuestion(quizId, questionOrdNum, answerDto, token);
-        return new ResponseEntity<>(answer,HttpStatus.CREATED);
+        AnswerModel answer = quizService.addAnswerToQuestion(quizId, questionOrdNum, answerDto, token);
+        return new ResponseEntity<>(answer, HttpStatus.CREATED);
     }
 
     // todo maybe patch?

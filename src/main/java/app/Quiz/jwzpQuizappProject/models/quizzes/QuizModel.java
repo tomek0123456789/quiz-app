@@ -144,7 +144,7 @@ public class QuizModel {
     }
     private void setQuestionOrderNumbers() {
         for (int i = 0; i < questionsSize(); i++) {
-            questions.get(i).setOrdNum(i);
+            questions.get(i).setOrdNum(i + 1);
         }
     }
 
