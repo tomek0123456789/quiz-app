@@ -1,16 +1,18 @@
 package app.Quiz.jwzpQuizappProject;
 
-import org.hibernate.cfg.NotYetImplementedException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.util.Assert;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@SpringBootTest
+//@RunWith(SpringRunner.class)
+@SpringBootTest()
+@ExtendWith(SpringExtension.class)
 class JwzpQuizappProjectApplicationTests {
 
 	@Test
 	void contextLoads() {
-		Assert.isTrue(true, "test assertion");
+//		Assert.isTrue(true, "test assertion");
 	}
 
 }
