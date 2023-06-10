@@ -4,6 +4,7 @@ import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import app.Quiz.jwzpQuizappProject.repositories.UserRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
@@ -54,7 +55,7 @@ public class TokenService {
 
     public UserModel getUserFromToken(String token) {
         String email = getEmailFromToken(token);
-        var user = userRepository.findByEmail(email);
-        return user.get();  // we are sure that user is present, because of JWT (or someone forged JWT so well :^])
-    }
+        var user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("user with mail: " + email + "doesnt exist"));
+        return user;  // we are sure that user is present, because of JWT (or someone forged JWT so well :^])
+    }                   // UPDATE: user may be deleted and may have saved old token, so better throw exception
 }

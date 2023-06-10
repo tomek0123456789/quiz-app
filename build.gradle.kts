@@ -23,14 +23,19 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-configuration-processor")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
+	implementation("org.mockito:mockito-core:3.12.4")
 	runtimeOnly("org.postgresql:postgresql")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testImplementation("pl.pragmatists:JUnitParams:1.1.1")	//for @Parameters
 }
 
 tasks.getByName<Jar>("jar") {
 	enabled = false
 }
 
-//tasks.withType<Test> {
-//	useJUnitPlatform()
-//}
+tasks.withType<Test> {
+	useJUnitPlatform()
+//	filter{
+//		includeTestsMatching("quiz-app.test")
+//	}
+}
