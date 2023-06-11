@@ -21,12 +21,12 @@ public class QuizResultsModel {
     @JsonProperty("quizId")
     long quizId;
 
-    @OneToMany
+    @OneToMany(orphanRemoval = true, cascade = CascadeType.PERSIST)
     Set<QuestionAndUsersAnswerModel> questionsAndAnswers;
 
-    @ManyToMany
-    @JsonIgnore
-    Set<ResultsModel> results;
+//    @ManyToMany
+//    @JsonIgnore
+//    Set<ResultsModel> results;
 
     long score;
 
@@ -57,6 +57,10 @@ public class QuizResultsModel {
         this.questionsAndAnswers = questionsAndAnswers;
     }
 
+    public void deleteQuestionsAndAnswers(QuestionAndUsersAnswerModel qaa){
+        this.questionsAndAnswers.remove(qaa);
+    }
+
     public void addQAA(QuestionAndUsersAnswerModel qaa){
         this.questionsAndAnswers.add(qaa);
     }
@@ -69,13 +73,13 @@ public class QuizResultsModel {
         this.quizId = quizId;
     }
 
-    public Set<ResultsModel> getResults() {
-        return results;
-    }
-
-    public void setResults(Set<ResultsModel> results) {
-        this.results = results;
-    }
+//    public Set<ResultsModel> getResults() {
+//        return results;
+//    }
+//
+//    public void setResults(Set<ResultsModel> results) {
+//        this.results = results;
+//    }
 
     public long getScore() {
         return score;
@@ -85,6 +89,12 @@ public class QuizResultsModel {
         this.score = score;
     }
 
+    public void update(QuizResultsPatchDto quizResultsPatchDto, QuizModel quizModel){
+        this.quizId = quizResultsPatchDto.quizId() != null ? quizResultsPatchDto.quizId() : this.quizId;
+        this.quiz = quizModel != null ? quizModel : this.quiz;
+        this.score = quizResultsPatchDto.score() != null ? quizResultsPatchDto.score() : this.score;
+    }
+
     @Override
     public String toString() {
         return "QuizResultsModel{" +
@@ -92,7 +102,7 @@ public class QuizResultsModel {
                 ", quiz=" + quiz +
                 ", quizId=" + quizId +
                 ", questionsAndAnswers=" + questionsAndAnswers +
-                ", results=" + results +
+//                ", results=" + results +
                 ", score=" + score +
                 '}';
     }
