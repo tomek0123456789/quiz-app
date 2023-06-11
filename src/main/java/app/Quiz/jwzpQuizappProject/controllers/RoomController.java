@@ -29,7 +29,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/myrooms")
 public class RoomController {
-
     private final ResultsService resultsService;
     private final RoomService roomService;
 
@@ -58,7 +57,7 @@ public class RoomController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<RoomModel> updateRoom(    // No need for checking token since endpoint is admin only
             @RequestBody RoomPutDto roomPutDto
-            ) throws RoomNotFoundException, PermissionDeniedException, UserNotFoundException {
+    ) throws RoomNotFoundException, PermissionDeniedException, UserNotFoundException {
         return new ResponseEntity<>(roomService.updateRoom(roomPutDto), HttpStatus.OK);
     }
 
