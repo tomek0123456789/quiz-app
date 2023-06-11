@@ -2,8 +2,8 @@ package app.Quiz.jwzpQuizappProject.controllers;
 
 import app.Quiz.jwzpQuizappProject.exceptions.users.UserAlreadyExistsException;
 import app.Quiz.jwzpQuizappProject.models.auth.LoginDto;
-import app.Quiz.jwzpQuizappProject.models.auth.RegisterDto;
 import app.Quiz.jwzpQuizappProject.models.auth.LoginResponseEntity;
+import app.Quiz.jwzpQuizappProject.models.auth.RegisterDto;
 import app.Quiz.jwzpQuizappProject.service.TokenService;
 import app.Quiz.jwzpQuizappProject.service.UserService;
 import jakarta.validation.Valid;
@@ -29,7 +29,6 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final String timeUnit;
     private final long timeAmount;
-
 
     public AuthController(TokenService tokenService, UserService userService, AuthenticationManager authenticationManager, @Value("${jwt.timeunit}") String timeUnit, @Value("${jwt.timeamount}") long timeAmount) {
         this.tokenService = tokenService;
@@ -59,5 +58,4 @@ public class AuthController {
         );
         return new LoginResponseEntity(tokenService.generateToken(authentication, timeAmount, timeUnit), timeAmount, timeUnit);
     }
-
 }

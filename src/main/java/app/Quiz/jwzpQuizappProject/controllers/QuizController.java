@@ -56,11 +56,11 @@ public class QuizController {
     }
 
     @PostMapping
-    public QuizModel createQuiz(
+    public ResponseEntity<QuizModel> createQuiz(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @RequestBody QuizDto quizDto
     ) throws CategoryNotFoundException {
-        return quizService.addQuiz(quizDto, token);
+        return new ResponseEntity<>(quizService.addQuiz(quizDto, token), HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{quizId}")
@@ -107,7 +107,7 @@ public class QuizController {
             @PathVariable int questionOrdNum
     ) throws QuizNotFoundException, QuestionNotFoundException, PermissionDeniedException, QuestionsLimitException {
         quizService.removeQuestionFromQuiz(quizId, questionOrdNum, token);
-        return new ResponseEntity<>("Successfully deleted a question no. " + questionOrdNum + " from a quiz with id: " + quizId + ".", HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     //////  ANSWER    //////
@@ -133,6 +133,4 @@ public class QuizController {
         quizService.removeAnswerFromQuestion(quizId, questionOrdNum, answerOrdNum, token);
         return new ResponseEntity<>("Successfully deleted an answer no. " + answerOrdNum + " from a question no. " + questionOrdNum + " from a quiz with id: " + quizId + ".", HttpStatus.NO_CONTENT);
     }
-
-
 }
