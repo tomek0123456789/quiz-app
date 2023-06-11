@@ -58,7 +58,7 @@ public class QuizModel {
         this.rooms = Collections.emptySet();
     }
 
-    protected QuizModel() {
+    public QuizModel() {
     }
 
     public void addRoom(RoomModel room){

@@ -31,7 +31,7 @@ public class AnswerModel {
         this.createdAt = createdAt;
     }
 
-    protected AnswerModel() {}
+    public AnswerModel() {}
 
     public Long getId() {
         return id;

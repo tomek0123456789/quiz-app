@@ -8,18 +8,11 @@ import java.time.Instant;
 //todo refactor it into a single bean in @Component
 @Service
 public class TimeService {
-    // ASK todo how to implement that?
+    private Clock clock = Clock.systemUTC();
 
-//    public TimeService(Clock clock) {
-//        this.clock = clock;
-//    }
-
-//    @Bean
-//    Clock clock() {
-//        return ;
-//    }
-
-    private final Clock clock = Clock.systemUTC();
+    public void setClock(Clock clock){
+        this.clock = clock;
+    }
 
     public Instant getCurrentTime() {
         return clock.instant();
@@ -27,6 +20,5 @@ public class TimeService {
 
     public Instant getFutureTime(Instant instant, Long timeAmount) {
         return instant.plusSeconds(timeAmount);
-//        return clock.instant().plus(timeAmount, ChronoUnit.SECONDS);
     }
 }

@@ -38,7 +38,7 @@ public class QuestionModel{ // T is type of question, like image or string etc
         this.answers = Collections.emptyList();
         this.quizId = quizId;
     }
-    protected QuestionModel() {}
+    public QuestionModel() {}
 
     public Long getId() {
         return id;

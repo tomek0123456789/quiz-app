@@ -55,7 +55,6 @@ public class TokenService {
 
     public UserModel getUserFromToken(String token) {
         String email = getEmailFromToken(token);
-        var user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("user with mail: " + email + "doesnt exist"));
-        return user;  // we are sure that user is present, because of JWT (or someone forged JWT so well :^])
+        return userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("user with mail: " + email + "doesnt exist"));  // we are sure that user is present, because of JWT (or someone forged JWT so well :^])
     }                   // UPDATE: user may be deleted and may have saved old token, so better throw exception
 }
