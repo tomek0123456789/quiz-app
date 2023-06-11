@@ -44,9 +44,10 @@ public class QuizController {
     @GetMapping
     public List<QuizModel> getMultipleQuizzes(
             @RequestParam(value = "name", required = false) Optional<String> titlePart,
-            @RequestParam(value = "category", required = false) Optional<String> categoryName
+            @RequestParam(value = "category", required = false) Optional<String> categoryName,
+            @RequestParam(value = "valid", required = false) Optional<Boolean> validQuizzes
     ) {
-        return quizService.getQuizzesByTitleOrCategory(titlePart, categoryName);
+        return quizService.getMultipleQuizzes(titlePart, categoryName, validQuizzes);
     }
 
     @GetMapping("/my")

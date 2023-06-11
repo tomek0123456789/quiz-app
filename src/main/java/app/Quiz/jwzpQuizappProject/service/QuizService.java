@@ -15,6 +15,7 @@ import app.Quiz.jwzpQuizappProject.models.questions.QuestionStatus;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizDto;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizPatchDto;
+import app.Quiz.jwzpQuizappProject.models.quizzes.QuizStatus;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import app.Quiz.jwzpQuizappProject.repositories.*;
 import org.springframework.stereotype.Service;
@@ -74,22 +75,36 @@ public class QuizService {
     public QuizModel getSingleQuiz(Long quizId) throws QuizNotFoundException {
         return quizRepository.findById(quizId).orElseThrow(() -> getPreparedQuizNotFoundException(quizId));
     }
-    public List<QuizModel> getQuizzesByTitleOrCategory(Optional<String> titlePart, Optional<String> categoryName) {
-        List<QuizModel> quizzes;
-        if (titlePart.isPresent()) {
-            if (categoryName.isPresent()) {
-                quizzes = quizRepository.findAllByTitleContainingAndCategoryName(titlePart.get(), categoryName.get());
-            } else {
-                quizzes = quizRepository.findAllByTitleContaining(titlePart.get());
-            }
-        } else {
-            if (categoryName.isPresent()) {
-                quizzes = quizRepository.findAllByCategoryName(categoryName.get());
-            } else {
-                quizzes = quizRepository.findAll();
-            }
-        }
-        return quizzes;
+    public List<QuizModel> getMultipleQuizzes(
+            // todo start from here
+            Optional<String> titlePart,
+            Optional<String> categoryName,
+            Optional<Boolean> validQuizzes
+    ) {
+        String predicate = String.valueOf(titlePart.isPresent() ? 1 : 0) + (categoryName.isPresent() ? 1 : 0) + (validQuizzes.isPresent() ? 1 : 0);
+        //        if (titlePart.isPresent()) {
+//            if (categoryName.isPresent()) {
+//                quizzes = quizRepository.findAllByTitleContainingAndCategoryName(titlePart.get(), categoryName.get());
+//            } else {
+//                quizzes = quizRepository.findAllByTitleContaining(titlePart.get());
+//            }
+//        } else {
+//            if (categoryName.isPresent()) {
+//                quizzes = quizRepository.findAllByCategoryName(categoryName.get());
+//            } else {
+//                quizzes = quizRepository.findAll();
+//            }
+//        }
+        return switch (predicate) {
+            case "001" -> quizRepository.findAllByQuizStatus(QuizStatus.VALID);
+            case "010" -> quizRepository.findAllByCategoryName(categoryName.get());
+            case "011" -> quizRepository.findAllByCategoryNameAndQuizStatus(categoryName.get(), QuizStatus.VALID);
+            case "100" -> quizRepository.findAllByTitleContaining(titlePart.get());
+            case "101" -> quizRepository.findAllByTitleContainingAndQuizStatus(titlePart.get(), QuizStatus.VALID);
+            case "110" -> quizRepository.findAllByTitleContainingAndCategoryName(titlePart.get(), categoryName.get());
+            case "111" -> quizRepository.findAllByTitleContainingAndCategoryNameAndQuizStatus(titlePart.get(), categoryName.get(), QuizStatus.VALID);
+            default -> quizRepository.findAll();
+        };
     }
     public List<QuizModel> getUserQuizzes(String token){
         var user = tokenService.getUserFromToken(token);

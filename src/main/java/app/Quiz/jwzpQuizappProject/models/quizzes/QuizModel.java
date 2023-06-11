@@ -3,6 +3,7 @@ package app.Quiz.jwzpQuizappProject.models.quizzes;
 import app.Quiz.jwzpQuizappProject.exceptions.questions.QuestionNotFoundException;
 import app.Quiz.jwzpQuizappProject.models.categories.CategoryModel;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
+import app.Quiz.jwzpQuizappProject.models.questions.QuestionStatus;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -26,6 +27,7 @@ public class QuizModel {
     private String title;
     @NonNull
     private String description;
+    private QuizStatus quizStatus;
     // TODO: make it all to lazy (optional = false,fetch=FetchType.LAZY)
     @ManyToOne()
     @JsonIgnore
@@ -47,6 +49,8 @@ public class QuizModel {
     })
     @JsonIgnore //to prevent infinite recursion
     Set<RoomModel> rooms;
+    @JsonIgnore
+    int validQuestions;
 
     public QuizModel(@NonNull String title, @NonNull String description, UserModel owner, CategoryModel category, Instant createdAt) {
         this.title = title;
@@ -54,12 +58,13 @@ public class QuizModel {
         this.owner = owner;
         this.createdAt = createdAt;
         this.category = category;
+        this.quizStatus = QuizStatus.INVALID;
+        this.validQuestions = 0;
         this.questions = Collections.emptyList();
         this.rooms = Collections.emptySet();
     }
 
-    protected QuizModel() {
-    }
+    protected QuizModel() {}
 
     public void addRoom(RoomModel room){
         rooms.add(room);
@@ -113,10 +118,17 @@ public class QuizModel {
         return questions.size() + 1;
     }
     public void setQuestions(List<QuestionModel> questions) {
-        this.questions = questions;
+        this.questions = Collections.emptyList();
+        questions.forEach(this::addQuestion);
     }
     public void addQuestion(QuestionModel question) {
         questions.add(question);
+        if (question.getQuestionStatus() == QuestionStatus.VALID) {
+            validQuestions++;
+        }
+        if (validQuestions >= 2) {
+            quizStatus = QuizStatus.VALID;
+        }
     }
     public QuestionModel getSingleQuestionByOrdNum(int questionOrdNum) throws QuestionNotFoundException {
         return questions.stream()
@@ -141,6 +153,12 @@ public class QuizModel {
     }
     public CategoryModel getCategory() {
         return category;
+    }
+    public QuizStatus getQuizStatus() {
+        return quizStatus;
+    }
+    public void setQuizStatus(QuizStatus quizStatus) {
+        this.quizStatus = quizStatus;
     }
     private void setQuestionOrderNumbers() {
         for (int i = 0; i < questionsSize(); i++) {
