@@ -20,6 +20,7 @@ import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import app.Quiz.jwzpQuizappProject.repositories.*;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.util.*;
 
 @Service
@@ -28,20 +29,20 @@ public class QuizService {
     private final QuestionRepository questionRepository;
     private final QuizRepository quizRepository;
     private final CategoryService categoryService;
-    private final TimeService timeService;
     private final TokenService tokenService;
+    private final Clock clock;
 
     private final int QUESTIONS_LIMIT = 50;
     private final int VALID_QUESTION_LIMIT = 2;
     private final int ANSWERS_LIMIT = 4;
 
-    public QuizService(AnswerRepository answerRepository, QuestionRepository questionRepository, QuizRepository quizRepository, CategoryService categoryService, TimeService timeService, TokenService tokenService) {
+    public QuizService(AnswerRepository answerRepository, QuestionRepository questionRepository, QuizRepository quizRepository, CategoryService categoryService, TokenService tokenService, Clock clock) {
         this.answerRepository = answerRepository;
         this.questionRepository = questionRepository;
         this.quizRepository = quizRepository;
         this.categoryService = categoryService;
-        this.timeService = timeService;
         this.tokenService = tokenService;
+        this.clock = clock;
     }
     private boolean checkQuizOwnership(Long userId, long quizOwnerId) {
         return userId == quizOwnerId;
@@ -113,7 +114,7 @@ public class QuizService {
     public QuizModel addQuiz(QuizDto quizDto, String token) throws CategoryNotFoundException {
         UserModel user = tokenService.getUserFromToken(token);
         var category = categoryService.getSingleCategory(quizDto.categoryId());
-        QuizModel quizModel = new QuizModel(quizDto.name(), quizDto.description(), user, category, timeService.getCurrentTime());
+        QuizModel quizModel = new QuizModel(quizDto.name(), quizDto.description(), user, category, clock.instant());
         quizRepository.save(quizModel);
         return quizModel;
     }
@@ -150,7 +151,7 @@ public class QuizService {
 
     public QuestionModel addQuestionToQuiz(long quizId, QuestionDto questionDto, String token) throws PermissionDeniedException, QuestionsLimitException, QuizNotFoundException {
         var quiz = validateUserAgainstQuiz(token, quizId);
-        var question = new QuestionModel(quiz.nextQuestionOrdinalNumber(), questionDto.content(), timeService.getCurrentTime(), quiz.getId());
+        var question = new QuestionModel(quiz.nextQuestionOrdinalNumber(), questionDto.content(), clock.instant(), quiz.getId());
         if (quiz.questionsSize() >= QUESTIONS_LIMIT) {
             throw new QuestionsLimitException("A quiz cannot have more than 50 questions");
         }
@@ -194,7 +195,7 @@ public class QuizService {
             throw new AnswersLimitException("A question cannot have more than 4 answers.");
         }
 
-        var answer = new AnswerModel(question.nextAnswerOrdinalNumber(), answerDto.text(), answerDto.score(), timeService.getCurrentTime(), question.getId());
+        var answer = new AnswerModel(question.nextAnswerOrdinalNumber(), answerDto.text(), answerDto.score(), clock.instant(), question.getId());
         answerRepository.save(answer);
         question.addAnswer(answer);
         if (question.answersSize() >= VALID_QUESTION_LIMIT) {
