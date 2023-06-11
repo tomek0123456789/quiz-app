@@ -114,22 +114,6 @@ public class QuizService {
         if (quizPatchDto.categoryId() != null) {
             quiz.setCategory(categoryService.getSingleCategory(quizPatchDto.categoryId()));
         }
-        if (quizPatchDto.questions() != null) {
-            // save new questions
-            var newQuestions = new ArrayList<>(quizPatchDto.questions());
-            newQuestions.removeAll(quiz.getQuestions());
-            // retain all questions to delete
-            quiz.getQuestions().removeAll(quizPatchDto.questions());
-            answerRepository.deleteAll(quiz.getQuestions().stream().flatMap((it) -> it.getAnswers().stream()).toList());
-            questionRepository.deleteAll(quiz.getQuestions());
-            // set new questions
-            quiz.setQuestions(quizPatchDto.questions());
-            // save new questions and answers
-            questionRepository.saveAll(newQuestions);
-            answerRepository.saveAll(newQuestions.stream().flatMap(questionModel -> questionModel.getAnswers().stream()).toList());
-
-            //or would it be better to simply delete all and add all?
-        }
         //todo maybe reflection? doesn't scale well in case more fields were added
         quizRepository.save(quiz);
         return quiz;
