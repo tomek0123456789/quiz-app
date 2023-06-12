@@ -51,7 +51,7 @@ public class CategoryServiceTest {
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
 
         assertThrows(CategoryNotFoundException.class, () -> categoryService.getSingleCategory(categoryId));
-        verify(categoryRepository, times(100)).findById(categoryId);
+        verify(categoryRepository, times(1)).findById(categoryId);
     }
 
     @Test
