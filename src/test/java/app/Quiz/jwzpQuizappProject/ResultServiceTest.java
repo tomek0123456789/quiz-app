@@ -45,6 +45,9 @@ public class ResultServiceTest {
     @Mock
     private RoomRepository roomRepository;
 
+    @Mock
+    private UserRepository userRepository;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -57,7 +60,8 @@ public class ResultServiceTest {
                 answerRepository,
                 tokenService,
                 roomAuthoritiesValidator,
-                roomRepository
+                roomRepository,
+                userRepository
         );
     }
 
@@ -106,4 +110,6 @@ public class ResultServiceTest {
         var expectedResult = allResults.get(0).getQuizzesResults().stream().findAny().get();
         assertEquals(expectedResult, myResults.stream().findAny().get());
     }
+
+
 }
