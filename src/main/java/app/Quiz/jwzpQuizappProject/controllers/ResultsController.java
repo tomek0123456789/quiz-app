@@ -11,6 +11,7 @@ import app.Quiz.jwzpQuizappProject.models.results.*;
 import app.Quiz.jwzpQuizappProject.repositories.*;
 import app.Quiz.jwzpQuizappProject.service.ResultsService;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -40,76 +41,95 @@ public class ResultsController {
     }
 
     @GetMapping("/my")
-    public ResponseEntity<List<ResultsModel>> getMyResultsForQuiz(@RequestHeader(HttpHeaders.AUTHORIZATION) String token){
-        return ResponseEntity.ok(this.resultsService.getAllMyResults(token));
+    public List<ResultsModel> getMyResultsForQuiz(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token
+    ) {
+        return resultsService.getAllMyResults(token);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getSingleResult(@RequestHeader(HttpHeaders.AUTHORIZATION) String token,
-                                          @PathVariable long id) throws PermissionDeniedException, ResultNotFoundException {
-        return ResponseEntity.ok(this.resultsService.getSingleResult( id, token));
+    public ResultsModel getSingleResult(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @PathVariable long id
+    ) throws PermissionDeniedException, ResultNotFoundException {
+        return resultsService.getSingleResult(id, token);
     }
 
     @GetMapping("/quiz/{id}")
-    public ResponseEntity<Set<QuizResultsModel>> getMyResultsForQuizEndpoint(@RequestHeader(HttpHeaders.AUTHORIZATION) String token,
-                                                                             @PathVariable long id){
-        return ResponseEntity.ok( resultsService.getMyResultsForQuiz(token,id));
+    public Set<QuizResultsModel> getMyResultsForQuizEndpoint(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @PathVariable long id
+    ) {
+        return resultsService.getMyResultsForQuiz(id, token);
     }
 
     @GetMapping("/quiz/{id}/best-result")
     public ResponseEntity<QuizResultsModel> getMyBestResult(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
-            @PathVariable long id){
+            @PathVariable long id
+    ) {
         return ResponseEntity.ok(resultsService.getMyBestResultForQuiz(token, id));
     }
 
     @PostMapping()
-    public ResponseEntity<?> createResults(@RequestHeader(HttpHeaders.AUTHORIZATION) String token,
-                                        @RequestBody ResultsDto results) throws AnswerNotFoundException, QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists {
-        return ResponseEntity.ok( this.resultsService.createResults(results, token));
+    public ResponseEntity<?> createResults(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @RequestBody ResultsDto results
+    ) throws AnswerNotFoundException, QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists {
+        return ResponseEntity.ok(resultsService.createResults(results, token));
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PatchMapping("/qaa")
-    public ResponseEntity<?> updateQaa(@RequestBody QuestionAndUsersAnswerPatchDto questionAndUsersAnswerPatchDto) throws AnswerNotFoundException, QuizNotFoundException, QuestionNotFoundException {
-        this.resultsService.updateQuestionAndUsersAnswer(questionAndUsersAnswerPatchDto);
-        return ResponseEntity.ok("");
-    }
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<String> updateQaa(
+            @RequestBody QuestionAndUsersAnswerPatchDto questionAndUsersAnswerPatchDto
+    ) throws AnswerNotFoundException, QuizNotFoundException, QuestionNotFoundException {
+        resultsService.updateQuestionAndUsersAnswer(questionAndUsersAnswerPatchDto);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     @PatchMapping("/quiz")
-    public ResponseEntity<?> updateQuizResults(@RequestBody QuizResultsPatchDto quizResultsPatchDto) throws AnswerNotFoundException, QuizNotFoundException, QuestionNotFoundException {
-        this.resultsService.updateQuizResults(quizResultsPatchDto);
-        return ResponseEntity.ok("");
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<String> updateQuizResults(
+            @RequestBody QuizResultsPatchDto quizResultsPatchDto
+    ) throws AnswerNotFoundException, QuizNotFoundException {
+        resultsService.updateQuizResults(quizResultsPatchDto);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PatchMapping
-    public ResponseEntity<?> updateResults(@RequestBody ResultsPatchDto resultsPatchDto) throws RoomNotFoundException, ResultNotFoundException {
-        this.resultsService.updateResults(resultsPatchDto);
-        return ResponseEntity.ok("");
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<String> updateResults(@RequestBody ResultsPatchDto resultsPatchDto) throws RoomNotFoundException, ResultNotFoundException {
+        resultsService.updateResults(resultsPatchDto);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping("/quizresults/{quizResultsId}/qaa/{qaaId}")
-    public ResponseEntity<?> deleteQuestionAndAnswer(@PathVariable long quizResultsId,
-                                                  @PathVariable long qaaId) throws AnswerNotFoundException {
-        this.resultsService.deleteQuestionAndAnswer(qaaId, quizResultsId);
-        return ResponseEntity.ok("");
-    }
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @DeleteMapping("/{resultsId}/quizresults/{quizResultsId}")
-    public ResponseEntity<?> deleteQuizResults(@PathVariable long resultsId,
-                                                     @PathVariable long quizResultsId
-    ) throws AnswerNotFoundException, ResultNotFoundException {
-        this.resultsService.deleteQuizResults(quizResultsId,resultsId);
-        return ResponseEntity.ok("");
+    public ResponseEntity<String> deleteQuestionAndAnswer(
+            @PathVariable long quizResultsId,
+            @PathVariable long qaaId
+    ) throws AnswerNotFoundException {
+        resultsService.deleteQuestionAndAnswer(qaaId, quizResultsId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @DeleteMapping("/{resultsId}/quizresults/{quizResultsId}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<String> deleteQuizResults(
+            @PathVariable long resultsId,
+            @PathVariable long quizResultsId
+    ) throws AnswerNotFoundException, ResultNotFoundException {
+        resultsService.deleteQuizResults(quizResultsId, resultsId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
     @DeleteMapping("/{resultsId}")
-    public ResponseEntity<?> deleteResults(@PathVariable long resultsId
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<String> deleteResults(
+            @PathVariable long resultsId
     ) throws ResultNotFoundException {
-        this.resultsService.deleteResults(resultsId);
-        return ResponseEntity.ok("");
+        resultsService.deleteResults(resultsId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

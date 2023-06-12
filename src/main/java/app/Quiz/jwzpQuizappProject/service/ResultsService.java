@@ -23,24 +23,20 @@ import java.util.stream.Collectors;
 @Service
 public class ResultsService {
 
-    final QuestionRepository questionRepository;
-    final QuestionAndUsersAnswerRepository questionAndUsersAnswerRepository;
-    final QuizResultsRepository quizResultsRepository;
-    final ResultsRepository resultsRepository;
-    final QuizRepository quizRepository;
-    final AnswerRepository answerRepository;
-    final TokenService tokenService;
-    final RoomAuthoritiesValidator roomAuthoritiesValidator;
-    final RoomRepository roomRepository;
-    final UserRepository userRepository;
+    private final QuestionAndUsersAnswerRepository questionAndUsersAnswerRepository;
+    private final QuizResultsRepository quizResultsRepository;
+    private final ResultsRepository resultsRepository;
+    private final QuizRepository quizRepository;
+    private final TokenService tokenService;
+    private final RoomAuthoritiesValidator roomAuthoritiesValidator;
+    private final RoomRepository roomRepository;
+    private final UserRepository userRepository;
 
-    public ResultsService(QuestionRepository questionRepository, QuestionAndUsersAnswerRepository questionAndUsersAnswerRepository, QuizResultsRepository quizResultsRepository, ResultsRepository resultsRepository, QuizRepository quizRepository, AnswerRepository answerRepository, TokenService tokenService, RoomAuthoritiesValidator roomAuthoritiesValidator, RoomRepository roomRepository, UserRepository userRepository) {
-        this.questionRepository = questionRepository;
+    public ResultsService(QuestionAndUsersAnswerRepository questionAndUsersAnswerRepository, QuizResultsRepository quizResultsRepository, ResultsRepository resultsRepository, QuizRepository quizRepository, TokenService tokenService, RoomAuthoritiesValidator roomAuthoritiesValidator, RoomRepository roomRepository, UserRepository userRepository) {
         this.questionAndUsersAnswerRepository = questionAndUsersAnswerRepository;
         this.quizResultsRepository = quizResultsRepository;
         this.resultsRepository = resultsRepository;
         this.quizRepository = quizRepository;
-        this.answerRepository = answerRepository;
         this.tokenService = tokenService;
         this.roomAuthoritiesValidator = roomAuthoritiesValidator;
         this.roomRepository = roomRepository;
@@ -48,72 +44,60 @@ public class ResultsService {
     }
 
     private QuizResultsModel getQuizResultsWithId(long id) throws AnswerNotFoundException {
-        return quizResultsRepository.findById(id).orElseThrow(() -> new AnswerNotFoundException("no quizResults with ID:" + id ));
+        return quizResultsRepository.findById(id).orElseThrow(() -> new AnswerNotFoundException("Quiz results with id: " + id + " were not found."));
     }
 
     private ResultsModel getResultsWithId(long id) throws ResultNotFoundException {
-        return resultsRepository.findById(id).orElseThrow(() -> new ResultNotFoundException("no Results with ID:" + id ));
-    }
-    
-    private QuestionAndUsersAnswerModel getQaaById(long id) throws AnswerNotFoundException {
-        return questionAndUsersAnswerRepository.findById(id).orElseThrow(() -> new AnswerNotFoundException("no QuestionAndUsersAnswerModel with ID:" + id ));
-        
+        return resultsRepository.findById(id).orElseThrow(() -> new ResultNotFoundException("Results with id: " + id + " were not found."));
     }
 
-    private boolean validateUserInfoResultAuthorities(UserModel user, ResultsModel resultsModel){
+    private QuestionAndUsersAnswerModel getQaaById(long id) throws AnswerNotFoundException {
+        return questionAndUsersAnswerRepository.findById(id).orElseThrow(() -> new AnswerNotFoundException("no QuestionAndUsersAnswerModel with ID:" + id));
+
+    }
+
+    private boolean validateUserInfoResultAuthorities(UserModel user, ResultsModel resultsModel) {
         return user.isAdmin() || resultsModel.getOwner() == user;
     }
 
-    public Set<QuizResultsModel> getMyResultsForQuiz(String token, long id) {
+    public Set<QuizResultsModel> getMyResultsForQuiz(long id, String token) {
         var user = tokenService.getUserFromToken(token);
 
-        List<ResultsModel> results = this.resultsRepository.findAll().stream().filter(result -> result.getOwner() == user).toList();
-
-        return results.stream()
-                .flatMap(result -> result.getQuizzesResults().stream())
-                .filter(quizResult -> quizResult.getQuiz().getId() == id)
-                .collect(Collectors.toSet());
+        List<ResultsModel> results = resultsRepository.findAllByOwner(user);
+        //todo not sure, check this
+        return resultsRepository.findAllByOwnerAndQuizzesResultsId(user.getId(), id);
+//        return results.stream()
+//                .flatMap(result -> result.getQuizzesResults().stream())
+//                .filter(quizResult -> quizResult.getQuiz().getId() == id)
+//                .collect(Collectors.toSet());
     }
 
-    public QuizResultsModel getMyBestResultForQuiz(String token, long quizId){
-        return Collections.max(getMyResultsForQuiz(token, quizId), Comparator.comparingLong(QuizResultsModel::getScore));
+    public QuizResultsModel getMyBestResultForQuiz(String token, long quizId) {
+        return Collections.max(getMyResultsForQuiz(quizId, token), Comparator.comparingLong(QuizResultsModel::getScore));
     }
 
-    public List<ResultsModel> getAllMyResults(String token){
+    public List<ResultsModel> getAllMyResults(String token) {
         var user = tokenService.getUserFromToken(token);
-        return this.resultsRepository.findAll().stream().filter(resultsModel -> resultsModel.getOwner()!=null && Objects.equals(resultsModel.getOwner().getId(), user.getId())).toList();
+        return resultsRepository.findAllByOwner(user);
     }
-    
 
-    public List<ResultsModel> getResultsForRoom(String token,long roomId) throws PermissionDeniedException, RoomNotFoundException {
+    public List<ResultsModel> getResultsForRoom(long roomId, String token) throws PermissionDeniedException, RoomNotFoundException {
         var user = tokenService.getUserFromToken(token);
-        var room = roomRepository.findById(roomId);
-
-        if(room.isEmpty()){
-            throw new RoomNotFoundException("Room with id=" + roomId + " not found");
+        var room = roomRepository.findById(roomId).orElseThrow(() -> new RoomNotFoundException("Room with id: " + roomId + " was not found."));
+        if (!roomAuthoritiesValidator.validateUserRoomInfoAuthorities(user, room)) {
+            throw new PermissionDeniedException(user.getName() + " is not authorized to get results for room: " + room.getRoomName() + " with id: " + room.getId() + ".");
         }
 
-        if(!this.roomAuthoritiesValidator.validateUserRoomInfoAuthorities(user, room.get())){
-            throw new PermissionDeniedException(user.getName() + " is not authorized to get results for room " + room.get().getRoomName() + " with id=" + room.get().getId());
-        }
-
-        return this.resultsRepository.findAll().stream()
-                .filter(resultsModel -> resultsModel.getRoom()!=null && Objects.equals(resultsModel.getRoom().getId(), roomId)).toList();
+        return resultsRepository.findByRoomId(roomId);
     }
 
     public ResultsModel getSingleResult(long id, String token) throws ResultNotFoundException, PermissionDeniedException {
         var user = tokenService.getUserFromToken(token);
-        var result = this.resultsRepository.findById(id);
-
-        if(result.isEmpty()){
-            throw new ResultNotFoundException("There is no results with ID: " + id);
+        var result = resultsRepository.findById(id).orElseThrow(() -> new ResultNotFoundException("Results with id: " + id + " were not found."));
+        if (!validateUserInfoResultAuthorities(user, result)) {
+            throw new PermissionDeniedException("User with id: " + user.getId() + " does not have authority to read results with id: " + result.getId());
         }
-
-        if(!validateUserInfoResultAuthorities(user,result.get())){
-           throw new PermissionDeniedException("Not valid user");
-        }
-
-        return result.get();
+        return result;
     }
 
 
@@ -141,7 +125,7 @@ public class ResultsService {
             for (QuestionAndUsersAnswerModel qaa : quizResult.getQuestionsAndAnswers()) {
                 int questionOrdNum = (int) qaa.getQuestionOrdNum();
 
-                if (questionOrdNum >= quiz.get().getQuestions().size() || questionOrdNum <0) {
+                if (questionOrdNum >= quiz.get().getQuestions().size() || questionOrdNum < 0) {
                     throw new QuestionNotFoundException("Question ord num out of bounds or not provided: " + questionOrdNum + " " + quizResult.getQuizId());
                 }
 
@@ -155,21 +139,21 @@ public class ResultsService {
                 boolean alreadyContainsQuestion = qaaSet.stream()
                         .anyMatch(tempQaa -> tempQaa.getQuestionOrdNum() == questionOrdNum);
 
-                if(alreadyContainsQuestion){
+                if (alreadyContainsQuestion) {
                     throw new AnswerAlreadyExists("Repeated question!");
                 }
 
                 int ansOrdNum = (int) qaa.getUserAnswerOrdNum();
 
-                System.out.println( question.get().getId());
+                System.out.println(question.get().getId());
 
-                if (ansOrdNum >= question.get().getAnswers().size() || ansOrdNum <0) {
+                if (ansOrdNum >= question.get().getAnswers().size() || ansOrdNum < 0) {
                     throw new AnswerNotFoundException("Answer ord num out of bounds or not provided " + ansOrdNum + " " + questionOrdNum + " " + quizResult.getQuizId());
                 }
 
                 Optional<AnswerModel> answer = Optional.ofNullable(question.get().getSingleAnswerByOrdNum(ansOrdNum));
 
-                if (answer.isEmpty() || ansOrdNum >= question.get().getAnswers().size() || ansOrdNum <0) {
+                if (answer.isEmpty() || ansOrdNum >= question.get().getAnswers().size() || ansOrdNum < 0) {
                     throw new AnswerNotFoundException("Invalid answer ord num");
                 }
 
@@ -193,30 +177,30 @@ public class ResultsService {
         return resultsModel;
     }
 
-
-
-
-    public ResultsModel createResultsForRoom(ResultsDto newResults,long roomId, String token) throws RoomNotFoundException, AnswerNotFoundException, QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists {
+    public ResultsModel createResultsForRoom(ResultsDto newResults, long roomId, String token) throws RoomNotFoundException, AnswerNotFoundException, QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists {
         var resultsModel = createResults(newResults, token);
         var room = roomRepository.findById(roomId).orElseThrow(() -> new RoomNotFoundException("no room with ID:" + roomId));
 
         resultsModel.setRoom(room);
-        this.resultsRepository.save(resultsModel);
+        resultsRepository.save(resultsModel);
 
         return resultsModel;
     }
 
-    public void deleteResult(ResultsModel result){
+    public void deleteSingleResult(ResultsModel result) {
         this.resultsRepository.delete(result);
+    }
 
+    public void deleteAllResults(List<ResultsModel> results) {
+        resultsRepository.deleteAll(results);
     }
 
     public QuestionAndUsersAnswerModel updateQuestionAndUsersAnswer(QuestionAndUsersAnswerPatchDto questionAndUsersAnswerPatchDto) throws AnswerNotFoundException, QuizNotFoundException, QuestionNotFoundException {
         var originalQuestionAndUsersAnswer = getQaaById(questionAndUsersAnswerPatchDto.id());
         var quiz = quizRepository.findById(questionAndUsersAnswerPatchDto.quizId());
 
-        if(quiz.isEmpty()){
-            throw  new QuizNotFoundException("no quiz with id=" + questionAndUsersAnswerPatchDto.quizId());
+        if (quiz.isEmpty()) {
+            throw new QuizNotFoundException("no quiz with id=" + questionAndUsersAnswerPatchDto.quizId());
         }
         originalQuestionAndUsersAnswer.update(questionAndUsersAnswerPatchDto, quiz.get());
 

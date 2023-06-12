@@ -3,10 +3,13 @@ package app.Quiz.jwzpQuizappProject.models.quizzes;
 import app.Quiz.jwzpQuizappProject.exceptions.questions.QuestionNotFoundException;
 import app.Quiz.jwzpQuizappProject.models.categories.CategoryModel;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
+import app.Quiz.jwzpQuizappProject.models.questions.QuestionStatus;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.lang.NonNull;
 
 import java.time.Instant;
@@ -15,6 +18,7 @@ import java.util.List;
 import java.util.Set;
 
 @Entity
+@Table(name = "quizzes")
 public class QuizModel {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -23,12 +27,14 @@ public class QuizModel {
     private String title;
     @NonNull
     private String description;
+    private QuizStatus quizStatus;
     // TODO: make it all to lazy (optional = false,fetch=FetchType.LAZY)
     @ManyToOne()
     @JsonIgnore
     private UserModel owner;
     @OneToMany(mappedBy = "quizId")
     @OrderBy("ordNum ASC")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private List<QuestionModel> questions;
     @NonNull
     Instant createdAt;
@@ -43,19 +49,22 @@ public class QuizModel {
     })
     @JsonIgnore //to prevent infinite recursion
     Set<RoomModel> rooms;
+    @JsonIgnore
+    int validQuestions;
 
-    public QuizModel(UserModel owner, @NonNull String title, @NonNull String description, CategoryModel category, Instant createdAt) {
+    public QuizModel(@NonNull String title, @NonNull String description, UserModel owner, CategoryModel category, Instant createdAt) {
         this.title = title;
         this.description = description;
         this.owner = owner;
         this.createdAt = createdAt;
         this.category = category;
+        this.quizStatus = QuizStatus.INVALID;
+        this.validQuestions = 0;
         this.questions = Collections.emptyList();
         this.rooms = Collections.emptySet();
     }
 
-    protected QuizModel() {
-    }
+    protected QuizModel() {}
 
     public void addRoom(RoomModel room){
         rooms.add(room);
@@ -102,21 +111,26 @@ public class QuizModel {
     public List<QuestionModel> getQuestions() {
         return questions;
     }
-    public int getQuestionsSize() {
+    public int questionsSize() {
         return questions.size();
     }
+    public int nextQuestionOrdinalNumber() {
+        return questions.size() + 1;
+    }
     public void setQuestions(List<QuestionModel> questions) {
-        this.questions = questions;
+        this.questions = Collections.emptyList();
+        questions.forEach(this::addQuestion);
     }
     public void addQuestion(QuestionModel question) {
         questions.add(question);
+        if (question.getQuestionStatus() == QuestionStatus.VALID) {
+            validQuestions++;
+        }
+        if (validQuestions >= 2) {
+            quizStatus = QuizStatus.VALID;
+        }
     }
     public QuestionModel getSingleQuestionByOrdNum(int questionOrdNum) throws QuestionNotFoundException {
-
-        for(int i = 0; i <getQuestionsSize(); i++){
-            System.out.println(questions.get(i).getContent());
-        }
-
         return questions.stream()
                 .filter(q -> q.getOrdNum() == questionOrdNum)
                 .findFirst()
@@ -140,9 +154,15 @@ public class QuizModel {
     public CategoryModel getCategory() {
         return category;
     }
+    public QuizStatus getQuizStatus() {
+        return quizStatus;
+    }
+    public void setQuizStatus(QuizStatus quizStatus) {
+        this.quizStatus = quizStatus;
+    }
     private void setQuestionOrderNumbers() {
-        for (int i = 0; i < getQuestionsSize(); i++) {
-            questions.get(i).setOrdNum(i);
+        for (int i = 0; i < questionsSize(); i++) {
+            questions.get(i).setOrdNum(i + 1);
         }
     }
 

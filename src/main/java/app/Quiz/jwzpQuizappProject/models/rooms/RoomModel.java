@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Set;
 
 @Entity
+@Table(name = "rooms")
 public class RoomModel {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -21,8 +22,7 @@ public class RoomModel {
     @ManyToOne
     UserModel owner;
     Instant startTime;
-//    @Future //ASK todo
-    Instant endTime; // TODO ask majkel
+    Instant endTime;
 
     @ManyToMany(fetch = FetchType.LAZY,  cascade = {
             CascadeType.PERSIST,
@@ -40,10 +40,6 @@ public class RoomModel {
         this.endTime = endTime;
         this.participants = Collections.emptySet();
         this.quizzes = Collections.emptySet();
-    }
-
-    public void addQuiz(QuizModel quiz){
-        quizzes.add(quiz);
     }
 
     public long getId() {
@@ -71,7 +67,6 @@ public class RoomModel {
     public void removeParticipant(UserModel user) {
         this.participants.remove(user);
     }
-
     public void setParticipants(Set<UserModel> participants) {
         this.participants = participants;
     }
@@ -86,7 +81,6 @@ public class RoomModel {
     public long getOwnerId() {
         return owner.getId();
     }
-
     public Instant getStartTime() {
         return startTime;
     }
@@ -120,11 +114,21 @@ public class RoomModel {
 
         return maxscore;
     }
+    public boolean isPastFinishTime(Instant currentTime) {
+        return currentTime.isAfter(endTime);
+    }
+    public void addQuiz(QuizModel quiz){
+        quizzes.add(quiz);
+    }
+    public void removeQuiz(QuizModel quiz) {
+        quizzes.remove(quiz);
+    }
 
     public void updateWithPutDto(RoomPutDto roomPutDto) {
         this.roomName = roomPutDto.roomName();
         this.startTime = roomPutDto.startTime();
         this.endTime = roomPutDto.endTime();
+        this.owner = roomPutDto.owner();
     }
 
     public void updateWithPatchDto(RoomPatchDto roomPatchDto) {

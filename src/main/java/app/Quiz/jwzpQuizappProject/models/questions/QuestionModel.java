@@ -4,6 +4,8 @@ import app.Quiz.jwzpQuizappProject.exceptions.answers.AnswerNotFoundException;
 import app.Quiz.jwzpQuizappProject.models.answers.AnswerModel;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.lang.NonNull;
 
 import java.time.Instant;
@@ -11,32 +13,32 @@ import java.util.Collections;
 import java.util.List;
 
 @Entity
+@Table(name = "questions")
 public class QuestionModel{ // T is type of question, like image or string etc
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+    int ordNum;
     private String content;
+    QuestionStatus status;
     @NonNull
     Instant createdAt;
-    Integer ordNum;
-    @OneToMany
+    @OneToMany(mappedBy = "questionId")
     @OrderBy("ordNum ASC")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     List<AnswerModel> answers;
-
     @JsonIgnore
     long quizId;
-//    @OneToMany(fetch = FetchType.LAZY, mappedBy = "question")
-//    List<QuestionAndUsersAnswerModel> questionAndUsersAnswers;
 
-    public QuestionModel() {
-    }
-    public QuestionModel(String content, int ordNum, long quizId, @NonNull Instant createdAt) {
-        this.content = content;
+    public QuestionModel(int ordNum, String content, @NonNull Instant createdAt, long quizId) {
         this.ordNum = ordNum;
-        this.quizId = quizId;
+        this.content = content;
+        this.status = QuestionStatus.INVALID;
         this.createdAt = createdAt;
         this.answers = Collections.emptyList();
+        this.quizId = quizId;
     }
+    protected QuestionModel() {}
 
     public Long getId() {
         return id;
@@ -57,17 +59,26 @@ public class QuestionModel{ // T is type of question, like image or string etc
     public void setCreatedAt(@NonNull Instant createdAt) {
         this.createdAt = createdAt;
     }
-    public Integer getOrdNum() {
+    public QuestionStatus getQuestionStatus() {
+        return status;
+    }
+    public void setQuestionStatus(QuestionStatus status) {
+        this.status = status;
+    }
+    public int getOrdNum() {
         return ordNum;
     }
-    public void setOrdNum(Integer ordNum) {
+    public void setOrdNum(int ordNum) {
         this.ordNum = ordNum;
     }
     public List<AnswerModel> getAnswers() {
         return answers;
     }
-    public int getAnswersSize() {
+    public int answersSize() {
         return answers.size();
+    }
+    public int nextAnswerOrdinalNumber() {
+        return answers.size() + 1;
     }
     public AnswerModel getSingleAnswerByOrdNum(int ordNum) throws AnswerNotFoundException{
         return answers.stream()
@@ -83,11 +94,11 @@ public class QuestionModel{ // T is type of question, like image or string etc
     }
     public void removeAnswer(AnswerModel answer) {
         answers.remove(answer);
-        setOrderNumbers();
+        setAnswersOrderNumbers();
     }
-    private void setOrderNumbers() {
-        for (int i = 0; i < getAnswersSize(); i++) {
-            answers.get(i).setOrdNum(i);
+    private void setAnswersOrderNumbers() {
+        for (int i = 0; i < answersSize(); i++) {
+            answers.get(i).setOrdNum(i + 1);
         }
     }
 //    public List<QuestionAndUsersAnswerModel> getQuestionAndUsersAnswers() {

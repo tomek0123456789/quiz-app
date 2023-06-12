@@ -8,31 +8,27 @@ import jakarta.validation.constraints.NotBlank;
 import org.springframework.lang.NonNull;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
-
-
-// TODO add validation to match the @Valid annotation
-// TODO how to add salt etc.
 
 // TODO too much info is being returned when quiz is being added
 // consider JsonIgnore there (QuizModel.owner) or here
 @Entity
-//@Table(name = "users")
+@Table(name = "users")
 public class UserModel {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-//    todo change the strategy or add a generator
-    private Long id;
+    private long id;
     @NotBlank
+    @Column(unique = true)
     private String name;
     @NotBlank
     @Email
-//  does this need @Email validation when RegisterRequest has it already?
+    @Column(unique = true)
     String email;
     @NonNull
-    LocalDateTime createdAt;
+    Instant createdAt;
     @NonNull
     UserStatus status;
     @NonNull
@@ -47,20 +43,19 @@ public class UserModel {
     // do jakich pokoi nalzy user
     @ManyToMany
     @JsonIgnore
-    Set<RoomModel> quizzesParticipation;
+    Set<RoomModel> roomParticipation;
 
 //    @OneToMany(mappedBy = "owner")
 //    Set<QuizModel> quizes;
 
 //todo add constructor to add an admin, also add time parameter (no injection to model?)
-    public UserModel(@NotBlank String name, @NotBlank String email, @NonNull String password) {
+    public UserModel(@NotBlank String name, @NotBlank String email, @NonNull String password, Instant createdAt) {
         this.name = name;
         this.email = email;
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = createdAt;
         this.status = UserStatus.ACTIVE;
         this.roles = List.of(UserRole.USER);
         this.password = password;
-        this.salt = "123salt!!";
     }
 
     public UserModel(Long id, @NonNull String name, @NonNull String email,
@@ -69,7 +64,7 @@ public class UserModel {
         this.id = id;
         this.name = name;
         this.email = email;
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = Instant.now();
         this.status = status;
         this.roles = roles;
         this.password = password;
@@ -77,20 +72,19 @@ public class UserModel {
     }
 
     public UserModel() {
-        this.name = "example_name";
-        this.email = "example@email.pl";
-        this.createdAt = LocalDateTime.now();
+        this.name = "admin";
+        this.email = "admin@admin.com";
+        this.createdAt = Instant.now();
         this.status = UserStatus.ACTIVE;
-        this.roles = List.of(UserRole.USER);
-        this.password = new BCryptPasswordEncoder().encode("password123");;
-        this.salt = "123salt!!";
+        this.roles = List.of(UserRole.USER, UserRole.ADMIN);
+        this.password = new BCryptPasswordEncoder().encode("admin");;
     }
 
-    public Long getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(long id) {
         this.id = id;
     }
 
@@ -110,11 +104,11 @@ public class UserModel {
         this.email = email;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
     }
 
@@ -150,32 +144,19 @@ public class UserModel {
         this.salt = salt;
     }
 
-    public Set<RoomModel> getQuizzesParticipation() {
-        return quizzesParticipation;
+    public Set<RoomModel> getRoomParticipation() {
+        return roomParticipation;
     }
 
-    public void setQuizzesParticipation(Set<RoomModel> quizesParticipation) {
-        this.quizzesParticipation = quizesParticipation;
+    public void setRoomParticipation(Set<RoomModel> roomParticipation) {
+        this.roomParticipation = roomParticipation;
     }
     public void addRoomParticipation(RoomModel room) {
-        quizzesParticipation.add(room);
+        roomParticipation.add(room);
     }
     public void removeRoomParticipation(RoomModel room) {
-        quizzesParticipation.remove(room);
+        roomParticipation.remove(room);
     }
-
-//    public Set<QuizModel> getQuizes() {
-//        return quizes;
-//    }
-//
-//    public void setQuizes(Set<QuizModel> quizes) {
-//        this.quizes = quizes;
-//    }
-//
-//    public void addQuiz(QuizModel quiz) {
-//        this.quizes.add(quiz);
-//    }
-
     public boolean isAdmin() {
         return roles.contains(UserRole.ADMIN);
     }
@@ -190,7 +171,6 @@ public class UserModel {
                 ", role=" + roles +
                 ", passwordHash='" + password + '\'' +
                 ", salt='" + salt + '\'' +
-//                ", quizesParticipation=" + quizesParticipation +
                 '}';
     }
 }

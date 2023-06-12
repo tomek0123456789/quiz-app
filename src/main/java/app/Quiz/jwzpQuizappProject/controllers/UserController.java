@@ -4,10 +4,10 @@ import app.Quiz.jwzpQuizappProject.exceptions.auth.PermissionDeniedException;
 import app.Quiz.jwzpQuizappProject.exceptions.users.UserNotFoundException;
 import app.Quiz.jwzpQuizappProject.models.users.UserDto;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
-import app.Quiz.jwzpQuizappProject.repositories.UserRepository;
 import app.Quiz.jwzpQuizappProject.service.TokenService;
 import app.Quiz.jwzpQuizappProject.service.UserService;
-import org.hibernate.cfg.NotYetImplementedException;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,51 +17,51 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    private final UserRepository userRepository;
     private final TokenService tokenService;
-    final UserService userService;
+    private final UserService userService;
 
-    public UserController(UserRepository userRepository, TokenService tokenService, UserService userService) {
-        this.userRepository = userRepository;
+    public UserController(TokenService tokenService, UserService userService) {
         this.tokenService = tokenService;
         this.userService = userService;
     }
 
-    @GetMapping()
-    public ResponseEntity<List<UserModel>> getMultipleUsers(@RequestParam(value = "name", required = false) Optional<String> userName ){
-        return userName.map(s -> ResponseEntity.ok(userService.getMultipleUsersByName(s))).orElseGet(() -> ResponseEntity.ok(userService.getAllUsers()));
+    @GetMapping
+    public List<UserModel> getMultipleUsers(
+            @RequestParam(value = "username", required = false) Optional<String> username
+    ) {
+        return userService.getMultipleUsers(username);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getSingleUser(@PathVariable long id) throws UserNotFoundException {
-        return ResponseEntity.ok( userService.getUserById(id));
+    public UserModel getSingleUser(
+            @PathVariable long id
+    ) throws UserNotFoundException {
+        return userService.getUserById(id);
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserModel> getMe(@RequestHeader("Authorization") String bearerToken) {
-        return  ResponseEntity.ok(tokenService.getUserFromToken(bearerToken));
-    }
-
-    // TODO: TOMEK! Chyba tego juz nie uzywamy cnie?????
-    @PostMapping()
-    public ResponseEntity<?> createUser(@RequestBody UserModel newUser) {
-        this.userRepository.save(newUser);
-        return ResponseEntity.ok(newUser.getId());
+    public UserModel getMe(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token
+    ) {
+        return tokenService.getUserFromToken(token);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteUser(@RequestHeader("Authorization") String token,
-                                     @PathVariable long id) throws UserNotFoundException, PermissionDeniedException {
-        userService.deactivateUser(token, id);
-
-        return ResponseEntity.ok("ok");
+    public ResponseEntity<String> deactivateUser(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @PathVariable long id
+    ) throws UserNotFoundException, PermissionDeniedException {
+        userService.deactivateUser(id, token);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @PutMapping()
-    public ResponseEntity<?> updateUser(@RequestHeader("Authorization") String token,
-                                     @RequestBody UserDto user) throws UserNotFoundException, PermissionDeniedException {
-        userService.updateUser(token,user);
-        throw new NotYetImplementedException();
+    @PutMapping
+    public ResponseEntity<?> updateUser(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @RequestBody UserDto user
+    ) throws UserNotFoundException, PermissionDeniedException {
+        userService.updateUser(user, token);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
 

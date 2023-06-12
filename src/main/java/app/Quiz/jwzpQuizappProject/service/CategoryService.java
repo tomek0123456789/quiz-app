@@ -1,13 +1,13 @@
 package app.Quiz.jwzpQuizappProject.service;
 
 import app.Quiz.jwzpQuizappProject.exceptions.categories.CategoryAlreadyExistsException;
+import app.Quiz.jwzpQuizappProject.exceptions.categories.CategoryNotFoundException;
 import app.Quiz.jwzpQuizappProject.models.categories.CategoryDto;
 import app.Quiz.jwzpQuizappProject.models.categories.CategoryModel;
 import app.Quiz.jwzpQuizappProject.repositories.CategoryRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class CategoryService {
@@ -17,8 +17,8 @@ public class CategoryService {
         this.categoryRepository = categoryRepository;
     }
 
-    public Optional<CategoryModel> getSingleCategory(long categoryId) {
-        return categoryRepository.findById(categoryId);
+    public CategoryModel getSingleCategory(long categoryId) throws CategoryNotFoundException {
+        return categoryRepository.findById(categoryId).orElseThrow(() -> new CategoryNotFoundException("Category with id: " + categoryId + " was not found."));
     }
 
     public List<CategoryModel> getAllCategories() {

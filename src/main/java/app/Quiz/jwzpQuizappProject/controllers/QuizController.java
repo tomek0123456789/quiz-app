@@ -13,10 +13,12 @@ import app.Quiz.jwzpQuizappProject.models.questions.QuestionDto;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizDto;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
+import app.Quiz.jwzpQuizappProject.models.quizzes.QuizPatchDto;
 import app.Quiz.jwzpQuizappProject.service.QuizService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -42,9 +44,10 @@ public class QuizController {
     @GetMapping
     public List<QuizModel> getMultipleQuizzes(
             @RequestParam(value = "name", required = false) Optional<String> titlePart,
-            @RequestParam(value = "category", required = false) Optional<String> categoryName
+            @RequestParam(value = "category", required = false) Optional<String> categoryName,
+            @RequestParam(value = "valid", required = false) Optional<Boolean> validQuizzes
     ) {
-        return quizService.getQuizzesByTitleOrCategory(titlePart, categoryName);
+        return quizService.getMultipleQuizzes(titlePart, categoryName, validQuizzes);
     }
 
     @GetMapping("/my")
@@ -53,11 +56,11 @@ public class QuizController {
     }
 
     @PostMapping
-    public QuizModel createQuiz(
+    public ResponseEntity<QuizModel> createQuiz(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @RequestBody QuizDto quizDto
     ) throws CategoryNotFoundException {
-        return quizService.addQuiz(quizDto, token);
+        return new ResponseEntity<>(quizService.addQuiz(quizDto, token), HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{quizId}")
@@ -65,21 +68,25 @@ public class QuizController {
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @PathVariable long quizId
     ) throws QuizNotFoundException, PermissionDeniedException {
-        // todo validate if user sending the request is the actual user
         quizService.deleteQuiz(quizId, token);
         return new ResponseEntity<>("Successfully deleted a quiz with id: " + quizId + ".", HttpStatus.NO_CONTENT);
     }
-
-//    ----------------------TODO-------------------------------------
-
-    // TODO: check if user is an owner or an admin
     @PutMapping
-    public ResponseEntity<HttpStatus> updateQuiz(@RequestBody QuizModel quiz) {
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public QuizModel updateQuiz(
+            @RequestBody QuizModel quiz
+    ) throws CategoryNotFoundException {
+        return quizService.updateQuiz(quiz);
     }
 
-//    ----------------------TODO-------------------------------------
-
+    @PatchMapping("/{quizId}")
+    public QuizModel patchQuiz(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @PathVariable long quizId,
+            @RequestBody QuizPatchDto quizPatchDto
+    ) throws QuizNotFoundException, CategoryNotFoundException, PermissionDeniedException {
+        return quizService.updateQuiz(quizId, quizPatchDto, token);
+    }
 
     //////  QUESTION    //////
 
@@ -100,12 +107,10 @@ public class QuizController {
             @PathVariable int questionOrdNum
     ) throws QuizNotFoundException, QuestionNotFoundException, PermissionDeniedException, QuestionsLimitException {
         quizService.removeQuestionFromQuiz(quizId, questionOrdNum, token);
-
-        return new ResponseEntity<>("Successfully deleted a question no. " + questionOrdNum + " from a quiz with id: " + quizId + ".", HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     //////  ANSWER    //////
-    // TODO: check if user is an owner or an admin
     @PostMapping("/{quizId}/questions/{questionOrdNum}/answers")
     public ResponseEntity<AnswerModel> addAnswerToQuestion(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
@@ -113,11 +118,11 @@ public class QuizController {
             @PathVariable int questionOrdNum,
             @RequestBody AnswerDto answerDto
     ) throws QuizNotFoundException, QuestionNotFoundException, PermissionDeniedException, AnswersLimitException {
-        AnswerModel answer;
-        answer = quizService.addAnswerToQuestion(quizId, questionOrdNum, answerDto, token);
-        return new ResponseEntity<>(answer,HttpStatus.CREATED);
+        AnswerModel answer = quizService.addAnswerToQuestion(quizId, questionOrdNum, answerDto, token);
+        return new ResponseEntity<>(answer, HttpStatus.CREATED);
     }
 
+    // todo maybe patch?
     @DeleteMapping("/{quizId}/questions/{questionOrdNum}/answers/{answerOrdNum}")
     public ResponseEntity<String> removeAnswerFromQuestion(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
@@ -128,6 +133,4 @@ public class QuizController {
         quizService.removeAnswerFromQuestion(quizId, questionOrdNum, answerOrdNum, token);
         return new ResponseEntity<>("Successfully deleted an answer no. " + answerOrdNum + " from a question no. " + questionOrdNum + " from a quiz with id: " + quizId + ".", HttpStatus.NO_CONTENT);
     }
-
-
 }

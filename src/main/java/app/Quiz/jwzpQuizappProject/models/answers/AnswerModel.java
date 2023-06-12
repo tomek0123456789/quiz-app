@@ -2,31 +2,32 @@ package app.Quiz.jwzpQuizappProject.models.answers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import org.springframework.lang.NonNull;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "answers")
 public class AnswerModel {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+    int ordNum;
     String text;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    int score;
     @NonNull
     Instant createdAt;
-    Integer ordNum;
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    Integer score;
+    @JsonIgnore
+    long questionId;
 
-    public AnswerModel(String text, int score, int ordNum, @NonNull Instant createdAt) {
+    public AnswerModel(int ordNum, String text, int score, @NonNull Instant createdAt, long questionId) {
+        this.ordNum = ordNum;
         this.text = text;
         this.score = score;
-        this.ordNum = ordNum;
+        this.questionId = questionId;
         this.createdAt = createdAt;
     }
 
@@ -51,16 +52,16 @@ public class AnswerModel {
     public void setCreatedAt(@NonNull Instant createdAt) {
         this.createdAt = createdAt;
     }
-    public Integer getOrdNum() {
+    public int getOrdNum() {
         return ordNum;
     }
-    public void setOrdNum(Integer ordNum) {
+    public void setOrdNum(int ordNum) {
         this.ordNum = ordNum;
     }
-    public Integer getScore() {
-        return score == null ? 0 : score;
+    public int getScore() {
+        return score;
     }
-    public void setScore(Integer score) {
+    public void setScore(int score) {
         this.score = score;
     }
 }

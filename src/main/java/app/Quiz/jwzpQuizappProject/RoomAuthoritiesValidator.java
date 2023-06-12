@@ -16,7 +16,7 @@ public class RoomAuthoritiesValidator {
     }
 
     public boolean checkRoomOwnership(long userId, long roomOwnerId) {
-        return Objects.equals(userId, roomOwnerId);
+        return userId == roomOwnerId;
     }
 
     public boolean validateUserRoomEditAuthorities(UserModel user, long roomOwnerId) {
