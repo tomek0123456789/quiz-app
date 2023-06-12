@@ -23,6 +23,9 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-configuration-processor")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
+	implementation("org.apache.logging.log4j:log4j-api")
+	implementation("org.apache.logging.log4j:log4j-core")
+	implementation("org.projectlombok:lombok")
 	runtimeOnly("org.postgresql:postgresql")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }

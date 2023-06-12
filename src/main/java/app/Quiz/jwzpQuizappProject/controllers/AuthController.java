@@ -39,15 +39,11 @@ public class AuthController {
     }
 
     @PostMapping(path = "/register")
-    public ResponseEntity<String> register(@Valid @RequestBody RegisterDto registerDto) {
+    public ResponseEntity<String> register(@Valid @RequestBody RegisterDto registerDto) throws UserAlreadyExistsException {
 //        TODO how to authenticate against db when user is not created yet?
 //         when var authentication = .. goes wrong user gets saved
 //         maybe something like transaction?
-        try {
-            userService.saveUser(registerDto);
-        } catch (UserAlreadyExistsException exception) {
-            return new ResponseEntity<>("An account with email: " + registerDto.email() + " already exists.", HttpStatus.CONFLICT);
-        }
+        userService.saveUser(registerDto);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 

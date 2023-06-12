@@ -36,9 +36,6 @@ public class UserModel {
     @NonNull
     @JsonIgnore
     String password;
-    @NonNull
-    @JsonIgnore
-    String salt;
 
     // do jakich pokoi nalzy user
     @ManyToMany
@@ -60,7 +57,7 @@ public class UserModel {
 
     public UserModel(Long id, @NonNull String name, @NonNull String email,
                      @NonNull UserStatus status, @NonNull List<UserRole> roles,
-                     @NonNull String password, @NonNull String salt) {
+                     @NonNull String password) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -68,7 +65,6 @@ public class UserModel {
         this.status = status;
         this.roles = roles;
         this.password = password;
-        this.salt = salt;
     }
 
     public UserModel() {
@@ -136,14 +132,6 @@ public class UserModel {
         this.password = passwordHash;
     }
 
-    public String getSalt() {
-        return salt;
-    }
-
-    public void setSalt(String salt) {
-        this.salt = salt;
-    }
-
     public Set<RoomModel> getRoomParticipation() {
         return roomParticipation;
     }
@@ -170,7 +158,6 @@ public class UserModel {
                 ", status=" + status +
                 ", role=" + roles +
                 ", passwordHash='" + password + '\'' +
-                ", salt='" + salt + '\'' +
                 '}';
     }
 }

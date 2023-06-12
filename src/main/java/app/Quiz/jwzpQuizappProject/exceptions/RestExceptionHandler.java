@@ -10,6 +10,7 @@ import app.Quiz.jwzpQuizappProject.exceptions.questions.QuestionsLimitException;
 import app.Quiz.jwzpQuizappProject.exceptions.quizzes.QuizNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.results.ResultNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.rooms.RoomNotFoundException;
+import app.Quiz.jwzpQuizappProject.exceptions.users.UserAlreadyExistsException;
 import app.Quiz.jwzpQuizappProject.exceptions.users.UserNotFoundException;
 import app.Quiz.jwzpQuizappProject.models.exceptions.ExceptionDto;
 import org.springframework.core.Ordered;
@@ -45,6 +46,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler({
             AnswerAlreadyExists.class,
             CategoryAlreadyExistsException.class,
+            UserAlreadyExistsException.class,
     })
     protected ResponseEntity<Object> handleEntityNotFound(AnswerAlreadyExists ex) {
         return new ResponseEntity<>(new ExceptionDto(ex.getMessage()), HttpStatus.CONFLICT);

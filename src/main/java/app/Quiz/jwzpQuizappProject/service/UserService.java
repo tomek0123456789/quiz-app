@@ -9,6 +9,7 @@ import app.Quiz.jwzpQuizappProject.models.users.UserDto;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserStatus;
 import app.Quiz.jwzpQuizappProject.repositories.UserRepository;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Log4j2
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
@@ -54,11 +56,12 @@ public class UserService implements UserDetailsService {
 //    https://stackoverflow.com/a/71813446
 //    https://docs.spring.io/spring-security/site/docs/3.2.0.RC1/reference/html/crypto.html (last section, 25.4)
     public void saveUser(RegisterDto registerDto) throws UserAlreadyExistsException {
+        log.debug("guwno");
         if (userRepository.existsByEmail(registerDto.email())) {
-            throw new UserAlreadyExistsException("Account with email " + registerDto.email() + " already exists.");
+            throw new UserAlreadyExistsException("An account with email " + registerDto.email() + " already exists.");
         }
         if (userRepository.existsByName(registerDto.name())) {
-            throw new UserAlreadyExistsException("Account with name " + registerDto.email() + " already exists.");
+            throw new UserAlreadyExistsException("An account with name " + registerDto.email() + " already exists.");
         }
         var user = new UserModel(registerDto.name(), registerDto.email(), passwordEncoder.encode(registerDto.password()), clock.instant());
         userRepository.save(user);
