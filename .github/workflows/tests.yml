@@ -10,13 +10,13 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      image: postgres:alpine
-      container_name: db
-      ports:
-        - 5444:5432
-      environment:
-        POSTGRES_USER: postgres
-        POSTGRES_PASSWORD: postgres
+      postgres:
+        image: postgres:alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5444:5432
 
     steps:
       - name: Checkout repository
