@@ -13,8 +13,8 @@ public class CategoryModel {
     @Column(unique = true)
     String name;
 
-    public CategoryModel(String name) {
-        this.name = name;
+    public CategoryModel(String categoryName) {
+        this.name = categoryName;
     }
 
     protected CategoryModel() {
