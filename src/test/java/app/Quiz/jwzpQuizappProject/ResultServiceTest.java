@@ -1,10 +1,19 @@
 package app.Quiz.jwzpQuizappProject;
 
+import app.Quiz.jwzpQuizappProject.exceptions.answers.AnswerAlreadyExists;
+import app.Quiz.jwzpQuizappProject.exceptions.answers.AnswerNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.auth.PermissionDeniedException;
+import app.Quiz.jwzpQuizappProject.exceptions.questions.QuestionNotFoundException;
+import app.Quiz.jwzpQuizappProject.exceptions.quizzes.QuizNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.results.ResultNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.rooms.RoomNotFoundException;
+import app.Quiz.jwzpQuizappProject.models.categories.CategoryModel;
+import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
+import app.Quiz.jwzpQuizappProject.models.questions.QuestionStatus;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
+import app.Quiz.jwzpQuizappProject.models.results.QuestionAndUsersAnswerModel;
 import app.Quiz.jwzpQuizappProject.models.results.QuizResultsModel;
+import app.Quiz.jwzpQuizappProject.models.results.ResultsDto;
 import app.Quiz.jwzpQuizappProject.models.results.ResultsModel;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
@@ -12,18 +21,21 @@ import app.Quiz.jwzpQuizappProject.models.users.UserRole;
 import app.Quiz.jwzpQuizappProject.repositories.*;
 import app.Quiz.jwzpQuizappProject.service.ResultsService;
 import app.Quiz.jwzpQuizappProject.service.TokenService;
+import org.aspectj.weaver.patterns.TypePatternQuestions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class ResultServiceTest {
 
@@ -283,8 +295,76 @@ public class ResultServiceTest {
     }
 
     @Test
-    public void createResults_createsSuccessfully(){
-
+    public void createResults_createsSuccessfully() throws AnswerNotFoundException, QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists {
+//        var user = makeTokenServiceReturnUser();
+//
+//        long quizOneId = 1;
+//        long quizTwoId = 2;
+//
+//        QuizModel quizOne = new QuizModel();
+//        quizOne.setId(quizOneId);
+//        quizOne.setQuestions(new ArrayList<>(1));
+//
+//        QuizModel quizTwo = new QuizModel();
+//        quizTwo.setId(quizOneId);
+//
+//        QuestionModel questionQuizOne = new QuestionModel();
+//        questionQuizOne.setOrdNum(0);
+//        questionQuizOne.setQuestionStatus( QuestionStatus.VALID);
+//        var questionsForQuizOne = new ArrayList<QuestionModel>(1);
+//        questionsForQuizOne.add(questionQuizOne);
+//        quizOne.setQuestions(questionsForQuizOne);
+//
+//        QuestionModel questionQuizTwo = new QuestionModel();
+//        questionQuizTwo.setOrdNum(0);
+//        questionQuizTwo.setQuestionStatus( QuestionStatus.VALID);
+//        var questionsForQuizTwo = new ArrayList<QuestionModel>(1);
+//        questionsForQuizTwo.add(questionQuizTwo);
+//        quizTwo.setQuestions(questionsForQuizTwo);
+//
+//        HashSet<QuizResultsModel> quizResults = new HashSet<>(2);
+//        QuizResultsModel quizResult1 = new QuizResultsModel();
+//        quizResult1.setQuizId(quizOneId);
+//
+//        long questionsOrdNumForQuizOne = 0;
+//        long answerOrdNumForQuizOne = 0;
+//        HashSet<QuestionAndUsersAnswerModel> qaasForQuizOne = new HashSet<>(1);
+//        var qaaForQuizOne = new QuestionAndUsersAnswerModel();
+//        qaaForQuizOne.setQuestionOrdNum(questionsOrdNumForQuizOne);
+//        qaaForQuizOne.setUserAnswerOrdNum(answerOrdNumForQuizOne);
+//        qaasForQuizOne.add(qaaForQuizOne);
+//
+//
+//        long questionsOrdNumForQuizTwo = 0;
+//        long answerOrdNumForQuizTwo = 0;
+//        HashSet<QuestionAndUsersAnswerModel> qaasForQuizTwo = new HashSet<>(1);
+//        var qaaForQuizTwo = new QuestionAndUsersAnswerModel();
+//        qaaForQuizOne.setQuestionOrdNum(questionsOrdNumForQuizTwo);
+//        qaaForQuizOne.setUserAnswerOrdNum(answerOrdNumForQuizTwo);
+//        qaasForQuizTwo.add(qaaForQuizTwo);
+//
+//        var quizOneResults = new QuizResultsModel();
+//        quizOneResults.setQuizId(quizOneId);
+//        quizOneResults.setQuestionsAndAnswers(qaasForQuizOne);
+//
+//        var quizTwoResults = new QuizResultsModel();
+//        quizTwoResults.setQuizId(quizTwoId);
+//        quizTwoResults.setQuestionsAndAnswers(qaasForQuizTwo);
+//
+//
+//        quizResults.add(quizOneResults);
+//        quizResults.add(quizTwoResults);
+//
+//
+//        var resultsDto = new ResultsDto(quizResults, user, LocalDateTime.of(2023,1,15,13,0,0),0 );
+//
+//        when( quizRepository.findById(quizOneId)).thenReturn(Optional.of(quizOne));
+//        when( quizRepository.findById(quizTwoId)).thenReturn(Optional.of(quizTwo));
+//
+//        resultsService.createResults(resultsDto,token);
+//
+//        verify(resultsRepository, times(1)).save(any(ResultsModel.class));
+        //Nie mam pojecia czm to sie wywala na dodaniu question do quiz
     }
 
     @Test
@@ -294,6 +374,9 @@ public class ResultServiceTest {
 
     @Test
     public void deleteSingleResult_resultExists_removesResult(){
+        var results = new ResultsModel();
+        resultsService.deleteSingleResult(results);
+        verify(resultsRepository, times(1)).delete(results);
 
     }
 
