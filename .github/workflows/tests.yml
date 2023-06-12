@@ -8,29 +8,28 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5444:5432
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
+      - name: Setup postgres
+        run: docker pull postgres
+             docker run  --name postgresdb -p 5432:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -d postgres
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@ccb4328a959376b642e027874838f60f8e596de3
       - name: Build with Gradle
-        uses: gradle/gradle-build-action@749f47bda3e44aa060e82d7b3ef7e40d953bd629
-        with:
-          arguments: build
+        run: ./gradlew build --console=plain
+
+      - name: Run unit tests
+        run: ./gradlew test --console=plain
+
+
+        #       - name: Validate Gradle wrapper
+        #        uses: gradle/wrapper-validation-action@ccb4328a959376b642e027874838f60f8e596de3
+        #      - name: Build with Gradle
+        #        uses: gradle/gradle-build-action@749f47bda3e44aa060e82d7b3ef7e40d953bd629
+        #        with:
+        #          arguments: build
