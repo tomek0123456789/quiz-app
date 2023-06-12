@@ -11,12 +11,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
@@ -102,12 +99,103 @@ public class ResultServiceTest {
         allResults.get(2).setOwner(otherUSer);
 
         when(resultsRepository.findAll()).thenReturn(allResults);
+        // TODO: zrobic ze .finBYOwner czy cos tego typu zeby zwrocilo oopowienie wyniki
 
         var myResults = this.resultsService.getMyResultsForQuiz(token, quizId);
         assertEquals(1, myResults.size());
 
         var expectedResult = allResults.get(0).getQuizzesResults().stream().findAny().get();
         assertEquals(expectedResult, myResults.stream().findAny().get());
+    }
+
+    @Test
+    public void getMyBestResultForQuiz_DifferentScores_returnsOneResult(){
+
+    }
+
+    @Test
+    public void getMyBestResultForQuiz_DrawInScores_returnsOneResult(){
+
+    }
+
+    @Test
+    public void getAllMyResults_ReturnsAllResults(){
+
+    }
+
+    @Test
+    public void getAllMyResults_NoResults_ThrowsException(){
+        //TODO
+    }
+
+    @Test
+    public void getResultsForRoom_NoRoomWIthId_ThrowsException(){
+
+    }
+
+    @Test
+    public void getResultsForRoom_NoResultsWithRoomId_ThrowsException(){
+
+    }
+
+    @Test
+    public void getResultsForRoom_OneResultForRoom_ReturnsOneResult(){
+
+    }
+
+    @Test
+    public void getSingleResult_idExists_returnsOneResult(){
+
+    }
+
+    @Test
+    public void getSingleResult_idDoesNotExist_throwsException(){
+
+    }
+
+    @Test
+    public void createResults_createsSuccessfully(){
+
+    }
+
+    @Test
+    public void createResultsForRoom_createsSuccessfully(){
+
+    }
+
+    @Test
+    public void deleteSingleResult_resultExists_removesResult(){
+
+    }
+
+    @Test
+    public void updateQuestionAndUsersAnswer_updateAllAvailableProperties_ReturnsUpdatedQaa(){
+
+    }
+
+    @Test
+    public void updateQuizResults_updateAllAvailableProperties_ReturnsUpdatedQuizResult(){
+
+    }
+
+    @Test
+    public void updateResults_updateAllAvailableProperties_ReturnsUpdatedResults(){
+
+    }
+
+    @Test
+    public void deleteQuestionAndAnswer_DeletesQaa(){
+
+    }
+
+    @Test
+    public void deleteQuizResults_DeletesQuizResult(){
+
+    }
+
+    @Test
+    public void deleteResults_DeletesResult(){
+
     }
 
 
