@@ -24,38 +24,16 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler(AnswerNotFoundException.class)
+    @ExceptionHandler({
+            AnswerNotFoundException.class,
+            CategoryNotFoundException.class,
+            QuestionNotFoundException.class,
+            QuizNotFoundException.class,
+            ResultNotFoundException.class,
+            RoomNotFoundException.class,
+            UserNotFoundException.class,
+    })
     protected ResponseEntity<Object> handleEntityNotFound(AnswerNotFoundException ex) {
-        return new ResponseEntity<>(new ExceptionDto(ex.getMessage()), HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(CategoryNotFoundException.class)
-    protected ResponseEntity<ExceptionDto> handleEntityNotFound(CategoryNotFoundException ex) {
-        return new ResponseEntity<>(new ExceptionDto(ex.getMessage()), HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(QuestionNotFoundException.class)
-    protected ResponseEntity<Object> handleEntityNotFound(QuestionNotFoundException ex) {
-        return new ResponseEntity<>(new ExceptionDto(ex.getMessage()), HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(QuizNotFoundException.class)
-    protected ResponseEntity<Object> handleEntityNotFound(QuizNotFoundException ex) {
-        return new ResponseEntity<>(new ExceptionDto(ex.getMessage()), HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(ResultNotFoundException.class)
-    protected ResponseEntity<Object> handleEntityNotFound(ResultNotFoundException ex) {
-        return new ResponseEntity<>(new ExceptionDto(ex.getMessage()), HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(RoomNotFoundException.class)
-    protected ResponseEntity<Object> handleEntityNotFound(RoomNotFoundException ex) {
-        return new ResponseEntity<>(new ExceptionDto(ex.getMessage()), HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(UserNotFoundException.class)
-    protected ResponseEntity<Object> handleEntityNotFound(UserNotFoundException ex) {
         return new ResponseEntity<>(new ExceptionDto(ex.getMessage()), HttpStatus.NOT_FOUND);
     }
 
@@ -64,13 +42,11 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(new ExceptionDto(ex.getMessage()), HttpStatus.UNAUTHORIZED);
     }
 
-    @ExceptionHandler(AnswerAlreadyExists.class)
+    @ExceptionHandler({
+            AnswerAlreadyExists.class,
+            CategoryAlreadyExistsException.class,
+    })
     protected ResponseEntity<Object> handleEntityNotFound(AnswerAlreadyExists ex) {
-        return new ResponseEntity<>(new ExceptionDto(ex.getMessage()), HttpStatus.CONFLICT);
-    }
-
-    @ExceptionHandler(CategoryAlreadyExistsException.class)
-    protected ResponseEntity<ExceptionDto> handleEntityAlreadyExists(CategoryAlreadyExistsException ex) {
         return new ResponseEntity<>(new ExceptionDto(ex.getMessage()), HttpStatus.CONFLICT);
     }
 

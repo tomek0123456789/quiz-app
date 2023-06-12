@@ -15,24 +15,17 @@ import java.util.Set;
 
 @Entity
 public class ResultsModel{
-
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
-
     @OneToMany
     private Set<QuizResultsModel> quizzesResults;
-
     @ManyToOne
     UserModel owner;
-
     @NonNull
     LocalDateTime createdAt;
-
     @ManyToOne
     RoomModel room;
-
-
     long score;
 
     @JsonCreator

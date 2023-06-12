@@ -35,8 +35,8 @@ public class CategoryController {
 
     @PostMapping
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public CategoryModel createCategory(@RequestBody CategoryDto categoryDto) throws CategoryAlreadyExistsException {
-        return categoryService.addCategory(categoryDto);
+    public ResponseEntity<CategoryModel> createCategory(@RequestBody CategoryDto categoryDto) throws CategoryAlreadyExistsException {
+        return new ResponseEntity<>(categoryService.addCategory(categoryDto), HttpStatus.CREATED);
     }
 
     @PutMapping("/{categoryId}")

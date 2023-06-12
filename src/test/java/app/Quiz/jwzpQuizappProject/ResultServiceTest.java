@@ -23,8 +23,6 @@ public class ResultServiceTest {
     private ResultsService resultsService;
 
     @Mock
-    private QuestionRepository questionRepository;
-    @Mock
     private QuestionAndUsersAnswerRepository questionAndUsersAnswerRepository;
     @Mock
     private QuizResultsRepository quizResultsRepository;
@@ -32,8 +30,6 @@ public class ResultServiceTest {
     private ResultsRepository resultsRepository;
     @Mock
     private QuizRepository quizRepository;
-    @Mock
-    private AnswerRepository answerRepository;
     @Mock
     private TokenService tokenService;
     @Mock
@@ -48,12 +44,10 @@ public class ResultServiceTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         resultsService = new ResultsService(
-                questionRepository,
                 questionAndUsersAnswerRepository,
                 quizResultsRepository,
                 resultsRepository,
                 quizRepository,
-                answerRepository,
                 tokenService,
                 roomAuthoritiesValidator,
                 roomRepository,
@@ -101,7 +95,7 @@ public class ResultServiceTest {
         when(resultsRepository.findAll()).thenReturn(allResults);
         // TODO: zrobic ze .finBYOwner czy cos tego typu zeby zwrocilo oopowienie wyniki
 
-        var myResults = this.resultsService.getMyResultsForQuiz(token, quizId);
+        var myResults = this.resultsService.getMyResultsForQuiz(quizId, token);
         assertEquals(1, myResults.size());
 
         var expectedResult = allResults.get(0).getQuizzesResults().stream().findAny().get();

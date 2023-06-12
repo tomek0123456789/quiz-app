@@ -44,9 +44,10 @@ public class QuizController {
     @GetMapping
     public List<QuizModel> getMultipleQuizzes(
             @RequestParam(value = "name", required = false) Optional<String> titlePart,
-            @RequestParam(value = "category", required = false) Optional<String> categoryName
+            @RequestParam(value = "category", required = false) Optional<String> categoryName,
+            @RequestParam(value = "valid", required = false) Optional<Boolean> validQuizzes
     ) {
-        return quizService.getQuizzesByTitleOrCategory(titlePart, categoryName);
+        return quizService.getMultipleQuizzes(titlePart, categoryName, validQuizzes);
     }
 
     @GetMapping("/my")
@@ -55,11 +56,11 @@ public class QuizController {
     }
 
     @PostMapping
-    public QuizModel createQuiz(
+    public ResponseEntity<QuizModel> createQuiz(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @RequestBody QuizDto quizDto
     ) throws CategoryNotFoundException {
-        return quizService.addQuiz(quizDto, token);
+        return new ResponseEntity<>(quizService.addQuiz(quizDto, token), HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{quizId}")
@@ -106,12 +107,10 @@ public class QuizController {
             @PathVariable int questionOrdNum
     ) throws QuizNotFoundException, QuestionNotFoundException, PermissionDeniedException, QuestionsLimitException {
         quizService.removeQuestionFromQuiz(quizId, questionOrdNum, token);
-
-        return new ResponseEntity<>("Successfully deleted a question no. " + questionOrdNum + " from a quiz with id: " + quizId + ".", HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     //////  ANSWER    //////
-    // TODO: check if user is an owner or an admin
     @PostMapping("/{quizId}/questions/{questionOrdNum}/answers")
     public ResponseEntity<AnswerModel> addAnswerToQuestion(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
@@ -119,9 +118,8 @@ public class QuizController {
             @PathVariable int questionOrdNum,
             @RequestBody AnswerDto answerDto
     ) throws QuizNotFoundException, QuestionNotFoundException, PermissionDeniedException, AnswersLimitException {
-        AnswerModel answer;
-        answer = quizService.addAnswerToQuestion(quizId, questionOrdNum, answerDto, token);
-        return new ResponseEntity<>(answer,HttpStatus.CREATED);
+        AnswerModel answer = quizService.addAnswerToQuestion(quizId, questionOrdNum, answerDto, token);
+        return new ResponseEntity<>(answer, HttpStatus.CREATED);
     }
 
     // todo maybe patch?
@@ -135,6 +133,4 @@ public class QuizController {
         quizService.removeAnswerFromQuestion(quizId, questionOrdNum, answerOrdNum, token);
         return new ResponseEntity<>("Successfully deleted an answer no. " + answerOrdNum + " from a question no. " + questionOrdNum + " from a quiz with id: " + quizId + ".", HttpStatus.NO_CONTENT);
     }
-
-
 }
