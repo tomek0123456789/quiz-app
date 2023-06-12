@@ -63,14 +63,7 @@ public class QuizModel {
         this.questions = Collections.emptyList();
         this.rooms = Collections.emptySet();
     }
-
-<<<<<<< HEAD
-    public QuizModel() {
-    }
-=======
-    protected QuizModel() {}
->>>>>>> main
-
+    public QuizModel() {}
     public void addRoom(RoomModel room){
         rooms.add(room);
     }
