@@ -58,48 +58,31 @@ public class ResultServiceTest {
     @Test
     public  void getMyResultsForQuiz(){
         String token = "Baerer token";
+        long userId = 1;
         var authorizedUser = new UserModel();
-        var otherUSer = new UserModel();
+        authorizedUser.setId(userId);
 
         long quizId = 1;
         QuizModel quizModel = new QuizModel();
         quizModel.setId(quizId);
 
-        long otherQuizId = 2;
-        QuizModel otherQuizModel = new QuizModel();
-        otherQuizModel.setId(otherQuizId);
-
         when(tokenService.getUserFromToken(token)).thenReturn(authorizedUser);
 
-        var allResults = new ArrayList<ResultsModel>();
 
-        allResults.add(new ResultsModel());
-        allResults.get(0).setOwner(authorizedUser);
+        var result = new ResultsModel();
+        result.setOwner(authorizedUser);
         QuizResultsModel quizResults1 = new QuizResultsModel();
         quizResults1.setQuiz(quizModel);
         var quizzesResults = new HashSet<QuizResultsModel>();
         quizzesResults.add(quizResults1);
-        allResults.get(0).setQuizzesResults(quizzesResults);
+        result.setQuizzesResults(quizzesResults);
 
-        allResults.add(new ResultsModel());
-        allResults.get(1).setOwner(authorizedUser);
-        QuizResultsModel quizResults2 = new QuizResultsModel();
-        quizResults2.setQuiz(otherQuizModel);
-        var quizzesResults2 = new HashSet<QuizResultsModel>();
-        quizzesResults2.add(quizResults2);
-        allResults.get(1).setQuizzesResults(quizzesResults2);
-
-        allResults.add(new ResultsModel());
-        allResults.get(2).setOwner(otherUSer);
-
-        when(resultsRepository.findAll()).thenReturn(allResults);
-        // TODO: zrobic ze .finBYOwner czy cos tego typu zeby zwrocilo oopowienie wyniki
+        when(resultsRepository.findAllByOwnerAndQuizzesResultsId(userId, quizId)).thenReturn(quizzesResults);
 
         var myResults = this.resultsService.getMyResultsForQuiz(quizId, token);
-        assertEquals(1, myResults.size());
 
-        var expectedResult = allResults.get(0).getQuizzesResults().stream().findAny().get();
-        assertEquals(expectedResult, myResults.stream().findAny().get());
+        assertEquals(1, myResults.size());
+        assertEquals(quizzesResults, myResults);
     }
 
     @Test
