@@ -6,9 +6,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.util.Assert;
 
-//@RunWith(SpringRunner.class)
-//@SpringBootTest(classes = JwzpQuizappProjectApplicationTests.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-//@ExtendWith(SpringExtension.class)
 class JwzpQuizappProjectApplicationTests {
 
 	@Test

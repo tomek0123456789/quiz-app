@@ -21,7 +21,6 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest
 public class ResultServiceTest {
 
     private ResultsService resultsService;
