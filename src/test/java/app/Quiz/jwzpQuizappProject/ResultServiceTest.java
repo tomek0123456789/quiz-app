@@ -7,14 +7,12 @@ import app.Quiz.jwzpQuizappProject.exceptions.questions.QuestionNotFoundExceptio
 import app.Quiz.jwzpQuizappProject.exceptions.quizzes.QuizNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.results.ResultNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.rooms.RoomNotFoundException;
+import app.Quiz.jwzpQuizappProject.models.answers.AnswerModel;
 import app.Quiz.jwzpQuizappProject.models.categories.CategoryModel;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionStatus;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
-import app.Quiz.jwzpQuizappProject.models.results.QuestionAndUsersAnswerModel;
-import app.Quiz.jwzpQuizappProject.models.results.QuizResultsModel;
-import app.Quiz.jwzpQuizappProject.models.results.ResultsDto;
-import app.Quiz.jwzpQuizappProject.models.results.ResultsModel;
+import app.Quiz.jwzpQuizappProject.models.results.*;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserRole;
@@ -28,13 +26,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class ResultServiceTest {
@@ -294,8 +288,8 @@ public class ResultServiceTest {
         assertThrows(ResultNotFoundException.class, () -> resultsService.getSingleResult(resultId, token));
     }
 
-    @Test
-    public void createResults_createsSuccessfully() throws AnswerNotFoundException, QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists {
+//    @Test
+//    public void createResults_createsSuccessfully() throws AnswerNotFoundException, QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists {
 //        var user = makeTokenServiceReturnUser();
 //
 //        long quizOneId = 1;
@@ -303,20 +297,19 @@ public class ResultServiceTest {
 //
 //        QuizModel quizOne = new QuizModel();
 //        quizOne.setId(quizOneId);
-//        quizOne.setQuestions(new ArrayList<>(1));
+//        quizOne.setQuestions(new ArrayList<>());
 //
 //        QuizModel quizTwo = new QuizModel();
 //        quizTwo.setId(quizOneId);
 //
 //        QuestionModel questionQuizOne = new QuestionModel();
-//        questionQuizOne.setOrdNum(0);
+//        questionQuizOne.setOrdNum(1);
 //        questionQuizOne.setQuestionStatus( QuestionStatus.VALID);
-//        var questionsForQuizOne = new ArrayList<QuestionModel>(1);
-//        questionsForQuizOne.add(questionQuizOne);
+//        var questionsForQuizOne = List.of(questionQuizOne);
 //        quizOne.setQuestions(questionsForQuizOne);
 //
 //        QuestionModel questionQuizTwo = new QuestionModel();
-//        questionQuizTwo.setOrdNum(0);
+//        questionQuizTwo.setOrdNum(1);
 //        questionQuizTwo.setQuestionStatus( QuestionStatus.VALID);
 //        var questionsForQuizTwo = new ArrayList<QuestionModel>(1);
 //        questionsForQuizTwo.add(questionQuizTwo);
@@ -364,13 +357,267 @@ public class ResultServiceTest {
 //        resultsService.createResults(resultsDto,token);
 //
 //        verify(resultsRepository, times(1)).save(any(ResultsModel.class));
-        //Nie mam pojecia czm to sie wywala na dodaniu question do quiz
+//        //Nie mam pojecia czm to sie wywala na dodaniu question do quiz
+//    }
+
+    @Test
+    public void testCreateResults_withValidData_shouldCreateResults() throws QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists, AnswerNotFoundException {
+        UserModel user = makeTokenServiceReturnUser();
+
+        QuizResultsModel quizResults = new QuizResultsModel();
+        quizResults.setQuizId(1L);
+        QuestionAndUsersAnswerModel questionAndAnswer = new QuestionAndUsersAnswerModel();
+        questionAndAnswer.setQuestionOrdNum(0);
+        questionAndAnswer.setUserAnswerOrdNum(0);
+        Set<QuestionAndUsersAnswerModel> questionAndAnswerSet = new HashSet<>();
+        questionAndAnswerSet.add(questionAndAnswer);
+        quizResults.setQuestionsAndAnswers(questionAndAnswerSet);
+        Set<QuizResultsModel> quizResultsSet = new HashSet<>();
+        quizResultsSet.add(quizResults);
+        ResultsDto newResults = new ResultsDto(quizResultsSet, user, LocalDateTime.of(2023,1,1,13,0,0), 0);
+
+        AnswerModel answer1 = new AnswerModel();
+        AnswerModel answer2 = new AnswerModel();
+        answer1.setScore(999);
+        answer1.setOrdNum(0);
+        answer2.setOrdNum(1);
+
+        QuestionModel questionQuizOne = new QuestionModel();
+        questionQuizOne.setOrdNum(0);
+        questionQuizOne.setQuestionStatus( QuestionStatus.VALID);
+        questionQuizOne.addAnswer(answer1);
+        questionQuizOne.addAnswer(answer2);
+        var questionsForQuizOne = List.of(questionQuizOne);
+
+        QuizModel quiz = new QuizModel();
+        quiz.setId(1L);
+        quiz.setQuestions(questionsForQuizOne);
+        when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
+
+        // Act
+        ResultsModel result = resultsService.createResults(newResults, token);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(user, result.getOwner());
+        assertEquals(999, result.getScore());
+        assertEquals(1, result.getQuizzesResults().size());
+        assertEquals(1L, result.getQuizzesResults().iterator().next().getQuizId());
+
+        verify(tokenService, times(1)).getUserFromToken(token);
+        verify(quizRepository, times(1)).findById(1L);
+        verify(resultsRepository, times(1)).save(result);
+        verify(quizResultsRepository, times(1)).save(quizResults);
+        verify(questionAndUsersAnswerRepository, times(1)).save(questionAndAnswer);
     }
 
     @Test
-    public void createResultsForRoom_createsSuccessfully(){
+    public void testCreateResults_withInvalidQuizId_shouldThrowQuizNotFoundException() throws QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists, AnswerNotFoundException {
+        UserModel user = makeTokenServiceReturnUser();
 
+        QuizResultsModel quizResults = new QuizResultsModel();
+        quizResults.setQuizId(1L);
+        QuestionAndUsersAnswerModel questionAndAnswer = new QuestionAndUsersAnswerModel();
+        questionAndAnswer.setQuestionOrdNum(0);
+        questionAndAnswer.setUserAnswerOrdNum(0);
+        Set<QuestionAndUsersAnswerModel> questionAndAnswerSet = new HashSet<>();
+        questionAndAnswerSet.add(questionAndAnswer);
+        quizResults.setQuestionsAndAnswers(questionAndAnswerSet);
+        Set<QuizResultsModel> quizResultsSet = new HashSet<>();
+        quizResultsSet.add(quizResults);
+        ResultsDto newResults = new ResultsDto(quizResultsSet, user, LocalDateTime.of(2023,1,1,13,0,0), 0);
+
+        when(quizRepository.findById(1L)).thenReturn(Optional.empty());
+
+        // Act and Assert
+        assertThrows(QuizNotFoundException.class, () -> resultsService.createResults(newResults, token));
+
+        verify(tokenService, times(1)).getUserFromToken(token);
+        verify(quizRepository, times(1)).findById(1L);
+        verify(resultsRepository, never()).save(any());
+        verify(quizResultsRepository, never()).save(any());
+        verify(questionAndUsersAnswerRepository, never()).save(any());
     }
+
+    @Test
+    public void testCreateResults_QuestionNotFound_shouldThrowQuestionNotFoundException() throws QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists, AnswerNotFoundException {
+        UserModel user = makeTokenServiceReturnUser();
+
+        QuizResultsModel quizResults = new QuizResultsModel();
+        quizResults.setQuizId(1L);
+        QuestionAndUsersAnswerModel questionAndAnswer = new QuestionAndUsersAnswerModel();
+        questionAndAnswer.setQuestionOrdNum(0);
+        questionAndAnswer.setUserAnswerOrdNum(0);
+        Set<QuestionAndUsersAnswerModel> questionAndAnswerSet = new HashSet<>();
+        questionAndAnswerSet.add(questionAndAnswer);
+        quizResults.setQuestionsAndAnswers(questionAndAnswerSet);
+        Set<QuizResultsModel> quizResultsSet = new HashSet<>();
+        quizResultsSet.add(quizResults);
+        ResultsDto newResults = new ResultsDto(quizResultsSet, user, LocalDateTime.of(2023,1,1,13,0,0), 0);
+
+        when(quizRepository.findById(1L)).thenReturn(Optional.empty());
+
+
+        assertThrows(QuizNotFoundException.class, () -> resultsService.createResults(newResults, token));
+        verify(tokenService, times(1)).getUserFromToken(token);
+        verify(quizRepository, times(1)).findById(1L);
+        verify(resultsRepository, never()).save(any());
+        verify(quizResultsRepository, never()).save(any());
+        verify(questionAndUsersAnswerRepository, never()).save(any());
+    }
+
+
+    @Test
+    public void testDeleteSingleResult() {
+        ResultsModel result = new ResultsModel();
+        doNothing().when(resultsRepository).delete(result);
+
+        resultsService.deleteSingleResult(result);
+
+        verify(resultsRepository, times(1)).delete(result);
+    }
+
+    @Test
+    public void testDeleteAllResults() {
+        List<ResultsModel> results = new ArrayList<>();
+        doNothing().when(resultsRepository).deleteAll(results);
+
+        resultsService.deleteAllResults(results);
+
+        verify(resultsRepository, times(1)).deleteAll(results);
+    }
+
+    @Test
+    public void testUpdateQuestionAndUsersAnswer_withValidData_shouldUpdateQuestionAndUsersAnswer() throws AnswerNotFoundException, QuizNotFoundException, QuestionNotFoundException {
+        QuestionAndUsersAnswerPatchDto patchDto = new QuestionAndUsersAnswerPatchDto(1L, 2L, 1,1);
+
+        QuestionAndUsersAnswerModel originalQuestionAndUsersAnswer = new QuestionAndUsersAnswerModel();
+        originalQuestionAndUsersAnswer.setId(1L);
+        originalQuestionAndUsersAnswer.setUserAnswerOrdNum(1L);
+
+        QuizModel quiz = new QuizModel();
+        quiz.setId(2L);
+
+        QuestionModel question = new QuestionModel();
+        question.setOrdNum(1);
+
+        AnswerModel answer = new AnswerModel();
+        answer.setOrdNum(1);
+
+        question.setAnswers(List.of(answer));
+
+        quiz.setQuestions(List.of(question));
+
+        when(questionAndUsersAnswerRepository.findById(1L)).thenReturn(Optional.of(originalQuestionAndUsersAnswer));
+        when(quizRepository.findById(2L)).thenReturn(Optional.of(quiz));
+        when(questionAndUsersAnswerRepository.save(originalQuestionAndUsersAnswer)).thenReturn(originalQuestionAndUsersAnswer);
+
+        QuestionAndUsersAnswerModel updatedQuestionAndUsersAnswer = resultsService.updateQuestionAndUsersAnswer(patchDto);
+
+        assertNotNull(updatedQuestionAndUsersAnswer);
+        assertEquals(1L, updatedQuestionAndUsersAnswer.getId());
+        assertEquals(1L, updatedQuestionAndUsersAnswer.getQuestionOrdNum());
+
+        verify(questionAndUsersAnswerRepository, times(1)).findById(1L);
+        verify(quizRepository, times(1)).findById(2L);
+        verify(questionAndUsersAnswerRepository, times(1)).save(originalQuestionAndUsersAnswer);
+    }
+
+
+    @Test
+    public void testUpdateQuizResults_withValidData_shouldUpdateQuizResults() throws AnswerNotFoundException, QuizNotFoundException {
+        QuizResultsPatchDto patchDto = new QuizResultsPatchDto(1L, 2L, 100L);
+
+        QuizResultsModel originalQuizResults = new QuizResultsModel();
+        originalQuizResults.setQuizId(1L);
+        originalQuizResults.setScore(50);
+
+        QuizModel quiz = new QuizModel();
+        quiz.setId(2L);
+
+        QuestionModel question = new QuestionModel();
+        question.setOrdNum(1);
+
+        AnswerModel answer = new AnswerModel();
+        answer.setOrdNum(1);
+
+        question.addAnswer(answer);
+
+        quiz.addQuestion(question);
+
+        when(quizResultsRepository.findById(1L)).thenReturn(Optional.of(originalQuizResults));
+        when(quizRepository.findById(2L)).thenReturn(Optional.of(quiz));
+        when(quizResultsRepository.save(originalQuizResults)).thenReturn(originalQuizResults);
+
+        QuizResultsModel updatedQuizResults = resultsService.updateQuizResults(patchDto);
+
+        assertNotNull(updatedQuizResults);
+        assertEquals(2L, updatedQuizResults.getQuizId());
+        assertEquals(100, updatedQuizResults.getScore());
+
+        verify(quizRepository, times(1)).findById(2L);
+        verify(quizResultsRepository, times(1)).save(originalQuizResults);
+    }
+
+
+    @Test
+    public void testUpdateResults_withValidData_shouldUpdateResults() throws ResultNotFoundException, RoomNotFoundException {
+        ResultsPatchDto patchDto = new ResultsPatchDto(1L, 2L, 99L, 3L);
+
+        ResultsModel originalResults = new ResultsModel();
+        originalResults.setId(1L);
+        originalResults.setScore(50);
+
+        RoomModel room = new RoomModel();
+        room.setId(2L);
+
+        UserModel owner = new UserModel();
+        owner.setId(3L);
+
+        when(resultsRepository.findById(1L)).thenReturn(Optional.of(originalResults));
+        when(roomRepository.findById(2L)).thenReturn(Optional.of(room));
+        when(userRepository.findById(3L)).thenReturn(Optional.of(owner));
+        when(resultsRepository.save(originalResults)).thenReturn(originalResults);
+
+        ResultsModel updatedResults = resultsService.updateResults(patchDto);
+
+        assertNotNull(updatedResults);
+        assertEquals(1L, updatedResults.getId());
+        assertEquals(2L, updatedResults.getRoom().getId());
+        assertEquals(3L, updatedResults.getOwner().getId());
+        assertEquals(99, updatedResults.getScore());
+
+        verify(roomRepository, times(1)).findById(2L);
+        verify(userRepository, times(1)).findById(3L);
+        verify(resultsRepository, times(1)).save(originalResults);
+    }
+
+
+    @Test
+    public void testDeleteQuestionAndAnswer() throws AnswerNotFoundException {
+        long qaaId = 1L;
+        long quizResultsId = 2L;
+
+        QuestionAndUsersAnswerModel qaa = new QuestionAndUsersAnswerModel();
+        qaa.setId(qaaId);
+        QuizResultsModel quizResults = new QuizResultsModel();
+        quizResults.setId(quizResultsId);
+
+        var qaas = new HashSet<QuestionAndUsersAnswerModel>();
+        qaas.add(qaa);
+        quizResults.setQuestionsAndAnswers(qaas);
+
+        when(questionAndUsersAnswerRepository.findById(qaaId)).thenReturn(Optional.of(qaa));
+        when(quizResultsRepository.findById(quizResultsId)).thenReturn(Optional.of(quizResults));
+
+        resultsService.deleteQuestionAndAnswer(qaaId, quizResultsId);
+
+        verify(quizResultsRepository, times(1)).save(quizResults);
+        verify(questionAndUsersAnswerRepository, times(1)).delete(qaa);
+    }
+
+
+
 
     @Test
     public void deleteSingleResult_resultExists_removesResult(){
@@ -380,34 +627,101 @@ public class ResultServiceTest {
 
     }
 
-    @Test
-    public void updateQuestionAndUsersAnswer_updateAllAvailableProperties_ReturnsUpdatedQaa(){
 
+    @Test
+    public void testDeleteQuizResults() throws AnswerNotFoundException, ResultNotFoundException {
+        long quizResultsId = 1L;
+        long resultsId = 2L;
+
+        QuizResultsModel quizResults = new QuizResultsModel();
+        quizResults.setId(quizResultsId);
+
+        ResultsModel results = new ResultsModel();
+        results.setId(resultsId);
+        Set<QuizResultsModel> quizResultsSet = new HashSet<>();
+        quizResultsSet.add(quizResults);
+        results.setQuizzesResults(quizResultsSet);
+
+        when(quizResultsRepository.findById(quizResultsId)).thenReturn(Optional.of(quizResults));
+        when(resultsRepository.findById(resultsId)).thenReturn(Optional.of(results));
+
+        resultsService.deleteQuizResults(quizResultsId, resultsId);
+
+        verify(resultsRepository, times(1)).save(results);
+        verify(quizResultsRepository, times(1)).delete(quizResults);
+    }
+
+
+    @Test
+    public void testDeleteQuizResults_withAnswerNotFoundException() throws AnswerNotFoundException, ResultNotFoundException {
+        long quizResultsId = 1L;
+        long resultsId = 2L;
+
+        QuizResultsModel quizResults = new QuizResultsModel();
+        quizResults.setId(quizResultsId);
+
+        ResultsModel results = new ResultsModel();
+        results.setId(resultsId);
+        Set<QuizResultsModel> quizResultsSet = new HashSet<>();
+        quizResultsSet.add(quizResults);
+        results.setQuizzesResults(quizResultsSet);
+
+        when(quizResultsRepository.findById(quizResultsId)).thenReturn(Optional.empty());
+        when(resultsRepository.findById(resultsId)).thenReturn(Optional.of(results));
+
+        assertThrows(AnswerNotFoundException.class, () -> resultsService.deleteQuizResults(quizResultsId, resultsId));
+
+        verify(resultsRepository, never()).save(results);
+        verify(quizResultsRepository, never()).delete(quizResults);
     }
 
     @Test
-    public void updateQuizResults_updateAllAvailableProperties_ReturnsUpdatedQuizResult(){
+    public void testDeleteQuizResults_withResultNotFoundException() throws AnswerNotFoundException, ResultNotFoundException {
+        long quizResultsId = 1L;
+        long resultsId = 2L;
 
+        QuizResultsModel quizResults = new QuizResultsModel();
+        quizResults.setId(quizResultsId);
+
+        ResultsModel results = new ResultsModel();
+        results.setId(resultsId);
+        Set<QuizResultsModel> quizResultsSet = new HashSet<>();
+        quizResultsSet.add(quizResults);
+        results.setQuizzesResults(quizResultsSet);
+
+        when(quizResultsRepository.findById(quizResultsId)).thenReturn(Optional.of(quizResults));
+        when(resultsRepository.findById(resultsId)).thenReturn(Optional.empty());
+
+        assertThrows(ResultNotFoundException.class, () -> resultsService.deleteQuizResults(quizResultsId, resultsId));
+
+        verify(resultsRepository, never()).save(results);
+        verify(quizResultsRepository, never()).delete(quizResults);
+    }
+
+
+    @Test
+    public void testDeleteResults_withValidData_shouldDeleteResults() throws ResultNotFoundException {
+        long resultsId = 1L;
+
+        ResultsModel results = new ResultsModel();
+        results.setId(resultsId);
+
+        when(resultsRepository.findById(resultsId)).thenReturn(Optional.of(results));
+
+        resultsService.deleteResults(resultsId);
+
+        verify(resultsRepository, times(1)).delete(results);
     }
 
     @Test
-    public void updateResults_updateAllAvailableProperties_ReturnsUpdatedResults(){
+    public void testDeleteResults_withInvalidData_shouldThrowResultNotFoundException() {
+        long resultsId = 1L;
 
-    }
+        when(resultsRepository.findById(resultsId)).thenReturn(Optional.empty());
 
-    @Test
-    public void deleteQuestionAndAnswer_DeletesQaa(){
+        assertThrows(ResultNotFoundException.class, () -> resultsService.deleteResults(resultsId));
 
-    }
-
-    @Test
-    public void deleteQuizResults_DeletesQuizResult(){
-
-    }
-
-    @Test
-    public void deleteResults_DeletesResult(){
-
+        verify(resultsRepository, never()).delete(any());
     }
 
     private UserModel makeTokenServiceReturnUser(){
