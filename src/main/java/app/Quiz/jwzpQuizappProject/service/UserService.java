@@ -56,7 +56,6 @@ public class UserService implements UserDetailsService {
 //    https://stackoverflow.com/a/71813446
 //    https://docs.spring.io/spring-security/site/docs/3.2.0.RC1/reference/html/crypto.html (last section, 25.4)
     public void saveUser(RegisterDto registerDto) throws UserAlreadyExistsException {
-        log.debug("guwno");
         if (userRepository.existsByEmail(registerDto.email())) {
             throw new UserAlreadyExistsException("An account with email " + registerDto.email() + " already exists.");
         }
