@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AuthController {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AuthController.class);
+    private final Logger log = LoggerFactory.getLogger("Console");
 
     private final TokenService tokenService;
     private final UserService userService;
@@ -43,15 +43,19 @@ public class AuthController {
 //        TODO how to authenticate against db when user is not created yet?
 //         when var authentication = .. goes wrong user gets saved
 //         maybe something like transaction?
+        log.info("Registering user with email: " + registerDto.email() + ".");
         userService.saveUser(registerDto);
+        log.info("User with email: " + registerDto.email() + " successfully registered.");
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @PostMapping(path = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
     public LoginResponseEntity login(@Valid @RequestBody LoginDto loginDto) {
+        log.info("User with email: " + loginDto.email() + " tries to log in.");
         var authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginDto.email(), loginDto.password())
         );
+        log.info("User with email: " + loginDto.email() + " successfully logged in.");
         return new LoginResponseEntity(tokenService.generateToken(authentication, timeAmount, timeUnit), timeAmount, timeUnit);
     }
 }
