@@ -85,7 +85,7 @@ public class ResultsService {
         var user = tokenService.getUserFromToken(token);
         var room = roomRepository.findById(roomId).orElseThrow(() -> new RoomNotFoundException("Room with id: " + roomId + " was not found."));
         if (!roomAuthoritiesValidator.validateUserRoomInfoAuthorities(user, room)) {
-            throw new PermissionDeniedException(user.getName() + " is not authorized to get results for room: " + room.getRoomName() + " with id: " + room.getId() + ".");
+            throw new PermissionDeniedException(user.getName() + " is not authofsrized to get results for room: " + room.getRoomName() + " with id: " + room.getId() + ".");
         }
 
         return resultsRepository.findByRoomId(roomId);
@@ -93,23 +93,55 @@ public class ResultsService {
 
     public ResultsModel getSingleResult(long id, String token) throws ResultNotFoundException, PermissionDeniedException {
         var user = tokenService.getUserFromToken(token);
-        var result = resultsRepository.findById(id).orElseThrow(() -> new ResultNotFoundException("Results with id: " + id + " were not found."));
+            var result = resultsRepository.findById(id).orElseThrow(() -> new ResultNotFoundException("Results with id: " + id + " were not found."));
         if (!validateUserInfoResultAuthorities(user, result)) {
             throw new PermissionDeniedException("User with id: " + user.getId() + " does not have authority to read results with id: " + result.getId());
         }
         return result;
     }
 
+    private QuestionModel validateQuestionOrderNumberAndGetQuestion(int questionOrdNum, QuizModel quiz,  Set<QuestionAndUsersAnswerModel> qaaSet) throws QuestionNotFoundException, AnswerAlreadyExists {
+        if (questionOrdNum > quiz.getQuestions().size() || questionOrdNum <= 0) {
+            throw new QuestionNotFoundException("Question ord num out of bounds or not provided: " + questionOrdNum + " " + quiz.getId());
+        }
+        Optional<QuestionModel> question = Optional.ofNullable(quiz.getSingleQuestionByOrdNum(questionOrdNum));
+
+        if (question.isEmpty()) {
+            throw new QuestionNotFoundException("Invalid question Order Number " + questionOrdNum);
+        }
+
+        boolean alreadyContainsQuestion = qaaSet.stream()
+                .anyMatch(tempQaa -> tempQaa.getQuestionOrdNum() == questionOrdNum);
+
+        if (alreadyContainsQuestion) {
+            throw new AnswerAlreadyExists("Repeated question!");
+        }
+
+        return  question.get();
+    }
+
+    private AnswerModel validateOrdNumAndGetAnswer(int ansOrdNum, QuestionModel question ) throws AnswerNotFoundException {
+        if (ansOrdNum > question.getAnswers().size() || ansOrdNum <= 0) {
+            throw new AnswerNotFoundException("Answer ord num out of bounds or not provided " + ansOrdNum + " " + question.getOrdNum());
+        }
+
+        Optional<AnswerModel> answer = Optional.ofNullable(question.getSingleAnswerByOrdNum(ansOrdNum));
+
+        if (answer.isEmpty()) {
+            throw new AnswerNotFoundException("Invalid answer ord num");
+        }
+
+        return answer.get();
+    }
+
 
     public ResultsModel createResults(ResultsDto newResults, String token) throws QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists, AnswerNotFoundException {
-        long roomScore = 0;
         var user = tokenService.getUserFromToken(token);
 
         ResultsModel resultsModel = new ResultsModel();
         resultsModel.setOwner(user);
 
-        System.out.println(newResults.quizzesResults());
-
+        long roomScore = 0;
         for (QuizResultsModel quizResult : newResults.quizzesResults()) {
             Optional<QuizModel> quiz = this.quizRepository.findById(quizResult.getQuizId());
 
@@ -125,42 +157,31 @@ public class ResultsService {
             for (QuestionAndUsersAnswerModel qaa : quizResult.getQuestionsAndAnswers()) {
                 int questionOrdNum = (int) qaa.getQuestionOrdNum();
 
-                if (questionOrdNum >= quiz.get().getQuestions().size() || questionOrdNum < 0) {
-                    throw new QuestionNotFoundException("Question ord num out of bounds or not provided: " + questionOrdNum + " " + quizResult.getQuizId());
-                }
-
-                Optional<QuestionModel> question = Optional.ofNullable(quiz.get().getSingleQuestionByOrdNum(questionOrdNum));
 
 
-                if (question.isEmpty()) {
-                    throw new QuestionNotFoundException("Invalid question ID " + questionOrdNum);
-                }
+//                if (questionOrdNum > quiz.get().getQuestions().size() || questionOrdNum <= 0) {
+//                    throw new QuestionNotFoundException("Question ord num out of bounds or not provided: " + questionOrdNum + " " + quizResult.getQuizId());
+//                }
 
-                boolean alreadyContainsQuestion = qaaSet.stream()
-                        .anyMatch(tempQaa -> tempQaa.getQuestionOrdNum() == questionOrdNum);
+//                Optional<QuestionModel> question = Optional.ofNullable(quiz.get().getSingleQuestionByOrdNum(questionOrdNum));
 
-                if (alreadyContainsQuestion) {
-                    throw new AnswerAlreadyExists("Repeated question!");
-                }
+                var question = validateQuestionOrderNumberAndGetQuestion(questionOrdNum, quiz.get(), qaaSet);
+
+
 
                 int ansOrdNum = (int) qaa.getUserAnswerOrdNum();
 
-                System.out.println(question.get().getId());
-
-                if (ansOrdNum >= question.get().getAnswers().size() || ansOrdNum < 0) {
+                if (ansOrdNum > question.getAnswers().size() || ansOrdNum <= 0) {
                     throw new AnswerNotFoundException("Answer ord num out of bounds or not provided " + ansOrdNum + " " + questionOrdNum + " " + quizResult.getQuizId());
                 }
 
-                Optional<AnswerModel> answer = Optional.ofNullable(question.get().getSingleAnswerByOrdNum(ansOrdNum));
+                AnswerModel answer = validateOrdNumAndGetAnswer(ansOrdNum, question);
 
-                if (answer.isEmpty() || ansOrdNum >= question.get().getAnswers().size() || ansOrdNum < 0) {
-                    throw new AnswerNotFoundException("Invalid answer ord num");
-                }
 
-                qaa.setQuestion(question.get());
-                qaa.setAnswer(answer.get());
+                qaa.setQuestion(question);
+                qaa.setAnswer(answer);
 
-                quizScore += answer.get().getScore();
+                quizScore += answer.getScore();
 
                 this.questionAndUsersAnswerRepository.save(qaa);
 

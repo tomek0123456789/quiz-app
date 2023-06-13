@@ -83,19 +83,7 @@ public class QuizService {
             Optional<Boolean> validQuizzes
     ) {
         String predicate = String.valueOf(titlePart.isPresent() ? 1 : 0) + (categoryName.isPresent() ? 1 : 0) + (validQuizzes.isPresent() ? 1 : 0);
-        //        if (titlePart.isPresent()) {
-//            if (categoryName.isPresent()) {
-//                quizzes = quizRepository.findAllByTitleContainingAndCategoryName(titlePart.get(), categoryName.get());
-//            } else {
-//                quizzes = quizRepository.findAllByTitleContaining(titlePart.get());
-//            }
-//        } else {
-//            if (categoryName.isPresent()) {
-//                quizzes = quizRepository.findAllByCategoryName(categoryName.get());
-//            } else {
-//                quizzes = quizRepository.findAll();
-//            }
-//        }
+
         return switch (predicate) {
             case "001" -> quizRepository.findAllByQuizStatus(QuizStatus.VALID);
             case "010" -> quizRepository.findAllByCategoryName(categoryName.get());
@@ -125,7 +113,7 @@ public class QuizService {
             quiz.setTitle(quizPatchDto.title());
         }
         if (quizPatchDto.description() != null) {
-            quiz.setTitle(quizPatchDto.description());
+            quiz.setDescription(quizPatchDto.description());
         }
         if (quizPatchDto.categoryId() != null) {
             quiz.setCategory(categoryService.getSingleCategory(quizPatchDto.categoryId()));

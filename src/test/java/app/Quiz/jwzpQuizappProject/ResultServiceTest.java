@@ -288,78 +288,6 @@ public class ResultServiceTest {
         assertThrows(ResultNotFoundException.class, () -> resultsService.getSingleResult(resultId, token));
     }
 
-//    @Test
-//    public void createResults_createsSuccessfully() throws AnswerNotFoundException, QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists {
-//        var user = makeTokenServiceReturnUser();
-//
-//        long quizOneId = 1;
-//        long quizTwoId = 2;
-//
-//        QuizModel quizOne = new QuizModel();
-//        quizOne.setId(quizOneId);
-//        quizOne.setQuestions(new ArrayList<>());
-//
-//        QuizModel quizTwo = new QuizModel();
-//        quizTwo.setId(quizOneId);
-//
-//        QuestionModel questionQuizOne = new QuestionModel();
-//        questionQuizOne.setOrdNum(1);
-//        questionQuizOne.setQuestionStatus( QuestionStatus.VALID);
-//        var questionsForQuizOne = List.of(questionQuizOne);
-//        quizOne.setQuestions(questionsForQuizOne);
-//
-//        QuestionModel questionQuizTwo = new QuestionModel();
-//        questionQuizTwo.setOrdNum(1);
-//        questionQuizTwo.setQuestionStatus( QuestionStatus.VALID);
-//        var questionsForQuizTwo = new ArrayList<QuestionModel>(1);
-//        questionsForQuizTwo.add(questionQuizTwo);
-//        quizTwo.setQuestions(questionsForQuizTwo);
-//
-//        HashSet<QuizResultsModel> quizResults = new HashSet<>(2);
-//        QuizResultsModel quizResult1 = new QuizResultsModel();
-//        quizResult1.setQuizId(quizOneId);
-//
-//        long questionsOrdNumForQuizOne = 0;
-//        long answerOrdNumForQuizOne = 0;
-//        HashSet<QuestionAndUsersAnswerModel> qaasForQuizOne = new HashSet<>(1);
-//        var qaaForQuizOne = new QuestionAndUsersAnswerModel();
-//        qaaForQuizOne.setQuestionOrdNum(questionsOrdNumForQuizOne);
-//        qaaForQuizOne.setUserAnswerOrdNum(answerOrdNumForQuizOne);
-//        qaasForQuizOne.add(qaaForQuizOne);
-//
-//
-//        long questionsOrdNumForQuizTwo = 0;
-//        long answerOrdNumForQuizTwo = 0;
-//        HashSet<QuestionAndUsersAnswerModel> qaasForQuizTwo = new HashSet<>(1);
-//        var qaaForQuizTwo = new QuestionAndUsersAnswerModel();
-//        qaaForQuizOne.setQuestionOrdNum(questionsOrdNumForQuizTwo);
-//        qaaForQuizOne.setUserAnswerOrdNum(answerOrdNumForQuizTwo);
-//        qaasForQuizTwo.add(qaaForQuizTwo);
-//
-//        var quizOneResults = new QuizResultsModel();
-//        quizOneResults.setQuizId(quizOneId);
-//        quizOneResults.setQuestionsAndAnswers(qaasForQuizOne);
-//
-//        var quizTwoResults = new QuizResultsModel();
-//        quizTwoResults.setQuizId(quizTwoId);
-//        quizTwoResults.setQuestionsAndAnswers(qaasForQuizTwo);
-//
-//
-//        quizResults.add(quizOneResults);
-//        quizResults.add(quizTwoResults);
-//
-//
-//        var resultsDto = new ResultsDto(quizResults, user, LocalDateTime.of(2023,1,15,13,0,0),0 );
-//
-//        when( quizRepository.findById(quizOneId)).thenReturn(Optional.of(quizOne));
-//        when( quizRepository.findById(quizTwoId)).thenReturn(Optional.of(quizTwo));
-//
-//        resultsService.createResults(resultsDto,token);
-//
-//        verify(resultsRepository, times(1)).save(any(ResultsModel.class));
-//        //Nie mam pojecia czm to sie wywala na dodaniu question do quiz
-//    }
-
     @Test
     public void testCreateResults_withValidData_shouldCreateResults() throws QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists, AnswerNotFoundException {
         UserModel user = makeTokenServiceReturnUser();
@@ -367,8 +295,8 @@ public class ResultServiceTest {
         QuizResultsModel quizResults = new QuizResultsModel();
         quizResults.setQuizId(1L);
         QuestionAndUsersAnswerModel questionAndAnswer = new QuestionAndUsersAnswerModel();
-        questionAndAnswer.setQuestionOrdNum(0);
-        questionAndAnswer.setUserAnswerOrdNum(0);
+        questionAndAnswer.setQuestionOrdNum(1);
+        questionAndAnswer.setUserAnswerOrdNum(1);
         Set<QuestionAndUsersAnswerModel> questionAndAnswerSet = new HashSet<>();
         questionAndAnswerSet.add(questionAndAnswer);
         quizResults.setQuestionsAndAnswers(questionAndAnswerSet);
@@ -379,11 +307,11 @@ public class ResultServiceTest {
         AnswerModel answer1 = new AnswerModel();
         AnswerModel answer2 = new AnswerModel();
         answer1.setScore(999);
-        answer1.setOrdNum(0);
-        answer2.setOrdNum(1);
+        answer1.setOrdNum(1);
+        answer2.setOrdNum(2);
 
         QuestionModel questionQuizOne = new QuestionModel();
-        questionQuizOne.setOrdNum(0);
+        questionQuizOne.setOrdNum(1);
         questionQuizOne.setQuestionStatus( QuestionStatus.VALID);
         questionQuizOne.addAnswer(answer1);
         questionQuizOne.addAnswer(answer2);
@@ -409,6 +337,155 @@ public class ResultServiceTest {
         verify(resultsRepository, times(1)).save(result);
         verify(quizResultsRepository, times(1)).save(quizResults);
         verify(questionAndUsersAnswerRepository, times(1)).save(questionAndAnswer);
+    }
+
+
+    @Test
+    public void testCreateResults_answerOrdNumIsZero_shouldThrowAnswerNotFoundException() throws QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists, AnswerNotFoundException {
+        UserModel user = makeTokenServiceReturnUser();
+
+        QuizResultsModel quizResults = new QuizResultsModel();
+        quizResults.setQuizId(1L);
+        QuestionAndUsersAnswerModel questionAndAnswer = new QuestionAndUsersAnswerModel();
+        questionAndAnswer.setQuestionOrdNum(1);
+        questionAndAnswer.setUserAnswerOrdNum(0);
+        Set<QuestionAndUsersAnswerModel> questionAndAnswerSet = new HashSet<>();
+        questionAndAnswerSet.add(questionAndAnswer);
+        quizResults.setQuestionsAndAnswers(questionAndAnswerSet);
+        Set<QuizResultsModel> quizResultsSet = new HashSet<>();
+        quizResultsSet.add(quizResults);
+        ResultsDto newResults = new ResultsDto(quizResultsSet, user, LocalDateTime.of(2023,1,1,13,0,0), 0);
+
+        AnswerModel answer1 = new AnswerModel();
+        AnswerModel answer2 = new AnswerModel();
+        answer1.setScore(999);
+        answer1.setOrdNum(1);
+        answer2.setOrdNum(2);
+
+        QuestionModel questionQuizOne = new QuestionModel();
+        questionQuizOne.setOrdNum(1);
+        questionQuizOne.setQuestionStatus( QuestionStatus.VALID);
+        questionQuizOne.addAnswer(answer1);
+        questionQuizOne.addAnswer(answer2);
+        var questionsForQuizOne = List.of(questionQuizOne);
+
+        QuizModel quiz = new QuizModel();
+        quiz.setId(1L);
+        quiz.setQuestions(questionsForQuizOne);
+        when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
+
+        assertThrows(AnswerNotFoundException.class, () -> resultsService.createResults(newResults, token));
+    }
+
+    @Test
+    public void testCreateResults_questionOrdNumIsZero_shouldThrowQuestionNotFoundException() throws QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists, AnswerNotFoundException {
+        UserModel user = makeTokenServiceReturnUser();
+
+        QuizResultsModel quizResults = new QuizResultsModel();
+        quizResults.setQuizId(1L);
+        QuestionAndUsersAnswerModel questionAndAnswer = new QuestionAndUsersAnswerModel();
+        questionAndAnswer.setQuestionOrdNum(0);
+        questionAndAnswer.setUserAnswerOrdNum(1);
+        Set<QuestionAndUsersAnswerModel> questionAndAnswerSet = new HashSet<>();
+        questionAndAnswerSet.add(questionAndAnswer);
+        quizResults.setQuestionsAndAnswers(questionAndAnswerSet);
+        Set<QuizResultsModel> quizResultsSet = new HashSet<>();
+        quizResultsSet.add(quizResults);
+        ResultsDto newResults = new ResultsDto(quizResultsSet, user, LocalDateTime.of(2023,1,1,13,0,0), 0);
+
+        AnswerModel answer1 = new AnswerModel();
+        AnswerModel answer2 = new AnswerModel();
+        answer1.setScore(999);
+        answer1.setOrdNum(1);
+        answer2.setOrdNum(2);
+
+        QuestionModel questionQuizOne = new QuestionModel();
+        questionQuizOne.setOrdNum(1);
+        questionQuizOne.setQuestionStatus( QuestionStatus.VALID);
+        questionQuizOne.addAnswer(answer1);
+        questionQuizOne.addAnswer(answer2);
+        var questionsForQuizOne = List.of(questionQuizOne);
+
+        QuizModel quiz = new QuizModel();
+        quiz.setId(1L);
+        quiz.setQuestions(questionsForQuizOne);
+        when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
+
+        assertThrows(QuestionNotFoundException.class, () -> resultsService.createResults(newResults, token));
+    }
+
+    @Test
+    public void testCreateResults_answerOrdNumIsTooBig_shouldThrowAnswerNotFoundException() throws QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists, AnswerNotFoundException {
+        UserModel user = makeTokenServiceReturnUser();
+
+        QuizResultsModel quizResults = new QuizResultsModel();
+        quizResults.setQuizId(1L);
+        QuestionAndUsersAnswerModel questionAndAnswer = new QuestionAndUsersAnswerModel();
+        questionAndAnswer.setQuestionOrdNum(1);
+        questionAndAnswer.setUserAnswerOrdNum(3);
+        Set<QuestionAndUsersAnswerModel> questionAndAnswerSet = new HashSet<>();
+        questionAndAnswerSet.add(questionAndAnswer);
+        quizResults.setQuestionsAndAnswers(questionAndAnswerSet);
+        Set<QuizResultsModel> quizResultsSet = new HashSet<>();
+        quizResultsSet.add(quizResults);
+        ResultsDto newResults = new ResultsDto(quizResultsSet, user, LocalDateTime.of(2023,1,1,13,0,0), 0);
+
+        AnswerModel answer1 = new AnswerModel();
+        AnswerModel answer2 = new AnswerModel();
+        answer1.setScore(999);
+        answer1.setOrdNum(1);
+        answer2.setOrdNum(2);
+
+        QuestionModel questionQuizOne = new QuestionModel();
+        questionQuizOne.setOrdNum(1);
+        questionQuizOne.setQuestionStatus( QuestionStatus.VALID);
+        questionQuizOne.addAnswer(answer1);
+        questionQuizOne.addAnswer(answer2);
+        var questionsForQuizOne = List.of(questionQuizOne);
+
+        QuizModel quiz = new QuizModel();
+        quiz.setId(1L);
+        quiz.setQuestions(questionsForQuizOne);
+        when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
+
+        assertThrows(AnswerNotFoundException.class, () -> resultsService.createResults(newResults, token));
+    }
+
+    @Test
+    public void testCreateResults_questionOrdNumIsTooBig_shouldThrowQuestionNotFoundException() throws QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists, AnswerNotFoundException {
+        UserModel user = makeTokenServiceReturnUser();
+
+        QuizResultsModel quizResults = new QuizResultsModel();
+        quizResults.setQuizId(1L);
+        QuestionAndUsersAnswerModel questionAndAnswer = new QuestionAndUsersAnswerModel();
+        questionAndAnswer.setQuestionOrdNum(3);
+        questionAndAnswer.setUserAnswerOrdNum(1);
+        Set<QuestionAndUsersAnswerModel> questionAndAnswerSet = new HashSet<>();
+        questionAndAnswerSet.add(questionAndAnswer);
+        quizResults.setQuestionsAndAnswers(questionAndAnswerSet);
+        Set<QuizResultsModel> quizResultsSet = new HashSet<>();
+        quizResultsSet.add(quizResults);
+        ResultsDto newResults = new ResultsDto(quizResultsSet, user, LocalDateTime.of(2023,1,1,13,0,0), 0);
+
+        AnswerModel answer1 = new AnswerModel();
+        AnswerModel answer2 = new AnswerModel();
+        answer1.setScore(999);
+        answer1.setOrdNum(1);
+        answer2.setOrdNum(2);
+
+        QuestionModel questionQuizOne = new QuestionModel();
+        questionQuizOne.setOrdNum(1);
+        questionQuizOne.setQuestionStatus( QuestionStatus.VALID);
+        questionQuizOne.addAnswer(answer1);
+        questionQuizOne.addAnswer(answer2);
+        var questionsForQuizOne = List.of(questionQuizOne);
+
+        QuizModel quiz = new QuizModel();
+        quiz.setId(1L);
+        quiz.setQuestions(questionsForQuizOne);
+        when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
+
+        assertThrows(QuestionNotFoundException.class, () -> resultsService.createResults(newResults, token));
     }
 
     @Test
