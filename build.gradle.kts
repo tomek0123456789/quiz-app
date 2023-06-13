@@ -23,6 +23,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-configuration-processor")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
+	implementation("org.springframework.boot:spring-boot-starter-log4j2")
 	implementation("org.apache.logging.log4j:log4j-api")
 	implementation("org.apache.logging.log4j:log4j-core")
 	implementation("org.projectlombok:lombok")
@@ -30,6 +31,11 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
+configurations {
+	all {
+		exclude(module = "spring-boot-starter-logging")
+	}
+}
 tasks.getByName<Jar>("jar") {
 	enabled = false
 }
