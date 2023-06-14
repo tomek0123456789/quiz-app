@@ -126,7 +126,6 @@ public class ResultServiceTest {
 
         var bestResult = resultsService.getMyBestResultForQuiz(token, quizId);
 
-//        assertEquals(1, bestResult.size());
         assertEquals(quizResultWithBetterScore, bestResult);
     }
 
@@ -322,10 +321,8 @@ public class ResultServiceTest {
         quiz.setQuestions(questionsForQuizOne);
         when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
 
-        // Act
         ResultsModel result = resultsService.createResults(newResults, token);
 
-        // Assert
         assertNotNull(result);
         assertEquals(user, result.getOwner());
         assertEquals(999, result.getScore());

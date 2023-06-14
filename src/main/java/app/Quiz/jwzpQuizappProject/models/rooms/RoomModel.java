@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Future;
 
 import java.time.Instant;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -31,6 +32,7 @@ public class RoomModel {
     Set<QuizModel> quizzes;
 
     public RoomModel() {
+        this.participants = new HashSet<>();
     }
 
     public RoomModel(String roomName, UserModel owner, Instant startTime, Instant endTime) {

@@ -157,17 +157,7 @@ public class ResultsService {
             for (QuestionAndUsersAnswerModel qaa : quizResult.getQuestionsAndAnswers()) {
                 int questionOrdNum = (int) qaa.getQuestionOrdNum();
 
-
-
-//                if (questionOrdNum > quiz.get().getQuestions().size() || questionOrdNum <= 0) {
-//                    throw new QuestionNotFoundException("Question ord num out of bounds or not provided: " + questionOrdNum + " " + quizResult.getQuizId());
-//                }
-
-//                Optional<QuestionModel> question = Optional.ofNullable(quiz.get().getSingleQuestionByOrdNum(questionOrdNum));
-
                 var question = validateQuestionOrderNumberAndGetQuestion(questionOrdNum, quiz.get(), qaaSet);
-
-
 
                 int ansOrdNum = (int) qaa.getUserAnswerOrdNum();
 
@@ -176,7 +166,6 @@ public class ResultsService {
                 }
 
                 AnswerModel answer = validateOrdNumAndGetAnswer(ansOrdNum, question);
-
 
                 qaa.setQuestion(question);
                 qaa.setAnswer(answer);

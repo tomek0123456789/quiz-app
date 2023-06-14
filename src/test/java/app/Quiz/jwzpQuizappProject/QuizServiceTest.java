@@ -396,24 +396,6 @@ public class QuizServiceTest {
         verify(quizRepository, times(1)).save(quizModel);
     }
 
-//    @Test
-//    public void testAddQuestionToQuiz_withQuizExceedingQuestionsLimit_shouldThrowQuestionsLimitException() {
-//        long quizId = 1L;
-//        String token = "valid_token";
-//        QuestionDto questionDto = new QuestionDto("Question 1");
-//
-//        QuizModel quizModel = new QuizModel(quizId, "Quiz 1", "Description 1", new UserModel(), new CategoryModel(), Instant.now());
-//        IntStream.rangeClosed(1, QuizService.QUESTIONS_LIMIT).forEach(i -> quizModel.addQuestion(new QuestionModel("Question " + i)));
-//
-//        when(quizRepository.findById(quizId)).thenReturn(Optional.of(quizModel));
-//
-//        assertThrows(QuestionsLimitException.class, () -> quizService.addQuestionToQuiz(quizId, questionDto, token));
-//
-//        verify(quizRepository, times(1)).findById(quizId);
-//        verifyNoMoreInteractions(questionRepository);
-//        verifyNoMoreInteractions(quizRepository);
-//    }
-
     @Test
     public void testAddQuestionToQuiz_withNonExistingQuizId_shouldThrowQuizNotFoundException() {
         long quizId = 1L;
@@ -494,28 +476,6 @@ public class QuizServiceTest {
         verify(questionRepository, times(1)).save(questionModel);
     }
 
-//    @Test
-//    public void testAddAnswerToQuestion_withQuestionExceedingAnswersLimit_shouldThrowAnswersLimitException() {
-//        long quizId = 1L;
-//        int questionOrderNumber = 1;
-//        String token = "valid_token";
-//        AnswerDto answerDto = new AnswerDto("Answer 1", 1);
-//
-//        QuizModel quizModel = new QuizModel(quizId, "Quiz 1", "Description 1", new UserModel(), new CategoryModel(), Instant.now());
-//        QuestionModel questionModel = new QuestionModel("Question 1");
-//        IntStream.rangeClosed(1, QuizService.ANSWERS_LIMIT).forEach(i -> questionModel.addAnswer(new AnswerModel("Answer " + i, i)));
-//        quizModel.addQuestion(questionModel);
-//
-//        when(quizRepository.findById(quizId)).thenReturn(Optional.of(quizModel));
-//
-//        assertThrows(AnswersLimitException.class, () -> quizService.addAnswerToQuestion(quizId, questionOrderNumber, answerDto, token));
-//
-//        verify(quizRepository, times(1)).findById(quizId);
-//        verifyNoMoreInteractions(answerRepository);
-//        verifyNoMoreInteractions(questionRepository);
-//        verifyNoMoreInteractions(quizRepository);
-//    }
-
     @Test
     public void testAddAnswerToQuestion_withNonExistingQuizId_shouldThrowQuizNotFoundException() {
         long quizId = 1L;
@@ -579,45 +539,6 @@ public class QuizServiceTest {
         verifyNoMoreInteractions(questionRepository);
         verifyNoMoreInteractions(quizRepository);
     }
-//
-//    @Test
-//    public void testRemoveAnswerFromQuestion_withNonExistingQuestionOrdinalNumber_shouldThrowQuestionNotFoundException() {
-//        long quizId = 1L;
-//        int questionOrderNumber = 1;
-//        int answerOrderNumber = 1;
-//
-//        QuizModel quizModel = new QuizModel(quizId, "Quiz 1", new UserModel());
-//
-//        when(quizRepository.findById(quizId)).thenReturn(Optional.of(quizModel));
-//
-//        assertThrows(QuestionNotFoundException.class, () -> quizService.removeAnswerFromQuestion(quizId, questionOrderNumber, answerOrderNumber, "valid_token"));
-//
-//        verify(quizRepository, times(1)).findById(quizId);
-//        verifyNoMoreInteractions(answerRepository);
-//        verifyNoMoreInteractions(questionRepository);
-//        verifyNoMoreInteractions(quizRepository);
-//    }
-//
-//    @Test
-//    public void testRemoveAnswerFromQuestion_withNonExistingAnswerOrdinalNumber_shouldThrowAnswerNotFoundException() {
-//        long quizId = 1L;
-//        int questionOrderNumber = 1;
-//        int answerOrderNumber = 1;
-//
-//        QuizModel quizModel = new QuizModel(quizId, "Quiz 1", new UserModel());
-//        QuestionModel questionModel = new QuestionModel();
-//        questionModel.setContent("Question 1");
-//        quizModel.addQuestion(questionModel);
-//
-//        when(quizRepository.findById(quizId)).thenReturn(Optional.of(quizModel));
-//
-//        assertThrows(AnswerNotFoundException.class, () -> quizService.removeAnswerFromQuestion(quizId, questionOrderNumber, answerOrderNumber, "valid_token"));
-//
-//        verify(quizRepository, times(1)).findById(quizId);
-//        verifyNoMoreInteractions(answerRepository);
-//        verifyNoMoreInteractions(questionRepository);
-//        verifyNoMoreInteractions(quizRepository);
-//    }
 
     private UserModel makeTokenServiceReturnUser(){
         long userId = 1;
