@@ -28,6 +28,8 @@ dependencies {
 	runtimeOnly("org.postgresql:postgresql")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("pl.pragmatists:JUnitParams:1.1.1")	//for @Parameters
+//	testImplementation ("org.springframework.boot:spring-boot-starter-test")
+//	testImplementation ("org.springframework.security:spring-security-test:4.0.4.RELEASE")
 }
 
 tasks.getByName<Jar>("jar") {

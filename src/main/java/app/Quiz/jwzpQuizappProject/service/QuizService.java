@@ -31,7 +31,6 @@ public class QuizService {
     private final CategoryService categoryService;
     private final TokenService tokenService;
     private final Clock clock;
-
     private final int QUESTIONS_LIMIT = 50;
     private final int VALID_QUESTION_LIMIT = 2;
     private final int ANSWERS_LIMIT = 4;
