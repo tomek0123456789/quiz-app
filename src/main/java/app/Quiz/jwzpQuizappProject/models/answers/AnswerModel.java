@@ -64,4 +64,16 @@ public class AnswerModel {
     public void setScore(int score) {
         this.score = score;
     }
+
+    @Override
+    public String toString() {
+        return "AnswerModel{" +
+                "id=" + id +
+                ", ordNum=" + ordNum +
+                ", text='" + text + '\'' +
+                ", score=" + score +
+                ", createdAt=" + createdAt +
+                ", questionId=" + questionId +
+                '}';
+    }
 }

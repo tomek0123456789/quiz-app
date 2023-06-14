@@ -14,11 +14,13 @@ public class CategoryModel {
     public CategoryModel(String categoryName) {
         this.name = categoryName;
     }
+
     protected CategoryModel() {}
 
     public long getId() {
         return id;
     }
+
     public void setId(long id) {
         this.id = id;
     }
@@ -27,5 +29,12 @@ public class CategoryModel {
     }
     public void setName(String categoryName) {
         this.name = categoryName;
+    }
+    @Override
+    public String toString() {
+        return "CategoryModel{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                '}';
     }
 }

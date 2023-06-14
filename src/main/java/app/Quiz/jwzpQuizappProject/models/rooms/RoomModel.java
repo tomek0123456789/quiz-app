@@ -137,4 +137,16 @@ public class RoomModel {
         this.endTime = roomPatchDto.endTime()!= null ? roomPatchDto.endTime() : this.endTime;
     }
 
+    @Override
+    public String toString() {
+        return "RoomModel{" +
+                "id=" + id +
+                ", roomName='" + roomName + '\'' +
+                ", participants=" + participants +
+                ", owner=" + owner +
+                ", startTime=" + startTime +
+                ", endTime=" + endTime +
+                ", quizzes=" + quizzes +
+                '}';
+    }
 }

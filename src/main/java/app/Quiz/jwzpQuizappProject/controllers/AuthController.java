@@ -1,5 +1,6 @@
 package app.Quiz.jwzpQuizappProject.controllers;
 
+import app.Quiz.jwzpQuizappProject.config.Constants;
 import app.Quiz.jwzpQuizappProject.exceptions.users.UserAlreadyExistsException;
 import app.Quiz.jwzpQuizappProject.models.auth.LoginDto;
 import app.Quiz.jwzpQuizappProject.models.auth.LoginResponseEntity;
@@ -22,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AuthController {
 
-    private final Logger log = LoggerFactory.getLogger("Console");
+    private final Logger log = LoggerFactory.getLogger(Constants.LOGGER_NAME);
 
     private final TokenService tokenService;
     private final UserService userService;
