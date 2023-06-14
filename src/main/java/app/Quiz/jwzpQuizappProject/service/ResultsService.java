@@ -93,7 +93,7 @@ public class ResultsService {
 
     public ResultsModel getSingleResult(long id, String token) throws ResultNotFoundException, PermissionDeniedException {
         var user = tokenService.getUserFromToken(token);
-            var result = resultsRepository.findById(id).orElseThrow(() -> new ResultNotFoundException("Results with id: " + id + " were not found."));
+        var result = resultsRepository.findById(id).orElseThrow(() -> new ResultNotFoundException("Results with id: " + id + " were not found."));
         if (!validateUserInfoResultAuthorities(user, result)) {
             throw new PermissionDeniedException("User with id: " + user.getId() + " does not have authority to read results with id: " + result.getId());
         }

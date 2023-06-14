@@ -1,13 +1,11 @@
 package app.Quiz.jwzpQuizappProject;
 
 import app.Quiz.jwzpQuizappProject.exceptions.auth.PermissionDeniedException;
-import app.Quiz.jwzpQuizappProject.exceptions.quizzes.QuizNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.rooms.RoomNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.users.UserNotFoundException;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomDto;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomModel;
-import app.Quiz.jwzpQuizappProject.models.rooms.RoomPatchDto;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomPutDto;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserRole;
@@ -24,8 +22,6 @@ import org.mockito.MockitoAnnotations;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -284,7 +280,6 @@ public class RoomServiceTest {
         verify(userRepository).findById(roomDto.owner().getId());
         verifyNoMoreInteractions(roomRepository, userRepository);
     }
-
 
 
     private UserModel makeTokenServiceReturnUser(){

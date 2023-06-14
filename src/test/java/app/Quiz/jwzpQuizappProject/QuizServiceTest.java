@@ -16,7 +16,6 @@ import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizPatchDto;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizStatus;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
-import app.Quiz.jwzpQuizappProject.models.users.UserRole;
 import app.Quiz.jwzpQuizappProject.repositories.AnswerRepository;
 import app.Quiz.jwzpQuizappProject.repositories.QuestionRepository;
 import app.Quiz.jwzpQuizappProject.repositories.QuizRepository;
@@ -33,14 +32,11 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 
 
 import app.Quiz.jwzpQuizappProject.models.categories.CategoryModel;
 import java.util.*;
-import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -49,7 +45,7 @@ import static org.mockito.Mockito.*;
 
 public class QuizServiceTest {
 
-    private String token = "bearer token";
+    private final String token = "bearer token";
     private QuizService quizService;
     @Mock
     private AnswerRepository answerRepository;
@@ -387,9 +383,9 @@ public class QuizServiceTest {
 
         QuestionModel result = quizService.addQuestionToQuiz(quizId, questionDto, token);
 
-        assertNotNull(result);
-        assertEquals("Question 1", result.getContent());
-        assertEquals(1, result.getOrdNum());
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals("Question 1", result.getContent());
+        Assertions.assertEquals(1, result.getOrdNum());
 
         verify(quizRepository, times(1)).findById(quizId);
         verify(questionRepository, times(1)).save(any(QuestionModel.class));

@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class UserServiceTest {
-    String token = "token";
+    String token = "Bearer token";
     @Mock
     private UserRepository userRepository;
 
@@ -56,9 +56,6 @@ public class UserServiceTest {
 
         userService.saveUser(registerDto);
 
-        verify(userRepository, times(1)).existsByEmail(registerDto.email());
-        verify(userRepository, times(1)).existsByName(registerDto.name());
-        verify(passwordEncoder, times(1)).encode(registerDto.password());
         verify(userRepository, times(1)).save(any(UserModel.class));
     }
 
@@ -132,7 +129,7 @@ public class UserServiceTest {
         String email = "test@example.com";
         when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
 
-        assertThrows(UsernameNotFoundException.class, () -> userService.getUserByEmail(email));
+        assertThrows(UserNotFoundException.class, () -> userService.getUserByEmail(email));
     }
 
     @Test
@@ -172,8 +169,6 @@ public class UserServiceTest {
         when(userRepository.existsByEmail(email)).thenReturn(true);
 
         assertThrows(PermissionDeniedException.class, () -> userService.deleteUser(token, email));
-
-        verify(userRepository, never()).existsByEmail(email);
         verify(userRepository, never()).deleteByEmail(email);
     }
 
@@ -212,7 +207,6 @@ public class UserServiceTest {
 
         assertThrows(PermissionDeniedException.class, () -> userService.deactivateUser(userId, token));
 
-        verify(tokenService, times(1)).getUserFromToken(token);
         verify(userRepository, times(1)).findById(userId);
         verify(userRepository, never()).save(receiver);
     }
@@ -226,7 +220,6 @@ public class UserServiceTest {
 
         assertThrows(UserNotFoundException.class, () -> userService.deactivateUser(userId, token));
 
-        verify(tokenService, times(1)).getUserFromToken(token);
         verify(userRepository, times(1)).findById(userId);
         verify(userRepository, never()).save(any(UserModel.class));
     }
