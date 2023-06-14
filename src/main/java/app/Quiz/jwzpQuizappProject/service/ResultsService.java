@@ -85,7 +85,7 @@ public class ResultsService {
         var user = tokenService.getUserFromToken(token);
         var room = roomRepository.findById(roomId).orElseThrow(() -> new RoomNotFoundException("Room with id: " + roomId + " was not found."));
         if (!roomAuthoritiesValidator.validateUserRoomInfoAuthorities(user, room)) {
-            throw new PermissionDeniedException(user.getName() + " is not authofsrized to get results for room: " + room.getRoomName() + " with id: " + room.getId() + ".");
+            throw new PermissionDeniedException(user.getName() + " is not authorized to get results for room: " + room.getRoomName() + " with id: " + room.getId() + ".");
         }
 
         return resultsRepository.findByRoomId(roomId);
