@@ -23,12 +23,12 @@ jobs:
 
       - name: Build with Gradle
         run: chmod +x ./gradlew ; ./gradlew build --console=plain
-      - name: Archive artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: gws
-          path: build/libs/gws.jar
-      - name: Download artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: gws
+#      - name: Archive artifacts
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: gws
+#          path: build/libs/gws.jar
+#      - name: Download artifact
+#        uses: actions/download-artifact@v2
+#        with:
+#          name: gws
