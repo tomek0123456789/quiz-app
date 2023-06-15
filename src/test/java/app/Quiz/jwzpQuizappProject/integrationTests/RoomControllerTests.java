@@ -1,6 +1,7 @@
 package app.Quiz.jwzpQuizappProject.integrationTests;
 
 import app.Quiz.jwzpQuizappProject.controllers.RoomController;
+import app.Quiz.jwzpQuizappProject.models.rooms.RoomDto;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomModel;
 import app.Quiz.jwzpQuizappProject.service.RoomService;
 import org.junit.jupiter.api.Test;
@@ -9,13 +10,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+import java.time.Instant;
+
+import static app.Quiz.jwzpQuizappProject.integrationTests.IntTestsHelper.asJsonString;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(RoomController.class)
@@ -47,26 +56,26 @@ public class RoomControllerTests {
 //        verify(roomService).getSingleRoom(eq(roomId), eq(token));
     }
 
-//    @Test
-//    @WithMockUser
-//    public void testCreateRoom_ValidRequestBody_ShouldReturnCreatedStatus() throws Exception {
-//        var startTime = Instant.parse("2018-04-29T10:15:30.00Z");
-//        RoomDto roomDto = new RoomDto("room name", startTime, startTime);
-//        RoomModel roomModel = new RoomModel();
-//
-//        when(roomService.createRoom(roomDto, token)).thenReturn(roomModel);
-//
-//        mockMvc.perform(MockMvcRequestBuilders.post("/myrooms")
-//                        .with(csrf())
-//                        .header(HttpHeaders.AUTHORIZATION, token)
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(asJsonString(roomDto)))
-//                .andExpect(status().isCreated())
-//                .andExpect(jsonPath("$.id").value(roomModel.getId()));
-//
-//        verify(roomService).createRoom(roomDto, token);
-//    }
-//
+    @Test
+    @WithMockUser
+    public void testCreateRoom_ValidRequestBody_ShouldReturnCreatedStatus() throws Exception {
+        var startTime = Instant.parse("2018-04-29T10:15:30.00Z");
+        RoomDto roomDto = new RoomDto("room name", startTime, startTime);
+        RoomModel roomModel = new RoomModel();
+
+        when(roomService.createRoom(roomDto, token)).thenReturn(roomModel);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/myrooms")
+                        .with(csrf())
+                        .header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(roomDto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(roomModel.getId())).andDo(print());
+
+        verify(roomService).createRoom(roomDto, token);
+    }
+
 //
 //
 //    @Test

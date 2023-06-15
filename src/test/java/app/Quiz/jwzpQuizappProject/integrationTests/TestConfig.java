@@ -2,6 +2,7 @@ package app.Quiz.jwzpQuizappProject.integrationTests;
 
 import app.Quiz.jwzpQuizappProject.repositories.*;
 import app.Quiz.jwzpQuizappProject.service.*;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -88,5 +89,6 @@ public class TestConfig {
     public Clock clock() {
         return Mockito.mock(Clock.class);
     }
+
 
 }
