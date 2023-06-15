@@ -86,7 +86,7 @@ public class QuizService {
             Optional<Boolean> onlyValidQuizzes
     ) {
 
-        String predicate = String.valueOf(titlePart.isPresent() ? 1 : 0) + (categoryName.isPresent() ? 1 : 0) + (validQuizzes.isPresent() ? 1 : 0);
+        String predicate = String.valueOf(titlePart.isPresent() ? 1 : 0) + (categoryName.isPresent() ? 1 : 0) + (onlyValidQuizzes.isPresent() ? 1 : 0);
 
         return switch (predicate) {
             case "001" -> quizRepository.findAllByQuizStatus(QuizStatus.VALID);

@@ -81,7 +81,7 @@ public class UserServiceTest {
     @Test
     public void getUserById_WhenUserExists_ShouldReturnUser() throws UserNotFoundException {
         long userId = 1;
-        UserModel user = new UserModel(userId, "testuser", "test@example.com", UserStatus.ACTIVE, new ArrayList<>(), "password", "salt");
+        UserModel user = new UserModel(userId, "testuser", "test@example.com", UserStatus.ACTIVE, new ArrayList<>(), "password");
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         UserModel result = userService.getUserById(userId);
@@ -93,7 +93,6 @@ public class UserServiceTest {
         assertEquals(user.getStatus(), result.getStatus());
         assertEquals(user.getRoles(), result.getRoles());
         assertEquals(user.getPassword(), result.getPassword());
-        assertEquals(user.getSalt(), result.getSalt());
     }
 
     @Test
@@ -107,7 +106,7 @@ public class UserServiceTest {
     @Test
     public void getUserByEmail_WhenUserExists_ShouldReturnUser() throws UserNotFoundException {
         String email = "test@example.com";
-        UserModel user = new UserModel(1L, "testuser", email, UserStatus.ACTIVE, new ArrayList<>(), "password", "salt");
+        UserModel user = new UserModel(1L, "testuser", email, UserStatus.ACTIVE, new ArrayList<>(), "password");
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
 
         UserModel result = userService.getUserByEmail(email);
@@ -119,7 +118,6 @@ public class UserServiceTest {
         assertEquals(user.getStatus(), result.getStatus());
         assertEquals(user.getRoles(), result.getRoles());
         assertEquals(user.getPassword(), result.getPassword());
-        assertEquals(user.getSalt(), result.getSalt());
 
         verify(userRepository, times(1)).findByEmail(email);
     }
@@ -135,8 +133,8 @@ public class UserServiceTest {
     @Test
     public void deleteUser_WhenExecutorHasAuthority_ShouldDeleteUser() throws PermissionDeniedException, UserNotFoundException {
         String email = "receiver@example.com";
-        UserModel AdminExecutor = new UserModel(1L, "executor", "executor@example.com", UserStatus.ACTIVE, List.of(UserRole.ADMIN), "password", "salt");
-        UserModel receiver = new UserModel(2L, "receiver", email, UserStatus.ACTIVE, new ArrayList<>(), "password", "salt");
+        UserModel AdminExecutor = new UserModel(1L, "executor", "executor@example.com", UserStatus.ACTIVE, List.of(UserRole.ADMIN), "password");
+        UserModel receiver = new UserModel(2L, "receiver", email, UserStatus.ACTIVE, new ArrayList<>(), "password");
         when(tokenService.getUserFromToken(token)).thenReturn(AdminExecutor);
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(receiver));
         when(userRepository.existsByEmail(email)).thenReturn(true);
@@ -149,7 +147,7 @@ public class UserServiceTest {
     @Test
     public void deleteUser_WhenExecutorIsReceiver_ShouldDeleteUser() throws PermissionDeniedException, UserNotFoundException {
         String email = "receiver@example.com";
-        UserModel receiverAndSelfExecutor = new UserModel(2L, "receiver", email, UserStatus.ACTIVE, new ArrayList<>(), "password", "salt");
+        UserModel receiverAndSelfExecutor = new UserModel(2L, "receiver", email, UserStatus.ACTIVE, new ArrayList<>(), "password");
         when(tokenService.getUserFromToken(token)).thenReturn(receiverAndSelfExecutor);
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(receiverAndSelfExecutor));
         when(userRepository.existsByEmail(email)).thenReturn(true);
@@ -162,8 +160,8 @@ public class UserServiceTest {
     @Test
     public void deleteUser_WhenExecutorDoesNotHaveAuthority_ShouldThrowPermissionDeniedException() {
         String email = "test@example.com";
-        UserModel executor = new UserModel(1L, "executor", "executor@example.com", UserStatus.ACTIVE, new ArrayList<>(), "password", "salt");
-        UserModel receiver = new UserModel(2L, "receiver", email, UserStatus.ACTIVE, new ArrayList<>(), "password", "salt");
+        UserModel executor = new UserModel(1L, "executor", "executor@example.com", UserStatus.ACTIVE, new ArrayList<>(), "password");
+        UserModel receiver = new UserModel(2L, "receiver", email, UserStatus.ACTIVE, new ArrayList<>(), "password");
         when(tokenService.getUserFromToken(token)).thenReturn(executor);
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(receiver));
         when(userRepository.existsByEmail(email)).thenReturn(true);
@@ -175,7 +173,7 @@ public class UserServiceTest {
     @Test
     public void deleteUser_WhenUserDoesNotExist_ShouldThrowPermissionDeniedException() {
         String email = "test@example.com";
-        UserModel executor = new UserModel(1L, "executor", "executor@example.com", UserStatus.ACTIVE, new ArrayList<>(), "password", "salt");
+        UserModel executor = new UserModel(1L, "executor", "executor@example.com", UserStatus.ACTIVE, new ArrayList<>(), "password");
         when(tokenService.getUserFromToken(token)).thenReturn(executor);
         when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
 
@@ -186,8 +184,8 @@ public class UserServiceTest {
     public void deactivateUser_WhenExecutorHasAuthority_ShouldDeactivateUser() throws PermissionDeniedException, UserNotFoundException {
         long userId = 2L;
         var adminAuthorities = List.of(UserRole.ADMIN);
-        UserModel executor = new UserModel(1L, "executor", "executor@example.com", UserStatus.ACTIVE, adminAuthorities, "password", "salt");
-        UserModel receiver = new UserModel(userId, "receiver", "test@example.com", UserStatus.ACTIVE, new ArrayList<>(), "password", "salt");
+        UserModel executor = new UserModel(1L, "executor", "executor@example.com", UserStatus.ACTIVE, adminAuthorities, "password");
+        UserModel receiver = new UserModel(userId, "receiver", "test@example.com", UserStatus.ACTIVE, new ArrayList<>(), "password");
         when(tokenService.getUserFromToken(token)).thenReturn(executor);
         when(userRepository.findById(userId)).thenReturn(Optional.of(receiver));
 
@@ -200,8 +198,8 @@ public class UserServiceTest {
     @Test
     public void deactivateUser_WhenExecutorDoesNotHaveAuthority_ShouldThrowPermissionDeniedException() {
         long userId = 2L;
-        UserModel executor = new UserModel(1L, "executor", "executor@example.com", UserStatus.ACTIVE, new ArrayList<>(), "password", "salt");
-        UserModel receiver = new UserModel(userId, "receiver", "test@example.com", UserStatus.ACTIVE, new ArrayList<>(), "password", "salt");
+        UserModel executor = new UserModel(1L, "executor", "executor@example.com", UserStatus.ACTIVE, new ArrayList<>(), "password");
+        UserModel receiver = new UserModel(userId, "receiver", "test@example.com", UserStatus.ACTIVE, new ArrayList<>(), "password");
         when(tokenService.getUserFromToken(token)).thenReturn(executor);
         when(userRepository.findById(userId)).thenReturn(Optional.of(receiver));
 
@@ -214,7 +212,7 @@ public class UserServiceTest {
     @Test
     public void deactivateUser_WhenUserDoesNotExist_ShouldThrowUserNotFoundException() {
         long userId = 2L;
-        UserModel executor = new UserModel(1L, "executor", "executor@example.com", UserStatus.ACTIVE, new ArrayList<>(), "password", "salt");
+        UserModel executor = new UserModel(1L, "executor", "executor@example.com", UserStatus.ACTIVE, new ArrayList<>(), "password");
         when(tokenService.getUserFromToken(token)).thenReturn(executor);
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
@@ -227,8 +225,8 @@ public class UserServiceTest {
     @Test
     public void getMultipleUsers_WhenUsernamePresent_ShouldReturnMatchingUsers() {
         String username = "test";
-        UserModel user1 = new UserModel(1L, "testuser1", "test1@example.com", UserStatus.ACTIVE, new ArrayList<>(), "password", "salt");
-        UserModel user2 = new UserModel(2L, "testuser2", "test2@example.com", UserStatus.ACTIVE, new ArrayList<>(), "password", "salt");
+        UserModel user1 = new UserModel(1L, "testuser1", "test1@example.com", UserStatus.ACTIVE, new ArrayList<>(), "password");
+        UserModel user2 = new UserModel(2L, "testuser2", "test2@example.com", UserStatus.ACTIVE, new ArrayList<>(), "password");
         List<UserModel> users = List.of(user1, user2);
         when(userRepository.findAllByNameContaining(username)).thenReturn(users);
 
