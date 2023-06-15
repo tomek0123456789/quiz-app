@@ -2,6 +2,7 @@ package app.Quiz.jwzpQuizappProject.integrationTests;
 
 import app.Quiz.jwzpQuizappProject.controllers.CategoryController;
 import app.Quiz.jwzpQuizappProject.controllers.QuizController;
+import app.Quiz.jwzpQuizappProject.exceptions.users.UserNotFoundException;
 import app.Quiz.jwzpQuizappProject.models.answers.AnswerDto;
 import app.Quiz.jwzpQuizappProject.models.answers.AnswerModel;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionDto;
@@ -9,7 +10,11 @@ import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizDto;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizPatchDto;
+import app.Quiz.jwzpQuizappProject.models.users.UserModel;
+import app.Quiz.jwzpQuizappProject.models.users.UserRole;
+import app.Quiz.jwzpQuizappProject.repositories.UserRepository;
 import app.Quiz.jwzpQuizappProject.service.QuizService;
+import app.Quiz.jwzpQuizappProject.service.TokenService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.jupiter.api.Test;
@@ -20,6 +25,13 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.test.context.ContextConfiguration;
@@ -27,10 +39,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.stream.Collectors;
 
+import static app.Quiz.jwzpQuizappProject.integrationTests.IntTestsHelper.asJsonString;
+import static org.mockito.ArgumentMatchers.anyChar;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.springSecurity;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -38,6 +53,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(QuizController.class)
@@ -49,6 +65,18 @@ public class QuizControllerTests {
 
     @MockBean
     private QuizService quizService;
+
+//    @MockBean
+//    private UserRepository userRepository;
+//    @MockBean
+//    private TokenService tokenService;
+//
+//    @Autowired
+//    private JwtEncoder jwtEncoder; // Dodaj wstrzykiwanie JwtEncoder
+//
+//    @Autowired
+//    private AuthenticationManager authenticationManager;
+
 
     @Test
     @WithMockUser()
@@ -152,25 +180,26 @@ public class QuizControllerTests {
 
     @Test
     @WithMockUser
-    public void testGetMyQuizzes_ShouldReturnUserQuizzes() throws Exception {
-        String token = "test-token";
-
+    public void testGetMyQuizzes_ValidToken_ShouldReturnUserQuizzes() throws Exception {
+        // Mock data
         QuizModel quiz1 = new QuizModel();
         quiz1.setId(1L);
         quiz1.setTitle("Quiz 1");
 
-        QuizModel quiz2 = new QuizModel();
-        quiz2.setId(2L);
-        quiz2.setTitle("Quiz 2");
+        List<QuizModel> quizzes = List.of(quiz1);
 
-        List<QuizModel> quizzes = List.of(quiz1, quiz2);
+        String token = "valid_token";
 
+        // Mock service method
         when(quizService.getUserQuizzes(token)).thenReturn(quizzes);
 
+        // Perform GET request
         mockMvc.perform(get("/quizzes/my")
-                        .header(HttpHeaders.AUTHORIZATION, token)
-                        .contentType(MediaType.APPLICATION_JSON));
+                        .header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].title").value("Quiz 1"));
 
+        // Verify service method invocation
         verify(quizService).getUserQuizzes(token);
     }
 
@@ -196,8 +225,138 @@ public class QuizControllerTests {
         verify(quizService).addQuiz(quizDto, token);
     }
 
-    private static String asJsonString(Object obj) throws Exception {
-        ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.writeValueAsString(obj);
+    @Test
+    @WithMockUser()
+    public void testDeleteQuiz_ValidTokenAndQuizId_ShouldReturnNoContent() throws Exception {
+        long quizId = 1L;
+        String token = "valid_token";
+
+        mockMvc.perform(delete("/quizzes/{quizId}", quizId)
+                        .with(csrf()) // Dodanie CSRF Tokena do żądania
+                        .header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(status().isNoContent());
+
+        // Verify service method invocation
+        verify(quizService).deleteQuiz(quizId, token);
+    }
+
+    @Test
+    @WithMockUser()
+    public void testPatchQuiz_ValidTokenQuizIdAndQuizPatchDto_ShouldReturnUpdatedQuiz() throws Exception {
+        long quizId = 1L;
+        String token = "valid_token";
+
+        QuizPatchDto quizPatchDto = new QuizPatchDto("Updated Quiz", "desc", 1L);
+
+        QuizModel updatedQuiz = new QuizModel();
+        updatedQuiz.setId(quizId);
+        updatedQuiz.setTitle("Updated Quiz");
+
+        // Mock service method
+        when(quizService.updateQuiz(quizId, quizPatchDto, token)).thenReturn(updatedQuiz);
+
+        // Perform PATCH request
+        mockMvc.perform(patch("/quizzes/{quizId}", quizId)
+                        .with(csrf()) // Dodanie CSRF Tokena do żądania
+                        .header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(quizPatchDto)))
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.title").value("Updated Quiz"));
+
+        // Verify service method invocation
+        verify(quizService).updateQuiz(quizId, quizPatchDto, token);
+    }
+
+    @Test
+    @WithMockUser()
+    public void testAddQuestionToQuiz_ValidTokenQuizIdAndQuestionDto_ShouldReturnCreatedQuestion() throws Exception {
+        long quizId = 1L;
+        String token = "valid_token";
+
+        QuestionDto questionDto = new QuestionDto("Question text");
+
+        QuestionModel createdQuestion = new QuestionModel();
+        createdQuestion.setId(1L);
+        createdQuestion.setContent("Question text");
+
+        // Mock service method
+        when(quizService.addQuestionToQuiz(quizId, questionDto, token)).thenReturn(createdQuestion);
+
+        // Perform POST request
+        mockMvc.perform(post("/quizzes/{quizId}/questions", quizId)
+                        .with(csrf())
+                        .header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(questionDto)))
+                .andExpect(jsonPath("$.content").value("Question text"));
+
+        // Verify service method invocation
+        verify(quizService).addQuestionToQuiz(quizId, questionDto, token);
+    }
+
+    @Test
+    @WithMockUser()
+    public void testRemoveQuestionFromQuiz_ValidTokenQuizIdAndQuestionOrdNum_ShouldReturnNoContent() throws Exception {
+        long quizId = 1L;
+        int questionOrdNum = 1;
+        String token = "valid_token";
+
+        // Perform DELETE request
+        mockMvc.perform(delete("/quizzes/{quizId}/questions/{questionOrdNum}", quizId, questionOrdNum)
+                .with(csrf()) // Dodanie CSRF Tokena do żądania
+                .header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(status().isNoContent());
+
+        // Verify service method invocation
+        verify(quizService).removeQuestionFromQuiz(quizId, questionOrdNum, token);
+    }
+
+    @Test
+    @WithMockUser()
+    public void testAddAnswerToQuestion_ValidTokenQuizIdQuestionOrdNumAndAnswerDto_ShouldReturnCreatedAnswer() throws Exception {
+        long quizId = 1L;
+        int questionOrdNum = 1;
+        String token = "valid_token";
+
+        AnswerDto answerDto = new AnswerDto("Answer text", 0);
+
+        AnswerModel createdAnswer = new AnswerModel();
+        createdAnswer.setId(1L);
+        createdAnswer.setText("Answer text");
+
+        // Mock service method
+        when(quizService.addAnswerToQuestion(quizId, questionOrdNum, answerDto, token)).thenReturn(createdAnswer);
+
+        // Perform POST request
+        mockMvc.perform(post("/quizzes/{quizId}/questions/{questionOrdNum}/answers", quizId, questionOrdNum)
+                        .with(csrf()) // Dodanie CSRF Tokena do żądania
+                        .header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(answerDto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.text").value("Answer text"));
+
+        // Verify service method invocation
+        verify(quizService).addAnswerToQuestion(quizId, questionOrdNum, answerDto, token);
+    }
+
+    @Test
+    @WithMockUser
+    public void testRemoveAnswerFromQuestion_ValidTokenQuizIdQuestionOrdNumAndAnswerOrdNum_ShouldReturnNoContent() throws Exception {
+        long quizId = 1L;
+        int questionOrdNum = 1;
+        int answerOrdNum = 1;
+        String token = "valid_token";
+
+        // Perform DELETE request
+        mockMvc.perform(delete("/quizzes/{quizId}/questions/{questionOrdNum}/answers/{answerOrdNum}", quizId, questionOrdNum, answerOrdNum)
+                        .header(HttpHeaders.AUTHORIZATION, token)
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+
+        // Verify service method invocation
+        verify(quizService).removeAnswerFromQuestion(quizId, questionOrdNum, answerOrdNum, token);
     }
 }

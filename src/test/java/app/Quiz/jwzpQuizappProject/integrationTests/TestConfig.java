@@ -1,9 +1,8 @@
 package app.Quiz.jwzpQuizappProject.integrationTests;
 
 import app.Quiz.jwzpQuizappProject.repositories.*;
-import app.Quiz.jwzpQuizappProject.service.CategoryService;
-import app.Quiz.jwzpQuizappProject.service.QuizService;
-import app.Quiz.jwzpQuizappProject.service.ResultsService;
+import app.Quiz.jwzpQuizappProject.service.*;
+import org.apache.el.parser.Token;
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +11,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+
+import java.time.Clock;
 
 @Configuration
 public class TestConfig {
@@ -28,6 +29,16 @@ public class TestConfig {
     @Bean
     public ResultsService resultsService() {
         return Mockito.mock(ResultsService.class);
+    }
+
+    @Bean
+    public RoomService roomService() {
+        return Mockito.mock(RoomService.class);
+    }
+
+    @Bean
+    public TokenService tokenService() {
+        return Mockito.mock(TokenService.class);
     }
 
     @Bean
@@ -78,6 +89,13 @@ public class TestConfig {
     public ResultsRepository resultsRepository() {
         return Mockito.mock(ResultsRepository.class);
     }
+
+    @Bean
+    public Clock clock() {
+        return Mockito.mock(Clock.class);
+    }
+
+
 
 
 //    @Bean

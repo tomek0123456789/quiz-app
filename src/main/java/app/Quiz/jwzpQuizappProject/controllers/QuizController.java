@@ -50,9 +50,8 @@ public class QuizController {
     }
 
     @GetMapping("/my")
-    public ResponseEntity<?> getMyQuizzes(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-        return ResponseEntity.ok(quizService.getUserQuizzes(token));
-//        return quizService.getUserQuizzes(token);
+    public ResponseEntity<List<QuizModel>> getMyQuizzes(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+        return new ResponseEntity<>(quizService.getUserQuizzes(token), HttpStatus.OK);
     }
 
     @PostMapping
