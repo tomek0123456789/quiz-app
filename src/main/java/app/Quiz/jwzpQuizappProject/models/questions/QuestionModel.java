@@ -9,6 +9,7 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.lang.NonNull;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,10 +36,12 @@ public class QuestionModel{ // T is type of question, like image or string etc
         this.content = content;
         this.status = QuestionStatus.INVALID;
         this.createdAt = createdAt;
-        this.answers = Collections.emptyList();
+        this.answers = new ArrayList<AnswerModel>(2);
         this.quizId = quizId;
     }
-    protected QuestionModel() {}
+    public QuestionModel() {
+        this.answers = new ArrayList<AnswerModel>(2);
+    }
 
     public Long getId() {
         return id;

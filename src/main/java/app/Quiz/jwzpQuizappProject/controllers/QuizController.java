@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@CrossOrigin        // to allow frontend-backend connections
 @RequestMapping("/quizzes")
 public class QuizController {
     private final QuizService quizService;
@@ -38,7 +37,7 @@ public class QuizController {
 
     @GetMapping("/{quizId}")
     public QuizModel getSingleQuiz(@PathVariable long quizId) throws QuizNotFoundException {
-        return quizService.getSingleQuiz(quizId);
+        return  quizService.getSingleQuiz(quizId);
     }
 
     @GetMapping
@@ -51,8 +50,8 @@ public class QuizController {
     }
 
     @GetMapping("/my")
-    public List<QuizModel> getMyQuizzes(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-        return quizService.getUserQuizzes(token);
+    public ResponseEntity<List<QuizModel>> getMyQuizzes(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+        return new ResponseEntity<>(quizService.getUserQuizzes(token), HttpStatus.OK);
     }
 
     @PostMapping

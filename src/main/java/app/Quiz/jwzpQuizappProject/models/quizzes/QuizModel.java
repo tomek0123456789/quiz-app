@@ -13,6 +13,7 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.lang.NonNull;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -63,8 +64,49 @@ public class QuizModel {
         this.questions = Collections.emptyList();
         this.rooms = Collections.emptySet();
     }
+    public QuizModel() {
+        this.questions = new ArrayList<QuestionModel>();
+    }
 
-    protected QuizModel() {}
+    public QuizModel(long id, String title) {
+        this.id = id;
+        this.title = title;
+        this.questions = new ArrayList<>();
+
+    }
+
+    public QuizModel(long id, String title, CategoryModel category) {
+        this.id = id;
+        this.title = title;
+        this.category = category;
+        this.questions = new ArrayList<>();
+
+    }
+
+    public QuizModel(long id, String title, QuizStatus status) {
+        this.id = id;
+        this.title = title;
+        this.quizStatus = status;
+        this.questions = new ArrayList<>();
+
+    }
+
+    public QuizModel(long id, String title, CategoryModel category, QuizStatus status) {
+        this.id = id;
+        this.title = title;
+        this.category = category;
+        this.quizStatus = status;
+        this.questions = new ArrayList<>();
+
+    }
+
+    public QuizModel(long id, String title, UserModel owner) {
+        this.id = id;
+        this.title = title;
+        this.owner = owner;
+        this.questions = new ArrayList<>();
+    }
+
 
     public void addRoom(RoomModel room){
         rooms.add(room);
@@ -118,10 +160,13 @@ public class QuizModel {
         return questions.size() + 1;
     }
     public void setQuestions(List<QuestionModel> questions) {
-        this.questions = Collections.emptyList();
+        this.questions = new ArrayList<>();
         questions.forEach(this::addQuestion);
     }
     public void addQuestion(QuestionModel question) {
+        if(this.questions == null){
+            this.questions = new ArrayList<QuestionModel>();
+        }
         questions.add(question);
         if (question.getQuestionStatus() == QuestionStatus.VALID) {
             validQuestions++;

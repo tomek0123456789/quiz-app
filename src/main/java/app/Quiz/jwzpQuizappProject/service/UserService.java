@@ -68,11 +68,11 @@ public class UserService implements UserDetailsService {
         return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User with id: " + id + " was not found."));
     }
 
-    public UserModel getUserByEmail(String email) {
-        return userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User with email: " + email + " was not found."));
+    public UserModel getUserByEmail(String email) throws UserNotFoundException {
+        return userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User with email: " + email + " was not found."));
     }
 
-    public void deleteUser(String token, String email) throws PermissionDeniedException {
+    public void deleteUser(String token, String email) throws PermissionDeniedException, UserNotFoundException {
         var executor = tokenService.getUserFromToken(token);
         var receiver = getUserByEmail(email);
 

@@ -34,9 +34,8 @@ public class SecurityUser implements UserDetails {
     }
 
     @Override
-    public boolean isAccountNonLocked() {
-        return user.getStatus() != UserStatus.LOCKED;
-    }
+    public boolean isAccountNonLocked() { return user.getStatus() != UserStatus.LOCKED;}
+
 
     @Override
     public boolean isCredentialsNonExpired() {
