@@ -1,0 +1,10 @@
+package app.Quiz.jwzpQuizappProject.integrationTests;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+public class IntTestsHelper {
+    public static String asJsonString(Object obj) throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.writeValueAsString(obj);
+    }
+}

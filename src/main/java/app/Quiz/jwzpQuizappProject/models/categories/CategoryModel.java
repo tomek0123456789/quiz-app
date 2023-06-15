@@ -15,7 +15,7 @@ public class CategoryModel {
         this.name = categoryName;
     }
 
-    protected CategoryModel() {}
+    public CategoryModel() {}
 
     public long getId() {
         return id;

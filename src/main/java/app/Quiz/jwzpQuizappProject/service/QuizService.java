@@ -35,7 +35,6 @@ public class QuizService {
     private final CategoryService categoryService;
     private final TokenService tokenService;
     private final Clock clock;
-
     private final int QUESTIONS_LIMIT = 50;
     private final int VALID_QUESTION_LIMIT = 2;
     private final int ANSWERS_LIMIT = 4;
@@ -86,20 +85,9 @@ public class QuizService {
             Optional<String> categoryName,
             Optional<Boolean> onlyValidQuizzes
     ) {
-        String predicate = String.valueOf(titlePart.isPresent() ? 1 : 0) + (categoryName.isPresent() ? 1 : 0) + (onlyValidQuizzes.isPresent() ? 1 : 0);
-        //        if (titlePart.isPresent()) {
-//            if (categoryName.isPresent()) {
-//                quizzes = quizRepository.findAllByTitleContainingAndCategoryName(titlePart.get(), categoryName.get());
-//            } else {
-//                quizzes = quizRepository.findAllByTitleContaining(titlePart.get());
-//            }
-//        } else {
-//            if (categoryName.isPresent()) {
-//                quizzes = quizRepository.findAllByCategoryName(categoryName.get());
-//            } else {
-//                quizzes = quizRepository.findAll();
-//            }
-//        }
+
+        String predicate = String.valueOf(titlePart.isPresent() ? 1 : 0) + (categoryName.isPresent() ? 1 : 0) + (validQuizzes.isPresent() ? 1 : 0);
+
         return switch (predicate) {
             case "001" -> quizRepository.findAllByQuizStatus(QuizStatus.VALID);
             case "010" -> quizRepository.findAllByCategoryName(categoryName.get());
@@ -129,7 +117,7 @@ public class QuizService {
             quiz.setTitle(quizPatchDto.title());
         }
         if (quizPatchDto.description() != null) {
-            quiz.setTitle(quizPatchDto.description());
+            quiz.setDescription(quizPatchDto.description());
         }
         if (quizPatchDto.categoryId() != null) {
             quiz.setCategory(categoryService.getSingleCategory(quizPatchDto.categoryId()));

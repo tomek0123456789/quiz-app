@@ -27,8 +27,14 @@ dependencies {
 	implementation("org.apache.logging.log4j:log4j-api")
 	implementation("org.apache.logging.log4j:log4j-core")
 	implementation("org.projectlombok:lombok")
+	implementation("org.mockito:mockito-core:3.12.4")
+	testImplementation("junit:junit:4.13.1")
 	runtimeOnly("org.postgresql:postgresql")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testImplementation("pl.pragmatists:JUnitParams:1.1.1")	//for @Parameters
+//	testImplementation ("org.springframework.boot:spring-boot-starter-test")
+	testImplementation ("org.springframework.security:spring-security-test")
+
 }
 
 configurations {
@@ -40,6 +46,9 @@ tasks.getByName<Jar>("jar") {
 	enabled = false
 }
 
-//tasks.withType<Test> {
-//	useJUnitPlatform()
-//}
+tasks.withType<Test> {
+	useJUnitPlatform()
+//	filter{
+//		includeTestsMatching("quiz-app.test")
+//	}
+}
