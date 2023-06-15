@@ -92,6 +92,7 @@ public class QuizController {
         log.info("User with email: " + userEmail + " deleted a quiz with id: " + quizId + ".");
         return new ResponseEntity<>("Successfully deleted a quiz with id: " + quizId + ".", HttpStatus.NO_CONTENT);
     }
+
     @PutMapping
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public QuizModel updateQuiz(

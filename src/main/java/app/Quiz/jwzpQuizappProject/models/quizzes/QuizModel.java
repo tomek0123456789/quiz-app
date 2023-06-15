@@ -51,7 +51,7 @@ public class QuizModel {
             CascadeType.MERGE
     })
     @JsonIgnore //to prevent infinite recursion
-    Set<RoomModel> rooms;
+            Set<RoomModel> rooms;
 
     public QuizModel(@NonNull String title, @NonNull String description, UserModel owner, CategoryModel category, Instant createdAt) {
         this.title = title;

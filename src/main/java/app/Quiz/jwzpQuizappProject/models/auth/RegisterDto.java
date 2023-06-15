@@ -11,4 +11,5 @@ public record RegisterDto(
         String email,
         @NotBlank
         String password
-) {}
+) {
+}

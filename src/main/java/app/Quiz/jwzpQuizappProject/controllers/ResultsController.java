@@ -9,7 +9,6 @@ import app.Quiz.jwzpQuizappProject.exceptions.quizzes.QuizNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.results.ResultNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.rooms.RoomNotFoundException;
 import app.Quiz.jwzpQuizappProject.models.results.*;
-import app.Quiz.jwzpQuizappProject.repositories.*;
 import app.Quiz.jwzpQuizappProject.service.ResultsService;
 import app.Quiz.jwzpQuizappProject.service.TokenService;
 import org.slf4j.Logger;
@@ -36,7 +35,7 @@ public class ResultsController {
     }
 
     @GetMapping("/my")
-    public List<ResultsModel> getMyResultsForQuiz(
+    public List<ResultsModel> getAllUserResults(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token
     ) {
         log.info("User with email: " + tokenService.getEmailFromToken(token) + " gets all his results.");
@@ -53,25 +52,25 @@ public class ResultsController {
     }
 
     @GetMapping("/quiz/{id}")
-    public Set<QuizResultsModel> getMyResultsForQuizEndpoint(
+    public Set<QuizResultsModel> getAllUserQuizResults(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @PathVariable long id
     ) {
-        log.info("User with email: " + tokenService.getEmailFromToken(token) + " gets results for quiz with id: " + id + ".");
+        log.info("User with email: " + tokenService.getEmailFromToken(token) + " gets quiz results for quiz with id: " + id + ".");
         return resultsService.getMyResultsForQuiz(id, token);
     }
 
     @GetMapping("/quiz/{id}/best-result")
-    public ResponseEntity<QuizResultsModel> getMyBestResult(
+    public QuizResultsModel getMyBestResult(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @PathVariable long id
     ) {
         log.info("User with email: " + tokenService.getEmailFromToken(token) + " gets his best results for quiz with id: " + id + ".");
-        return ResponseEntity.ok(resultsService.getMyBestResultForQuiz(token, id));
+        return resultsService.getMyBestResultForQuiz(token, id);
     }
 
-    @PostMapping()
-    public ResponseEntity<?> createResults(
+    @PostMapping
+    public ResponseEntity<ResultsModel> createResults(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @RequestBody ResultsDto results
     ) throws AnswerNotFoundException, QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists {
@@ -84,7 +83,7 @@ public class ResultsController {
 
     @PatchMapping("/qaa")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public ResponseEntity<String> updateQaa(
+    public ResponseEntity<String> updateQuestionAndUserAnswer(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @RequestBody QuestionAndUsersAnswerPatchDto questionAndUsersAnswerPatchDto
     ) throws AnswerNotFoundException, QuizNotFoundException, QuestionNotFoundException {

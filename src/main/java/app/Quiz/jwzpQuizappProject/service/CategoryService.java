@@ -24,6 +24,7 @@ public class CategoryService {
     public List<CategoryModel> getAllCategories() {
         return categoryRepository.findAll();
     }
+
     public List<CategoryModel> getCategoriesByNameContaining(String namePart) {
         return categoryRepository.findAllByNameContaining(namePart);
     }

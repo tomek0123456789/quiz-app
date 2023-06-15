@@ -3,20 +3,17 @@ package app.Quiz.jwzpQuizappProject.models.results;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.micrometer.common.lang.Nullable;
 import jakarta.persistence.*;
 import org.springframework.lang.NonNull;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-public class ResultsModel{
+public class ResultsModel {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
@@ -111,7 +108,7 @@ public class ResultsModel{
         this.room = room;
     }
 
-    public void update(ResultsPatchDto resultsPatchDto, UserModel owner,RoomModel room){
+    public void update(ResultsPatchDto resultsPatchDto, UserModel owner, RoomModel room) {
         this.owner = owner != null ? owner : this.owner;
         this.room = room != null ? room : this.room;
         this.score = resultsPatchDto.score() != null ? resultsPatchDto.score() : this.score;

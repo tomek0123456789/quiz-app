@@ -16,31 +16,31 @@ import org.springframework.context.annotation.Bean;
 @EnableConfigurationProperties(RsaKeyProperties.class)
 public class JwzpQuizappProjectApplication {
 
-	public JwzpQuizappProjectApplication(UserRepository userRepository, CategoryRepository categoryRepository, @Value("${app.debug}") boolean debug) {
-		this.userRepository = userRepository;
-		this.categoryRepository = categoryRepository;
-		DEBUG = debug;
-	}
+    public JwzpQuizappProjectApplication(UserRepository userRepository, CategoryRepository categoryRepository, @Value("${app.debug}") boolean debug) {
+        this.userRepository = userRepository;
+        this.categoryRepository = categoryRepository;
+        DEBUG = debug;
+    }
 
-	public static void main(String[] args) {
-		SpringApplication.run(JwzpQuizappProjectApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(JwzpQuizappProjectApplication.class, args);
+    }
 
-	private final UserRepository userRepository;
-	private final CategoryRepository categoryRepository;
+    private final UserRepository userRepository;
+    private final CategoryRepository categoryRepository;
 
-	private final boolean DEBUG;
+    private final boolean DEBUG;
 
-	@Bean
-	public CommandLineRunner cli() {
-		return args -> {
-			if (DEBUG) {
-				if (userRepository.findByEmail("admin@admin.com").isEmpty()) {
-					var user = new UserModel();
-					userRepository.save(user);
-					categoryRepository.save(new CategoryModel("Art"));
-				}
-			}
-		};
-	}
+    @Bean
+    public CommandLineRunner cli() {
+        return args -> {
+            if (DEBUG) {
+                if (userRepository.findByEmail("admin@admin.com").isEmpty()) {
+                    var user = new UserModel();
+                    userRepository.save(user);
+                    categoryRepository.save(new CategoryModel("Art"));
+                }
+            }
+        };
+    }
 }

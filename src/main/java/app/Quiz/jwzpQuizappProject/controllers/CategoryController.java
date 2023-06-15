@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@CrossOrigin        // to allow frontend-backend connections
 @RequestMapping("/categories")
 public class CategoryController {
     private final Logger log = LoggerFactory.getLogger(Constants.LOGGER_NAME);

@@ -5,7 +5,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
-import java.util.List;
 
 public class SecurityUser implements UserDetails {
 
@@ -19,23 +18,26 @@ public class SecurityUser implements UserDetails {
     public String getUsername() {
         return user.getEmail();
     }
+
     @Override
     public String getPassword() {
         return user.getPassword();
     }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return user.getRoles().stream().map((role) -> new SimpleGrantedAuthority(role.roleString)).toList();
     }
-//TODO change those methods to return something useful
+
     @Override
     public boolean isAccountNonExpired() {
         return true;
     }
 
     @Override
-    public boolean isAccountNonLocked() { return user.getStatus() != UserStatus.LOCKED;}
-
+    public boolean isAccountNonLocked() {
+        return user.getStatus() != UserStatus.LOCKED;
+    }
 
     @Override
     public boolean isCredentialsNonExpired() {

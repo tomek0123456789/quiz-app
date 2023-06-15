@@ -51,11 +51,12 @@ public class SecurityConfig {
         //https://reflectoring.io/spring-security-password-handling/
         return new BCryptPasswordEncoder(10, new SecureRandom());
     }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable) // (1)
-                .authorizeHttpRequests( auth -> auth
+                .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login").permitAll()
                         .requestMatchers("/register").permitAll()
                         .anyRequest().authenticated() // (2)

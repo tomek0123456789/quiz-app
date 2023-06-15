@@ -160,7 +160,7 @@ public class RoomController {
     }
 
     @PatchMapping("/{id}/quizzes/{quizId}")
-    public ResponseEntity<?> addQuizToRoom(
+    public ResponseEntity<String> addQuizToRoom(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @PathVariable long id,
             @PathVariable long quizId

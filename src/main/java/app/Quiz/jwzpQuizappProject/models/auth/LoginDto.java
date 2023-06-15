@@ -9,4 +9,5 @@ public record LoginDto(
         String email,
         @NotBlank
         String password
-) {}
+) {
+}
