@@ -10,4 +10,5 @@ import java.util.List;
 @Repository
 public interface RoomRepository extends JpaRepository<RoomModel, Long> {
     List<RoomModel> findAllByOwner(UserModel user);
+    List<RoomModel> findAllByParticipantsContaining(UserModel user);
 }

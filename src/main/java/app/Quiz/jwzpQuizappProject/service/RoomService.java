@@ -64,7 +64,7 @@ public class RoomService {
 
     public List<RoomModel> getUserRooms(String token) {
         var user = tokenService.getUserFromToken(token);
-        return roomRepository.findAllByOwner(user);
+        return roomRepository.findAllByParticipantsContaining(user);
     }
 
     public List<RoomModel> getAllRooms(String token) throws PermissionDeniedException {

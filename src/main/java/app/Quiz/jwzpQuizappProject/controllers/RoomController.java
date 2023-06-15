@@ -153,7 +153,7 @@ public class RoomController {
     public List<RoomModel> getAllRooms(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token
     ) {
-        log.info("User with email: " + tokenService.getEmailFromToken(token) + " gets all rooms.");
+        log.info("User with email: " + tokenService.getEmailFromToken(token) + " gets all rooms he's in.");
         return roomService.getUserRooms(token);
     }
 
