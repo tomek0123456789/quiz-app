@@ -67,7 +67,7 @@ public class UserControllerTests {
                 .andExpect(jsonPath("$[1].id").value(2))
                 .andExpect(jsonPath("$[1].name").value(user2Name));
 
-        verify(userService, times(1)).getMultipleUsers(any(Optional.class));
+        verify(userService, times(999)).getMultipleUsers(any(Optional.class));
         verifyNoMoreInteractions(userService);
     }
 
