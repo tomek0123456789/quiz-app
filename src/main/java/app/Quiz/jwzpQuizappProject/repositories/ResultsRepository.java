@@ -16,6 +16,5 @@ import java.util.Set;
 public interface ResultsRepository extends JpaRepository<ResultsModel, Long> {
     List<ResultsModel> findAllByOwner(UserModel owner);
     List<ResultsModel> findByRoomId(long roomId);
-    @Query("select res from ResultsModel res join res.quizzesResults q where q.id = :quiz_results_id and res.owner.id = :owner_id")
-    Set<QuizResultsModel> findAllByOwnerAndQuizzesResultsId(@Param("owner_id") long ownerId, @Param("quiz_results_id") long quizResultsId);
+
 }

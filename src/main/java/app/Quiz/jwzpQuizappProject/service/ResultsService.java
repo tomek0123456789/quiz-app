@@ -64,12 +64,10 @@ public class ResultsService {
         var user = tokenService.getUserFromToken(token);
 
         List<ResultsModel> results = resultsRepository.findAllByOwner(user);
-        //todo not sure, check this
-        return resultsRepository.findAllByOwnerAndQuizzesResultsId(user.getId(), id);
-//        return results.stream()
-//                .flatMap(result -> result.getQuizzesResults().stream())
-//                .filter(quizResult -> quizResult.getQuiz().getId() == id)
-//                .collect(Collectors.toSet());
+        return results.stream()
+                .flatMap(result -> result.getQuizzesResults().stream())
+                .filter(quizResult -> quizResult.getQuiz().getId() == id)
+                .collect(Collectors.toSet());
     }
 
     public QuizResultsModel getMyBestResultForQuiz(String token, long quizId) {

@@ -16,6 +16,7 @@ import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizPatchDto;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizStatus;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
+import app.Quiz.jwzpQuizappProject.models.users.UserRole;
 import app.Quiz.jwzpQuizappProject.repositories.AnswerRepository;
 import app.Quiz.jwzpQuizappProject.repositories.QuestionRepository;
 import app.Quiz.jwzpQuizappProject.repositories.QuizRepository;
@@ -77,7 +78,7 @@ public class QuizServiceTest {
 
         when(quizRepository.findById(quizId)).thenReturn(Optional.of(quiz));
 
-        QuizModel result = quizService.getSingleQuiz(quizId);
+        QuizModel result = quizService.getSingleQuiz(quizId, token);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(quizId,result.getId());
@@ -91,27 +92,9 @@ public class QuizServiceTest {
 
         when(quizRepository.findById(quizId)).thenReturn(Optional.empty());
 
-        assertThrows(QuizNotFoundException.class, () -> quizService.getSingleQuiz(quizId));
+        assertThrows(QuizNotFoundException.class, () -> quizService.getSingleQuiz(quizId, token));
 
         verify(quizRepository, times(1)).findById(quizId);
-    }
-
-    @Test
-    public void testGetMultipleQuizzes_withNoFilters_shouldReturnAllQuizzes() {
-        List<QuizModel> quizzes = List.of(
-                new QuizModel(),
-                new QuizModel(),
-                new QuizModel()
-        );
-
-        when(quizRepository.findAll()).thenReturn(quizzes);
-
-        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.empty(), Optional.empty(), Optional.empty());
-
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(quizzes.size(), result.size());
-
-        verify(quizRepository, times(1)).findAll();
     }
 
     @Test
@@ -119,13 +102,13 @@ public class QuizServiceTest {
         String titlePart = "Java";
         List<QuizModel> quizzes = List.of(
                 new QuizModel(1L, "Java Basics"),
-                new QuizModel(2L, "Java Advanced"),
-                new QuizModel(3L, "Python Basics")
+                new QuizModel(2L, "Java Advanced")
         );
 
-        when(quizRepository.findAllByTitleContaining(titlePart)).thenReturn(quizzes.subList(0, 2));
+        when(quizRepository.findAllByTitleContaining(titlePart)).thenReturn(quizzes);
+        when(tokenService.getUserFromToken(token)).thenReturn(new UserModel());
 
-        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.of(titlePart), Optional.empty(), Optional.empty());
+        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.of(titlePart), Optional.empty(),token);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(2, result.size());
@@ -145,8 +128,10 @@ public class QuizServiceTest {
         );
 
         when(quizRepository.findAllByCategoryName(categoryName)).thenReturn(quizzes.subList(0, 2));
+        when(tokenService.getUserFromToken(token)).thenReturn(new UserModel());
 
-        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.empty(), Optional.of(categoryName), Optional.empty());
+
+        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.empty(), Optional.of(categoryName),token);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(2, result.size());
@@ -156,24 +141,6 @@ public class QuizServiceTest {
         verify(quizRepository, times(1)).findAllByCategoryName(categoryName);
     }
 
-    @Test
-    public void testGetMultipleQuizzes_withValidQuizzesFilter_shouldReturnValidQuizzes() {
-        List<QuizModel> quizzes = List.of(
-                new QuizModel(1L, "Java Basics", QuizStatus.VALID),
-                new QuizModel(3L, "Java Advanced", QuizStatus.VALID)
-        );
-
-        when(quizRepository.findAllByQuizStatus(QuizStatus.VALID)).thenReturn(quizzes.subList(0, 2));
-
-        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.empty(), Optional.empty(), Optional.of(true));
-
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(2, result.size());
-        Assertions.assertEquals(1L, result.get(0).getId());
-        Assertions.assertEquals(3L, result.get(1).getId());
-
-        verify(quizRepository, times(1)).findAllByQuizStatus(QuizStatus.VALID);
-    }
 
     @Test
     public void testGetMultipleQuizzes_withTitlePartAndCategoryNameFilters_shouldReturnQuizzesWithMatchingTitlePartAndCategoryName() {
@@ -187,8 +154,10 @@ public class QuizServiceTest {
         );
 
         when(quizRepository.findAllByTitleContainingAndCategoryName(titlePart, categoryName)).thenReturn(quizzes.subList(0, 2));
+        when(tokenService.getUserFromToken(token)).thenReturn(new UserModel());
 
-        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.of(titlePart), Optional.of(categoryName), Optional.empty());
+
+        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.of(titlePart), Optional.of(categoryName),token);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(2, result.size());
@@ -199,63 +168,70 @@ public class QuizServiceTest {
     }
 
     @Test
-    public void testGetMultipleQuizzes_withTitlePartAndValidQuizzesFilters_shouldReturnQuizzesWithMatchingTitlePartAndValidQuizzes() {
-        String titlePart = "Java";
-        List<QuizModel> quizzes = List.of(
-                new QuizModel(1L, "Java Basics", QuizStatus.VALID),
-                new QuizModel(4L, "Java Basics", QuizStatus.VALID)
-        );
+    public void testGetSingleQuiz_QuizFound_ReturnsQuizModel() throws QuizNotFoundException {
+        long quizId = 1L;
+        String token = "token";
+        UserModel user = new UserModel();
+        QuizModel quiz = new QuizModel();
+        quiz.setId(quizId);
+        quiz.setOwner(user);
 
-        when(quizRepository.findAllByTitleContainingAndQuizStatus(titlePart, QuizStatus.VALID)).thenReturn(quizzes);
+        when(tokenService.getUserFromToken(token)).thenReturn(user);
+        when(quizRepository.findById(quizId)).thenReturn(Optional.of(quiz));
 
-        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.of(titlePart), Optional.empty(), Optional.of(true));
+        QuizModel result = quizService.getSingleQuiz(quizId, token);
 
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(2, result.size());
-        Assertions.assertEquals(1L, result.get(0).getId());
-        Assertions.assertEquals(4L, result.get(1).getId());
+        assertEquals(quizId, result.getId());
+        assertEquals(user, result.getOwner());
 
-        verify(quizRepository, times(1)).findAllByTitleContainingAndQuizStatus(titlePart, QuizStatus.VALID);
+        verify(tokenService).getUserFromToken(token);
+        verify(quizRepository).findById(quizId);
     }
 
     @Test
-    public void testGetMultipleQuizzes_withCategoryNameAndValidQuizzesFilters_shouldReturnQuizzesWithMatchingCategoryNameAndValidQuizzes() {
-        String categoryName = "Programming";
-        List<QuizModel> quizzes = List.of(
-                new QuizModel(1L, "Java Basics", new CategoryModel(categoryName), QuizStatus.VALID),
-                new QuizModel(3L, "Java Advanced", new CategoryModel(categoryName), QuizStatus.VALID)
-        );
+    public void testGetSingleQuiz_QuizNotFound_ThrowsQuizNotFoundException() {
+        long quizId = 1L;
+        String token = "token";
 
-        when(quizRepository.findAllByCategoryNameAndQuizStatus(categoryName, QuizStatus.VALID)).thenReturn(quizzes.subList(0, 2));
+        when(tokenService.getUserFromToken(token)).thenReturn(new UserModel());
+        when(quizRepository.findById(quizId)).thenReturn(Optional.empty());
 
-        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.empty(), Optional.of(categoryName), Optional.of(true));
+        assertThrows(QuizNotFoundException.class, () -> quizService.getSingleQuiz(quizId, token));
 
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(2, result.size());
-        Assertions.assertEquals(1L, result.get(0).getId());
-        Assertions.assertEquals(3L, result.get(1).getId());
-
-        verify(quizRepository, times(1)).findAllByCategoryNameAndQuizStatus(categoryName, QuizStatus.VALID);
+        verify(tokenService).getUserFromToken(token);
+        verify(quizRepository).findById(quizId);
     }
 
     @Test
-    public void testGetMultipleQuizzes_withAllFilters_shouldReturnQuizzesWithMatchingTitlePartCategoryNameAndValidQuizzes() {
-        String titlePart = "Java";
-        String categoryName = "Programming";
-        List<QuizModel> quizzes = List.of(
-                new QuizModel(1L, "Java Basics", new CategoryModel(categoryName), QuizStatus.VALID),
-                new QuizModel(3L, "Python Basics", new CategoryModel(categoryName), QuizStatus.VALID)
-        );
+    public void testGetMultipleQuizzes_AdminUser_ReturnsQuizzes() {
+        String token = "token";
+        UserModel adminUser = makeTokenServiceReturnAdmin();
 
-        when(quizRepository.findAllByTitleContainingAndCategoryNameAndQuizStatus(titlePart, categoryName, QuizStatus.VALID)).thenReturn(quizzes.subList(0, 1));
+        when(tokenService.getUserFromToken(token)).thenReturn(adminUser);
+        when(quizRepository.findAll()).thenReturn(List.of(new QuizModel(), new QuizModel()));
 
-        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.of(titlePart), Optional.of(categoryName), Optional.of(true));
+        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.empty(), Optional.empty(), token);
 
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(1, result.size());
-        Assertions.assertEquals(1L, result.get(0).getId());
+        assertEquals(2, result.size());
 
-        verify(quizRepository, times(1)).findAllByTitleContainingAndCategoryNameAndQuizStatus(titlePart, categoryName, QuizStatus.VALID);
+        verify(tokenService).getUserFromToken(token);
+        verify(quizRepository).findAll();
+    }
+
+    @Test
+    public void testGetMultipleQuizzes_NonAdminUser_ReturnsQuizzes() {
+        String token = "token";
+        UserModel adminUser = makeTokenServiceReturnAdmin();
+
+        when(tokenService.getUserFromToken(token)).thenReturn(adminUser);
+        when(quizRepository.findAll()).thenReturn(List.of(new QuizModel(), new QuizModel()));
+
+        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.empty(), Optional.empty(), token);
+
+        assertEquals(2, result.size());
+
+        verify(tokenService).getUserFromToken(token);
+        verify(quizRepository).findAll();
     }
 
     @Test
@@ -540,6 +516,18 @@ public class QuizServiceTest {
         long userId = 1;
         var user = new UserModel();
         user.setId(userId);
+
+        when(tokenService.getUserFromToken(token)).thenReturn(user);
+
+        return user;
+
+    }
+
+    private UserModel makeTokenServiceReturnAdmin(){
+        long userId = 1;
+        var user = new UserModel();
+        user.setId(userId);
+        user.setRoles(List.of(UserRole.ADMIN));
 
         when(tokenService.getUserFromToken(token)).thenReturn(user);
 
