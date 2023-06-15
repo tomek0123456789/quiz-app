@@ -3,6 +3,7 @@ package app.Quiz.jwzpQuizappProject.service;
 import app.Quiz.jwzpQuizappProject.RoomAuthoritiesValidator;
 import app.Quiz.jwzpQuizappProject.exceptions.auth.PermissionDeniedException;
 import app.Quiz.jwzpQuizappProject.exceptions.quizzes.QuizNotFoundException;
+import app.Quiz.jwzpQuizappProject.exceptions.rooms.InvalidRoomDataException;
 import app.Quiz.jwzpQuizappProject.exceptions.rooms.RoomNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.users.UserNotFoundException;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
@@ -78,8 +79,11 @@ public class RoomService {
         return roomRepository.findAll();
     }
 
-    public RoomModel createRoom(RoomDto roomDto, String token) {
+    public RoomModel createRoom(RoomDto roomDto, String token) throws InvalidRoomDataException {
         var user = tokenService.getUserFromToken(token);
+        if (roomDto.startTime().isAfter(roomDto.endTime())) {
+            throw new InvalidRoomDataException("Room start date is after room end date.");
+        }
         var room = new RoomModel(roomDto.name(), user, roomDto.startTime(), roomDto.endTime());
         roomRepository.save(room);
         return room;

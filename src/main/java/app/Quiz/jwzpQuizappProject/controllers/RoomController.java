@@ -6,6 +6,7 @@ import app.Quiz.jwzpQuizappProject.exceptions.answers.AnswerNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.auth.PermissionDeniedException;
 import app.Quiz.jwzpQuizappProject.exceptions.questions.QuestionNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.quizzes.QuizNotFoundException;
+import app.Quiz.jwzpQuizappProject.exceptions.rooms.InvalidRoomDataException;
 import app.Quiz.jwzpQuizappProject.exceptions.rooms.RoomNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.users.UserNotFoundException;
 import app.Quiz.jwzpQuizappProject.models.results.ResultsDto;
@@ -54,7 +55,7 @@ public class RoomController {
     public ResponseEntity<RoomModel> createRoom(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @RequestBody RoomDto roomDto
-    ) {
+    ) throws InvalidRoomDataException {
         String userEmail = tokenService.getEmailFromToken(token);
         log.info("User with email: " + userEmail + " tries to create a room.");
         var createdRoom = roomService.createRoom(roomDto, token);
