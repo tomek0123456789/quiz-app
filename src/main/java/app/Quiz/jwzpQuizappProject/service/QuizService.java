@@ -75,26 +75,34 @@ public class QuizService {
 
     ////////////////////////
 
-    public QuizModel getSingleQuiz(Long quizId) throws QuizNotFoundException {
-        return quizRepository.findById(quizId).orElseThrow(() -> getPreparedQuizNotFoundException(quizId));
+    public QuizModel getSingleQuiz(long quizId, String token) throws QuizNotFoundException {
+        var user = tokenService.getUserFromToken(token);
+        var quiz = quizRepository.findById(quizId).orElseThrow(() -> getPreparedQuizNotFoundException(quizId));
+        if (quiz.getOwner() != user && !user.isAdmin() && quiz.getQuizStatus() != QuizStatus.VALID) {
+            throw getPreparedQuizNotFoundException(quizId);
+        }
+        return quiz;
     }
     public List<QuizModel> getMultipleQuizzes(
             Optional<String> titlePart,
             Optional<String> categoryName,
-            Optional<Boolean> onlyValidQuizzes
+            String token
     ) {
-
-        String predicate = String.valueOf(titlePart.isPresent() ? 1 : 0) + (categoryName.isPresent() ? 1 : 0) + (onlyValidQuizzes.isPresent() ? 1 : 0);
+        String predicate = String.valueOf(titlePart.isPresent() ? 1 : 0) + (categoryName.isPresent() ? 1 : 0);
+        if (tokenService.getUserFromToken(token).isAdmin()) {
+            return switch (predicate) {
+                case "01" -> quizRepository.findAllByCategoryName(categoryName.get());
+                case "10" -> quizRepository.findAllByTitleContaining(titlePart.get());
+                case "11" -> quizRepository.findAllByTitleContainingAndCategoryName(titlePart.get(), categoryName.get());
+                default -> quizRepository.findAll();
+            };
+        }
 
         return switch (predicate) {
-            case "001" -> quizRepository.findAllByQuizStatus(QuizStatus.VALID);
-            case "010" -> quizRepository.findAllByCategoryName(categoryName.get());
-            case "011" -> quizRepository.findAllByCategoryNameAndQuizStatus(categoryName.get(), QuizStatus.VALID);
-            case "100" -> quizRepository.findAllByTitleContaining(titlePart.get());
-            case "101" -> quizRepository.findAllByTitleContainingAndQuizStatus(titlePart.get(), QuizStatus.VALID);
-            case "110" -> quizRepository.findAllByTitleContainingAndCategoryName(titlePart.get(), categoryName.get());
-            case "111" -> quizRepository.findAllByTitleContainingAndCategoryNameAndQuizStatus(titlePart.get(), categoryName.get(), QuizStatus.VALID);
-            default -> quizRepository.findAll();
+            case "01" -> quizRepository.findAllByCategoryNameAndQuizStatus(categoryName.get(), QuizStatus.VALID);
+            case "10" -> quizRepository.findAllByTitleContainingAndQuizStatus(titlePart.get(), QuizStatus.VALID);
+            case "11" -> quizRepository.findAllByTitleContainingAndCategoryNameAndQuizStatus(titlePart.get(), categoryName.get(), QuizStatus.VALID);
+            default -> quizRepository.findAllByQuizStatus(QuizStatus.VALID);
         };
     }
     public List<QuizModel> getUserQuizzes(String token){

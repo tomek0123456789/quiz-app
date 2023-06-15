@@ -309,7 +309,7 @@ public class QuizServiceTest {
     @Test
     public void testUpdateQuiz_withValidQuizIdAndQuizPatchDtoAndToken_shouldReturnUpdatedQuiz() throws QuizNotFoundException, PermissionDeniedException, CategoryNotFoundException {
         long quizId = 1L;
-        QuizPatchDto quizPatchDto = new QuizPatchDto("Updated Title", "Updated Description", 2L);
+        QuizPatchDto quizPatchDto = new QuizPatchDto("Updated Title", "Updated Description", 2L, QuizStatus.VALIDATABLE);
 
         UserModel user = new UserModel();
         CategoryModel category = new CategoryModel();
@@ -407,7 +407,7 @@ public class QuizServiceTest {
     }
 
     @Test
-    public void testRemoveQuestionFromQuiz_withQuestionOrdinalNumberExceedingQuizQuestionsLimit_shouldThrowQuestionsLimitException() {
+    public void testRemoveQuestionFromQuiz_withQuestionOrdinalNumberExceedingQuizQuestionsLimit_shouldThrowQuestionNotFoundException() {
         long quizId = 1L;
         int questionOrderNumber = 2;
 
@@ -421,7 +421,7 @@ public class QuizServiceTest {
 
         when(quizRepository.findById(quizId)).thenReturn(Optional.of(quizModel));
 
-        assertThrows(QuestionsLimitException.class, () -> quizService.removeQuestionFromQuiz(quizId, questionOrderNumber, token));
+        assertThrows(QuestionNotFoundException.class, () -> quizService.removeQuestionFromQuiz(quizId, questionOrderNumber, token));
 
         verify(quizRepository, times(1)).findById(quizId);
         verifyNoMoreInteractions(questionRepository);

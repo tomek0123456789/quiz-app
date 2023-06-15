@@ -11,6 +11,7 @@ import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizDto;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizPatchDto;
+import app.Quiz.jwzpQuizappProject.models.quizzes.QuizStatus;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserRole;
 import app.Quiz.jwzpQuizappProject.repositories.UserRepository;
@@ -240,7 +241,7 @@ public class QuizControllerTests {
         long quizId = 1L;
         String token = "valid_token";
 
-        QuizPatchDto quizPatchDto = new QuizPatchDto("Updated Quiz", "desc", 1L);
+        QuizPatchDto quizPatchDto = new QuizPatchDto("Updated Quiz", "desc", 1L, QuizStatus.VALIDATABLE);
 
         QuizModel updatedQuiz = new QuizModel();
         updatedQuiz.setId(quizId);
