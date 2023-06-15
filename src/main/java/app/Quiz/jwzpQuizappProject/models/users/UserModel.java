@@ -149,7 +149,6 @@ public class UserModel {
                 ", createdAt=" + createdAt +
                 ", status=" + status +
                 ", role=" + roles +
-                ", passwordHash='" + password + '\'' +
                 '}';
     }
 }
