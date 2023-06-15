@@ -36,7 +36,6 @@ public class QuizService {
     private final TokenService tokenService;
     private final Clock clock;
     private final int QUESTIONS_LIMIT = 50;
-    private final int VALID_QUESTION_LIMIT = 2;
     private final int ANSWERS_LIMIT = 4;
 
     public QuizService(AnswerRepository answerRepository, QuestionRepository questionRepository, QuizRepository quizRepository, CategoryService categoryService, TokenService tokenService, Clock clock) {
@@ -80,7 +79,6 @@ public class QuizService {
         return quizRepository.findById(quizId).orElseThrow(() -> getPreparedQuizNotFoundException(quizId));
     }
     public List<QuizModel> getMultipleQuizzes(
-            // todo start from here
             Optional<String> titlePart,
             Optional<String> categoryName,
             Optional<Boolean> onlyValidQuizzes
@@ -122,6 +120,9 @@ public class QuizService {
         if (quizPatchDto.categoryId() != null) {
             quiz.setCategory(categoryService.getSingleCategory(quizPatchDto.categoryId()));
         }
+        if (quizPatchDto.status() != null && quizPatchDto.status() != QuizStatus.INVALID) {
+            quiz.setQuizStatus(quizPatchDto.status());
+        }
         //todo maybe reflection? doesn't scale well in case more fields were added
         quizRepository.save(quiz);
         return quiz;
@@ -131,6 +132,7 @@ public class QuizService {
         // validate if category exists
         categoryService.getSingleCategory(quiz.getCategory().getId());
         quiz.setQuestions(Collections.emptyList());
+        quiz.setQuizStatus(QuizStatus.INVALID);
         return quizRepository.save(quiz);
     }
 
@@ -155,17 +157,10 @@ public class QuizService {
 
     public void removeQuestionFromQuiz(long quizId, int questionOrdinalNumber, String token) throws PermissionDeniedException, QuestionsLimitException, QuizNotFoundException, QuestionNotFoundException {
         var quiz = validateUserAgainstQuiz(token, quizId);
-        var quizQuestionsSize = quiz.questionsSize();
-        // todo is it necessary since quiz.removeQuestion throws when it doesn't find a valid quiz?
-        //  the message is more informative than just not found
-        //  if so, add to removeAnswerFromQuestion
-        if (questionOrdinalNumber > quizQuestionsSize) {
-            throw new QuestionsLimitException("You tried to delete question no. " + questionOrdinalNumber + ", but this quiz has only " + quizQuestionsSize + " questions.");
-        }
         QuestionModel question;
         try {
             question = quiz.removeQuestion(questionOrdinalNumber);
-        } catch (NoSuchElementException e) {
+        } catch (QuestionNotFoundException e) {
             throw new QuestionNotFoundException("Question with ordinal number: " + questionOrdinalNumber + "  was not found in quiz with id: " + quizId + ".");
         }
         questionRepository.delete(question);
@@ -190,10 +185,9 @@ public class QuizService {
         var answer = new AnswerModel(question.nextAnswerOrdinalNumber(), answerDto.text(), answerDto.score(), clock.instant(), question.getId());
         answerRepository.save(answer);
         question.addAnswer(answer);
-        if (question.answersSize() >= VALID_QUESTION_LIMIT) {
-            question.setQuestionStatus(QuestionStatus.VALID);
-        }
         questionRepository.save(question);
+        quiz.updateQuizStatus();
+        quizRepository.save(quiz);
         return answer;
     }
 
@@ -210,10 +204,9 @@ public class QuizService {
             throw new AnswerNotFoundException("Answer with ordinal number: " + answerOrdinalNumber + " in question with ordinal number: " + questionOrdinalNumber + " in quiz with id: " + quizId + " was not found.");
         }
         question.removeAnswer(answer);
-        if (question.answersSize() < VALID_QUESTION_LIMIT) {
-            question.setQuestionStatus(QuestionStatus.INVALID);
-        }
         answerRepository.delete(answer);
         questionRepository.save(question);
+        quiz.updateQuizStatus();
+        quizRepository.save(quiz);
     }
 }

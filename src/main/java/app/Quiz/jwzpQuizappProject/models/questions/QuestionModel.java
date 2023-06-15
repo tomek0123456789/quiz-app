@@ -10,8 +10,9 @@ import org.springframework.lang.NonNull;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+
+import static app.Quiz.jwzpQuizappProject.config.Constants.VALID_QUESTION_ANSWERS_SIZE_LIMIT;
 
 @Entity
 @Table(name = "questions")
@@ -36,11 +37,11 @@ public class QuestionModel{ // T is type of question, like image or string etc
         this.content = content;
         this.status = QuestionStatus.INVALID;
         this.createdAt = createdAt;
-        this.answers = new ArrayList<AnswerModel>(2);
+        this.answers = new ArrayList<>(2);
         this.quizId = quizId;
     }
     public QuestionModel() {
-        this.answers = new ArrayList<AnswerModel>(2);
+        this.answers = new ArrayList<>(2);
     }
 
     public Long getId() {
@@ -91,17 +92,31 @@ public class QuestionModel{ // T is type of question, like image or string etc
     }
     public void setAnswers(List<AnswerModel> answers) {
         this.answers = answers;
+        updateQuestion();
     }
     public void addAnswer(AnswerModel answer) {
         answers.add(answer);
+        updateQuestion();
     }
     public void removeAnswer(AnswerModel answer) {
         answers.remove(answer);
+        updateQuestion();
+    }
+
+    private void updateQuestion() {
         setAnswersOrderNumbers();
+        updateQuestionStatus();
     }
     private void setAnswersOrderNumbers() {
         for (int i = 0; i < answersSize(); i++) {
             answers.get(i).setOrdNum(i + 1);
+        }
+    }
+    private void updateQuestionStatus() {
+        if (answersSize() >= VALID_QUESTION_ANSWERS_SIZE_LIMIT) {
+            status = QuestionStatus.VALID;
+        } else {
+            status = QuestionStatus.INVALID;
         }
     }
 

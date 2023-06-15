@@ -6,12 +6,15 @@ import app.Quiz.jwzpQuizappProject.exceptions.quizzes.QuizNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.rooms.RoomNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.users.UserNotFoundException;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
+import app.Quiz.jwzpQuizappProject.models.quizzes.QuizStatus;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomDto;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomModel;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomPatchDto;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomPutDto;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
-import app.Quiz.jwzpQuizappProject.repositories.*;
+import app.Quiz.jwzpQuizappProject.repositories.QuizRepository;
+import app.Quiz.jwzpQuizappProject.repositories.RoomRepository;
+import app.Quiz.jwzpQuizappProject.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -171,7 +174,9 @@ public class RoomService {
             throwPermissionDeniedException(user.getName(), roomId);
         }
         var quiz = quizRepository.findById(quizId).orElseThrow(() -> new QuizNotFoundException("Quiz with id: " + quizId + " was not found."));
-
+        if (quiz.getQuizStatus() == QuizStatus.INVALID || quiz.getQuizStatus() == QuizStatus.VALIDATABLE) {
+            throw new QuizNotFoundException("Quiz with id: " + quizId + " was not found.");
+        }
         room.addQuiz(quiz);
         quiz.addRoom(room);
         roomRepository.save(room);

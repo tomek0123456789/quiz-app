@@ -12,8 +12,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
-// TODO too much info is being returned when quiz is being added
-// consider JsonIgnore there (QuizModel.owner) or here
 @Entity
 @Table(name = "users")
 public class UserModel {
@@ -24,7 +22,7 @@ public class UserModel {
     @Column(unique = true)
     private String name;
     @NotBlank
-    @Email
+    @Email(message = "Email is not valid", regexp = "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$")
     @Column(unique = true)
     String email;
     @NonNull
@@ -36,16 +34,10 @@ public class UserModel {
     @NonNull
     @JsonIgnore
     String password;
-
-    // do jakich pokoi nalzy user
     @ManyToMany
     @JsonIgnore
     Set<RoomModel> roomParticipation;
 
-//    @OneToMany(mappedBy = "owner")
-//    Set<QuizModel> quizes;
-
-//todo add constructor to add an admin, also add time parameter (no injection to model?)
     public UserModel(@NotBlank String name, @NotBlank String email, @NonNull String password, Instant createdAt) {
         this.name = name;
         this.email = email;
