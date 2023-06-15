@@ -9,8 +9,10 @@ import io.micrometer.common.lang.Nullable;
 import jakarta.persistence.*;
 import org.springframework.lang.NonNull;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -23,7 +25,7 @@ public class ResultsModel{
     @ManyToOne
     UserModel owner;
     @NonNull
-    LocalDateTime createdAt;
+    Instant createdAt;
     @ManyToOne
     RoomModel room;
     long score;
@@ -31,12 +33,18 @@ public class ResultsModel{
     @JsonCreator
     public ResultsModel(@JsonProperty("quizzesResults") Set<QuizResultsModel> quizesResults) {
         this.quizzesResults = quizesResults;
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = Instant.now();
     }
 
     public ResultsModel() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = Instant.now();
         this.quizzesResults = Collections.emptySet();
+    }
+
+    public ResultsModel(Instant createdAt, UserModel owner) {
+        this.createdAt = createdAt;
+        this.owner = owner;
+        this.quizzesResults = new HashSet<>();
     }
 
     public long getId() {
@@ -76,11 +84,11 @@ public class ResultsModel{
     }
 
     @NonNull
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(@NonNull LocalDateTime createdAt) {
+    public void setCreatedAt(@NonNull Instant createdAt) {
         this.createdAt = createdAt;
     }
 

@@ -27,22 +27,10 @@ import java.util.Set;
 @RequestMapping("/results")
 public class ResultsController {
     private final Logger log = LoggerFactory.getLogger(Constants.LOGGER_NAME);
-    final QuestionRepository questionRepository;
-    final QuestionAndUsersAnswerRepository questionAndUsersAnswerRepository;
-    final QuizResultsRepository quizResultsRepository;
-    final ResultsRepository resultsRepository;
-    final QuizRepository quizRepository;
-    final AnswerRepository answerRepository;
-    final ResultsService resultsService;
+    private final ResultsService resultsService;
     private final TokenService tokenService;
 
-    public ResultsController(QuestionRepository questionRepository, QuestionAndUsersAnswerRepository questionAndUsersAnswerRepository, QuizResultsRepository quizResultsRepository, ResultsRepository resultsRepository, QuizRepository quizRepository, AnswerRepository answerRepository, ResultsService resultsService, TokenService tokenService) {
-        this.questionRepository = questionRepository;
-        this.questionAndUsersAnswerRepository = questionAndUsersAnswerRepository;
-        this.quizResultsRepository = quizResultsRepository;
-        this.resultsRepository = resultsRepository;
-        this.quizRepository = quizRepository;
-        this.answerRepository = answerRepository;
+    public ResultsController(ResultsService resultsService, TokenService tokenService) {
         this.resultsService = resultsService;
         this.tokenService = tokenService;
     }

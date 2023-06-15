@@ -23,7 +23,7 @@ public class QuestionAndUsersAnswerModel {
     @Transient
 //    @JsonIgnore
     @JsonProperty("questionOrdNum")
-    long questionOrdNum;            // to jest ordNumber, nie ID! dzieki temu nie musimyu sprawdzac czy question nalezy do quizu
+    int questionOrdNum;            // to jest ordNumber, nie ID! dzieki temu nie musimyu sprawdzac czy question nalezy do quizu
 
     @ManyToOne
     @JoinColumn(name = "answer")
@@ -32,7 +32,7 @@ public class QuestionAndUsersAnswerModel {
     @Transient
 //    @JsonIgnore
     @JsonProperty("userAnswerOrdNum")
-    long userAnswerOrdNum;       // to jest ordNumber, nie ID! dzieki temu nie musimyu sprawdzac czy answer nalezy do question
+    int userAnswerOrdNum;       // to jest ordNumber, nie ID! dzieki temu nie musimyu sprawdzac czy answer nalezy do question
 
     public QuestionAndUsersAnswerModel() {
         userAnswerOrdNum = -1;      // gdy odpowiednie pola nie beda podane w JSONie, to bedzie mozna
@@ -63,19 +63,19 @@ public class QuestionAndUsersAnswerModel {
         this.answer = answer;
     }
 
-    public long getUserAnswerOrdNum() {
+    public int getUserAnswerOrdNum() {
         return userAnswerOrdNum;
     }
 
-    public void setUserAnswerOrdNum(long userAnswerOrdNum) {
+    public void setUserAnswerOrdNum(int userAnswerOrdNum) {
         this.userAnswerOrdNum = userAnswerOrdNum;
     }
 
-    public long getQuestionOrdNum() {
+    public int getQuestionOrdNum() {
         return questionOrdNum;
     }
 
-    public void setQuestionOrdNum(long questionOrdNum) {
+    public void setQuestionOrdNum(int questionOrdNum) {
         this.questionOrdNum = questionOrdNum;
     }
 
