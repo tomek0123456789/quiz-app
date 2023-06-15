@@ -68,7 +68,7 @@ public class QuizService {
     private QuizModel validateUserAgainstQuiz(String token, long quizId) throws QuizNotFoundException, PermissionDeniedException {
         var user = tokenService.getUserFromToken(token);
         var quiz = quizRepository.findById(quizId).orElseThrow(() -> getPreparedQuizNotFoundException(quizId));
-        if (!validateUserQuizAuthorities(user, quiz.getId())) {
+        if (!validateUserQuizAuthorities(user, quiz.getOwnerId())) {
             throwPermissionDeniedException(quiz.getId());
         }
         return quiz;
