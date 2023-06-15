@@ -104,11 +104,17 @@ public class QuestionModel{ // T is type of question, like image or string etc
             answers.get(i).setOrdNum(i + 1);
         }
     }
-//    public List<QuestionAndUsersAnswerModel> getQuestionAndUsersAnswers() {
-//        return questionAndUsersAnswers;
-//    }
-//
-//    public void setQuestionAndUsersAnswers(List<QuestionAndUsersAnswerModel> questionAndUsersAnswers) {
-//        this.questionAndUsersAnswers = questionAndUsersAnswers;
-//    }
+
+    @Override
+    public String toString() {
+        return "QuestionModel{" +
+                "id=" + id +
+                ", ordNum=" + ordNum +
+                ", content='" + content + '\'' +
+                ", status=" + status +
+                ", createdAt=" + createdAt +
+                ", answers=" + answers +
+                ", quizId=" + quizId +
+                '}';
+    }
 }

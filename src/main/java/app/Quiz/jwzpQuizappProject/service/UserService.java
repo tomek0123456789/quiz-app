@@ -55,10 +55,10 @@ public class UserService implements UserDetailsService {
 //    https://docs.spring.io/spring-security/site/docs/3.2.0.RC1/reference/html/crypto.html (last section, 25.4)
     public void saveUser(RegisterDto registerDto) throws UserAlreadyExistsException {
         if (userRepository.existsByEmail(registerDto.email())) {
-            throw new UserAlreadyExistsException("Account with email " + registerDto.email() + " already exists.");
+            throw new UserAlreadyExistsException("An account with email " + registerDto.email() + " already exists.");
         }
         if (userRepository.existsByName(registerDto.name())) {
-            throw new UserAlreadyExistsException("Account with name " + registerDto.email() + " already exists.");
+            throw new UserAlreadyExistsException("An account with name " + registerDto.email() + " already exists.");
         }
         var user = new UserModel(registerDto.name(), registerDto.email(), passwordEncoder.encode(registerDto.password()), clock.instant());
         userRepository.save(user);

@@ -1,5 +1,6 @@
 package app.Quiz.jwzpQuizappProject.service;
 
+import app.Quiz.jwzpQuizappProject.config.Constants;
 import app.Quiz.jwzpQuizappProject.exceptions.answers.AnswerNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.answers.AnswersLimitException;
 import app.Quiz.jwzpQuizappProject.exceptions.auth.PermissionDeniedException;
@@ -18,6 +19,8 @@ import app.Quiz.jwzpQuizappProject.models.quizzes.QuizPatchDto;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizStatus;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import app.Quiz.jwzpQuizappProject.repositories.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -25,6 +28,7 @@ import java.util.*;
 
 @Service
 public class QuizService {
+    private final Logger log = LoggerFactory.getLogger(Constants.LOGGER_NAME);
     private final AnswerRepository answerRepository;
     private final QuestionRepository questionRepository;
     private final QuizRepository quizRepository;
@@ -79,9 +83,10 @@ public class QuizService {
             // todo start from here
             Optional<String> titlePart,
             Optional<String> categoryName,
-            Optional<Boolean> validQuizzes
+            Optional<Boolean> onlyValidQuizzes
     ) {
-        String predicate = String.valueOf(titlePart.isPresent() ? 1 : 0) + (categoryName.isPresent() ? 1 : 0) + (validQuizzes.isPresent() ? 1 : 0);
+
+        String predicate = String.valueOf(titlePart.isPresent() ? 1 : 0) + (categoryName.isPresent() ? 1 : 0) + (onlyValidQuizzes.isPresent() ? 1 : 0);
 
         return switch (predicate) {
             case "001" -> quizRepository.findAllByQuizStatus(QuizStatus.VALID);

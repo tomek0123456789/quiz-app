@@ -1,5 +1,6 @@
 package app.Quiz.jwzpQuizappProject.controllers;
 
+import app.Quiz.jwzpQuizappProject.config.Constants;
 import app.Quiz.jwzpQuizappProject.exceptions.answers.AnswerNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.answers.AnswersLimitException;
 import app.Quiz.jwzpQuizappProject.exceptions.auth.PermissionDeniedException;
@@ -15,6 +16,9 @@ import app.Quiz.jwzpQuizappProject.models.quizzes.QuizDto;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizPatchDto;
 import app.Quiz.jwzpQuizappProject.service.QuizService;
+import app.Quiz.jwzpQuizappProject.service.TokenService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,31 +31,44 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/quizzes")
 public class QuizController {
+    private final Logger log = LoggerFactory.getLogger(Constants.LOGGER_NAME);
+    private final TokenService tokenService;
     private final QuizService quizService;
 
-    public QuizController(QuizService quizService) {
+    public QuizController(TokenService tokenService, QuizService quizService) {
+        this.tokenService = tokenService;
         this.quizService = quizService;
     }
 
     //////  QUIZ    //////
 
     @GetMapping("/{quizId}")
-    public QuizModel getSingleQuiz(@PathVariable long quizId) throws QuizNotFoundException {
-        return  quizService.getSingleQuiz(quizId);
+    public QuizModel getSingleQuiz(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @PathVariable long quizId
+    ) throws QuizNotFoundException {
+        log.info("User with email: " + tokenService.getEmailFromToken(token) + " gets quiz with id: " + quizId + ".");
+        return quizService.getSingleQuiz(quizId);
     }
 
     @GetMapping
     public List<QuizModel> getMultipleQuizzes(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @RequestParam(value = "name", required = false) Optional<String> titlePart,
             @RequestParam(value = "category", required = false) Optional<String> categoryName,
-            @RequestParam(value = "valid", required = false) Optional<Boolean> validQuizzes
+            @RequestParam(value = "onlyValidQuizzes", required = false) Optional<Boolean> onlyValidQuizzes
     ) {
-        return quizService.getMultipleQuizzes(titlePart, categoryName, validQuizzes);
+        log.info("User with email: " + tokenService.getEmailFromToken(token) + " gets quizzes with parameters: " +
+                "{titlePart: " + titlePart.orElse("\"\"") +
+                ", categoryName: " + categoryName.orElse("\"\"") +
+                ", onlyValidQuizzes: " + onlyValidQuizzes.orElse(false) + "}.");
+        return quizService.getMultipleQuizzes(titlePart, categoryName, onlyValidQuizzes);
     }
 
     @GetMapping("/my")
-    public ResponseEntity<List<QuizModel>> getMyQuizzes(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-        return new ResponseEntity<>(quizService.getUserQuizzes(token), HttpStatus.OK);
+    public List<QuizModel> getMyQuizzes(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+        log.info("User with email: " + tokenService.getEmailFromToken(token) + " gets his quizzes.");
+        return quizService.getUserQuizzes(token);
     }
 
     @PostMapping
@@ -59,7 +76,11 @@ public class QuizController {
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @RequestBody QuizDto quizDto
     ) throws CategoryNotFoundException {
-        return new ResponseEntity<>(quizService.addQuiz(quizDto, token), HttpStatus.CREATED);
+        String userEmail = tokenService.getEmailFromToken(token);
+        log.info("User with email: " + userEmail + " tries to create a quiz.");
+        var quiz = quizService.addQuiz(quizDto, token);
+        log.info("User with email: " + userEmail + " created a quiz: " + quiz + ".");
+        return new ResponseEntity<>(quiz, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{quizId}")
@@ -67,15 +88,23 @@ public class QuizController {
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @PathVariable long quizId
     ) throws QuizNotFoundException, PermissionDeniedException {
+        String userEmail = tokenService.getEmailFromToken(token);
+        log.info("User with email: " + userEmail + " tries to delete a quiz with id: " + quizId + ".");
         quizService.deleteQuiz(quizId, token);
+        log.info("User with email: " + userEmail + " deleted a quiz with id: " + quizId + ".");
         return new ResponseEntity<>("Successfully deleted a quiz with id: " + quizId + ".", HttpStatus.NO_CONTENT);
     }
     @PutMapping
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public QuizModel updateQuiz(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @RequestBody QuizModel quiz
     ) throws CategoryNotFoundException {
-        return quizService.updateQuiz(quiz);
+        String userEmail = tokenService.getEmailFromToken(token);
+        log.info("User with email: " + userEmail + " tries to update a quiz with id: " + quiz.getId() + ".");
+        var updatedQuiz = quizService.updateQuiz(quiz);
+        log.info("User with email: " + userEmail + " updated a quiz with id: " + quiz.getId() + "to: " + updatedQuiz + ".");
+        return updatedQuiz;
     }
 
     @PatchMapping("/{quizId}")
@@ -84,7 +113,11 @@ public class QuizController {
             @PathVariable long quizId,
             @RequestBody QuizPatchDto quizPatchDto
     ) throws QuizNotFoundException, CategoryNotFoundException, PermissionDeniedException {
-        return quizService.updateQuiz(quizId, quizPatchDto, token);
+        String userEmail = tokenService.getEmailFromToken(token);
+        log.info("User with email: " + userEmail + " tries to update a quiz with id: " + quizId + ".");
+        var updatedQuiz = quizService.updateQuiz(quizId, quizPatchDto, token);
+        log.info("User with email: " + userEmail + " updated a quiz with id: " + quizId + "to: " + updatedQuiz + ".");
+        return updatedQuiz;
     }
 
     //////  QUESTION    //////
@@ -95,7 +128,10 @@ public class QuizController {
             @PathVariable long quizId,
             @RequestBody QuestionDto questionDto
     ) throws QuizNotFoundException, PermissionDeniedException, QuestionsLimitException {
+        String userEmail = tokenService.getEmailFromToken(token);
+        log.info("User with email: " + userEmail + " tries to add a question to a quiz with id: " + quizId + ".");
         QuestionModel model = quizService.addQuestionToQuiz(quizId, questionDto, token);
+        log.info("User with email: " + userEmail + " added a question to a quiz with id: " + quizId + ", question: " + model + ".");
         return new ResponseEntity<>(model, HttpStatus.CREATED);
     }
 
@@ -105,7 +141,10 @@ public class QuizController {
             @PathVariable long quizId,
             @PathVariable int questionOrdNum
     ) throws QuizNotFoundException, QuestionNotFoundException, PermissionDeniedException, QuestionsLimitException {
+        String userEmail = tokenService.getEmailFromToken(token);
+        log.info("User with email: " + userEmail + " tries to remove a question with ordNum: " + questionOrdNum + " from a quiz with id: " + quizId + ".");
         quizService.removeQuestionFromQuiz(quizId, questionOrdNum, token);
+        log.info("User with email: " + userEmail + " removed a question with ordNum: " + questionOrdNum + " from a quiz with id: " + quizId + ".");
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
@@ -117,7 +156,10 @@ public class QuizController {
             @PathVariable int questionOrdNum,
             @RequestBody AnswerDto answerDto
     ) throws QuizNotFoundException, QuestionNotFoundException, PermissionDeniedException, AnswersLimitException {
+        String userEmail = tokenService.getEmailFromToken(token);
+        log.info("User with email: " + userEmail + " tries to add an answer to a question with ordNum: " + questionOrdNum + " in a quiz with id: " + quizId + ".");
         AnswerModel answer = quizService.addAnswerToQuestion(quizId, questionOrdNum, answerDto, token);
+        log.info("User with email: " + userEmail + " added an answer to a question with ordNum: " + questionOrdNum + " in a quiz with id: " + quizId + ", answer: " + answer + ".");
         return new ResponseEntity<>(answer, HttpStatus.CREATED);
     }
 
@@ -129,7 +171,10 @@ public class QuizController {
             @PathVariable int questionOrdNum,
             @PathVariable int answerOrdNum
     ) throws AnswerNotFoundException, QuizNotFoundException, QuestionNotFoundException, PermissionDeniedException, AnswersLimitException {
+        String userEmail = tokenService.getEmailFromToken(token);
+        log.info("User with email: " + userEmail + " tries to delete an answer to a question with ordNum: " + questionOrdNum + " in a quiz with id: " + quizId + ".");
         quizService.removeAnswerFromQuestion(quizId, questionOrdNum, answerOrdNum, token);
+        log.info("User with email: " + userEmail + " deleted an answer to a question with ordNum: " + questionOrdNum + " in a quiz with id: " + quizId + ".");
         return new ResponseEntity<>("Successfully deleted an answer no. " + answerOrdNum + " from a question no. " + questionOrdNum + " from a quiz with id: " + quizId + ".", HttpStatus.NO_CONTENT);
     }
 }

@@ -37,4 +37,5 @@ out/
 .vscode/
 
 **/src/main/resources/certs/**
-**/src/test/resources/certs/**
+logs/
+

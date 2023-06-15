@@ -23,6 +23,10 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-configuration-processor")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
+	implementation("org.springframework.boot:spring-boot-starter-log4j2")
+	implementation("org.apache.logging.log4j:log4j-api")
+	implementation("org.apache.logging.log4j:log4j-core")
+	implementation("org.projectlombok:lombok")
 	implementation("org.mockito:mockito-core:3.12.4")
 	testImplementation("junit:junit:4.13.1")
 	runtimeOnly("org.postgresql:postgresql")
@@ -33,6 +37,11 @@ dependencies {
 
 }
 
+configurations {
+	all {
+		exclude(module = "spring-boot-starter-logging")
+	}
+}
 tasks.getByName<Jar>("jar") {
 	enabled = false
 }

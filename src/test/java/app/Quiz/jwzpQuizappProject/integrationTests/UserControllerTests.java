@@ -60,6 +60,8 @@ public class UserControllerTests {
         when(userService.getMultipleUsers(any(Optional.class))).thenReturn(users);
 
         mockMvc.perform(get("/users")
+                        .with(csrf())
+                        .header(HttpHeaders.AUTHORIZATION, token)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1))
@@ -82,6 +84,8 @@ public class UserControllerTests {
 
         // When/Then
         mockMvc.perform(get("/users/1")
+                        .with(csrf())
+                        .header(HttpHeaders.AUTHORIZATION, token)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
@@ -97,6 +101,7 @@ public class UserControllerTests {
         UserModel user1 = new UserModel();
         user1.setId(1);
         user1.setName(user1Name);
+
         when(tokenService.getUserFromToken(anyString())).thenReturn(user1);
 
         mockMvc.perform(get("/users/me")
@@ -108,7 +113,6 @@ public class UserControllerTests {
                 .andExpect(jsonPath("$.name").value(user1Name));
 
         verify(tokenService, times(1)).getUserFromToken(token);
-        verifyNoMoreInteractions(tokenService);
     }
 
     @Test
