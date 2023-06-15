@@ -66,18 +66,6 @@ public class QuizControllerTests {
     @MockBean
     private QuizService quizService;
 
-//    @MockBean
-//    private UserRepository userRepository;
-//    @MockBean
-//    private TokenService tokenService;
-//
-//    @Autowired
-//    private JwtEncoder jwtEncoder; // Dodaj wstrzykiwanie JwtEncoder
-//
-//    @Autowired
-//    private AuthenticationManager authenticationManager;
-
-
     @Test
     @WithMockUser()
     public void testGetSingleQuiz_ShouldReturnQuiz() throws Exception {
@@ -190,16 +178,13 @@ public class QuizControllerTests {
 
         String token = "valid_token";
 
-        // Mock service method
         when(quizService.getUserQuizzes(token)).thenReturn(quizzes);
 
-        // Perform GET request
         mockMvc.perform(get("/quizzes/my")
                         .header(HttpHeaders.AUTHORIZATION, token))
                 .andExpect(jsonPath("$[0].id").value(1))
                 .andExpect(jsonPath("$[0].title").value("Quiz 1"));
 
-        // Verify service method invocation
         verify(quizService).getUserQuizzes(token);
     }
 
@@ -236,7 +221,6 @@ public class QuizControllerTests {
                         .header(HttpHeaders.AUTHORIZATION, token))
                 .andExpect(status().isNoContent());
 
-        // Verify service method invocation
         verify(quizService).deleteQuiz(quizId, token);
     }
 
@@ -252,10 +236,8 @@ public class QuizControllerTests {
         updatedQuiz.setId(quizId);
         updatedQuiz.setTitle("Updated Quiz");
 
-        // Mock service method
         when(quizService.updateQuiz(quizId, quizPatchDto, token)).thenReturn(updatedQuiz);
 
-        // Perform PATCH request
         mockMvc.perform(patch("/quizzes/{quizId}", quizId)
                         .with(csrf()) // Dodanie CSRF Tokena do żądania
                         .header(HttpHeaders.AUTHORIZATION, token)
@@ -264,7 +246,6 @@ public class QuizControllerTests {
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.title").value("Updated Quiz"));
 
-        // Verify service method invocation
         verify(quizService).updateQuiz(quizId, quizPatchDto, token);
     }
 
@@ -280,10 +261,8 @@ public class QuizControllerTests {
         createdQuestion.setId(1L);
         createdQuestion.setContent("Question text");
 
-        // Mock service method
         when(quizService.addQuestionToQuiz(quizId, questionDto, token)).thenReturn(createdQuestion);
 
-        // Perform POST request
         mockMvc.perform(post("/quizzes/{quizId}/questions", quizId)
                         .with(csrf())
                         .header(HttpHeaders.AUTHORIZATION, token)
@@ -291,7 +270,6 @@ public class QuizControllerTests {
                         .content(asJsonString(questionDto)))
                 .andExpect(jsonPath("$.content").value("Question text"));
 
-        // Verify service method invocation
         verify(quizService).addQuestionToQuiz(quizId, questionDto, token);
     }
 
@@ -302,13 +280,11 @@ public class QuizControllerTests {
         int questionOrdNum = 1;
         String token = "valid_token";
 
-        // Perform DELETE request
         mockMvc.perform(delete("/quizzes/{quizId}/questions/{questionOrdNum}", quizId, questionOrdNum)
                 .with(csrf()) // Dodanie CSRF Tokena do żądania
                 .header(HttpHeaders.AUTHORIZATION, token))
                 .andExpect(status().isNoContent());
 
-        // Verify service method invocation
         verify(quizService).removeQuestionFromQuiz(quizId, questionOrdNum, token);
     }
 
@@ -325,10 +301,8 @@ public class QuizControllerTests {
         createdAnswer.setId(1L);
         createdAnswer.setText("Answer text");
 
-        // Mock service method
         when(quizService.addAnswerToQuestion(quizId, questionOrdNum, answerDto, token)).thenReturn(createdAnswer);
 
-        // Perform POST request
         mockMvc.perform(post("/quizzes/{quizId}/questions/{questionOrdNum}/answers", quizId, questionOrdNum)
                         .with(csrf()) // Dodanie CSRF Tokena do żądania
                         .header(HttpHeaders.AUTHORIZATION, token)
@@ -338,7 +312,6 @@ public class QuizControllerTests {
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.text").value("Answer text"));
 
-        // Verify service method invocation
         verify(quizService).addAnswerToQuestion(quizId, questionOrdNum, answerDto, token);
     }
 
@@ -350,13 +323,11 @@ public class QuizControllerTests {
         int answerOrdNum = 1;
         String token = "valid_token";
 
-        // Perform DELETE request
         mockMvc.perform(delete("/quizzes/{quizId}/questions/{questionOrdNum}/answers/{answerOrdNum}", quizId, questionOrdNum, answerOrdNum)
                         .header(HttpHeaders.AUTHORIZATION, token)
                         .with(csrf()))
                 .andExpect(status().isNoContent());
 
-        // Verify service method invocation
         verify(quizService).removeAnswerFromQuestion(quizId, questionOrdNum, answerOrdNum, token);
     }
 }

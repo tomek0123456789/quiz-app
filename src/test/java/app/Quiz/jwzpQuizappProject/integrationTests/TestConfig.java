@@ -2,15 +2,9 @@ package app.Quiz.jwzpQuizappProject.integrationTests;
 
 import app.Quiz.jwzpQuizappProject.repositories.*;
 import app.Quiz.jwzpQuizappProject.service.*;
-import org.apache.el.parser.Token;
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.SecurityFilterChain;
 
 import java.time.Clock;
 
@@ -94,23 +88,5 @@ public class TestConfig {
     public Clock clock() {
         return Mockito.mock(Clock.class);
     }
-
-
-
-
-//    @Bean
-//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
-//        return http
-//                .csrf(AbstractHttpConfigurer::disable) // (1)
-////                .authorizeHttpRequests( auth -> auth
-////                        .requestMatchers("/login").permitAll()
-////                        .requestMatchers("/register").permitAll()
-////                        .anyRequest().authenticated() // (2)
-////                )
-////                .oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt)
-////                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // (3)
-//                .build();
-//    }
-
 
 }

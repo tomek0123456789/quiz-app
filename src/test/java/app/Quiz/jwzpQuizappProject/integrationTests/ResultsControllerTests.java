@@ -51,10 +51,6 @@ public class ResultsControllerTests {
     @MockBean
     private ResultsService resultsService;
 
-//    @MockBean
-//    private QuizService quizService;
-
-
     @Test
     @WithMockUser
     public void testGetMyResultsForQuiz_ValidToken_ShouldReturnResultsList() throws Exception {
