@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -51,6 +52,8 @@ public class ResultServiceTest {
 
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private Clock clock;
 
     @BeforeEach
     void setUp() {
@@ -63,8 +66,8 @@ public class ResultServiceTest {
                 tokenService,
                 roomAuthoritiesValidator,
                 roomRepository,
-                userRepository
-        );
+                userRepository,
+                clock);
     }
 
     @Test
@@ -482,7 +485,7 @@ public class ResultServiceTest {
 
         QuestionAndUsersAnswerModel originalQuestionAndUsersAnswer = new QuestionAndUsersAnswerModel();
         originalQuestionAndUsersAnswer.setId(1L);
-        originalQuestionAndUsersAnswer.setUserAnswerOrdNum(1L);
+        originalQuestionAndUsersAnswer.setUserAnswerOrdNum(1);
 
         QuizModel quiz = new QuizModel();
         quiz.setId(2L);

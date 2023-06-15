@@ -7,6 +7,7 @@ import app.Quiz.jwzpQuizappProject.exceptions.auth.PermissionDeniedException;
 import app.Quiz.jwzpQuizappProject.exceptions.questions.QuestionNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.quizzes.QuizNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.results.ResultNotFoundException;
+import app.Quiz.jwzpQuizappProject.exceptions.results.TimeExceededException;
 import app.Quiz.jwzpQuizappProject.exceptions.rooms.RoomNotFoundException;
 import app.Quiz.jwzpQuizappProject.models.answers.AnswerModel;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
@@ -17,6 +18,7 @@ import app.Quiz.jwzpQuizappProject.repositories.*;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -31,8 +33,9 @@ public class ResultsService {
     private final RoomAuthoritiesValidator roomAuthoritiesValidator;
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
+    private final Clock clock;
 
-    public ResultsService(QuestionAndUsersAnswerRepository questionAndUsersAnswerRepository, QuizResultsRepository quizResultsRepository, ResultsRepository resultsRepository, QuizRepository quizRepository, TokenService tokenService, RoomAuthoritiesValidator roomAuthoritiesValidator, RoomRepository roomRepository, UserRepository userRepository) {
+    public ResultsService(QuestionAndUsersAnswerRepository questionAndUsersAnswerRepository, QuizResultsRepository quizResultsRepository, ResultsRepository resultsRepository, QuizRepository quizRepository, TokenService tokenService, RoomAuthoritiesValidator roomAuthoritiesValidator, RoomRepository roomRepository, UserRepository userRepository, Clock clock) {
         this.questionAndUsersAnswerRepository = questionAndUsersAnswerRepository;
         this.quizResultsRepository = quizResultsRepository;
         this.resultsRepository = resultsRepository;
@@ -41,6 +44,7 @@ public class ResultsService {
         this.roomAuthoritiesValidator = roomAuthoritiesValidator;
         this.roomRepository = roomRepository;
         this.userRepository = userRepository;
+        this.clock = clock;
     }
 
     private QuizResultsModel getQuizResultsWithId(long id) throws AnswerNotFoundException {
@@ -53,7 +57,6 @@ public class ResultsService {
 
     private QuestionAndUsersAnswerModel getQaaById(long id) throws AnswerNotFoundException {
         return questionAndUsersAnswerRepository.findById(id).orElseThrow(() -> new AnswerNotFoundException("no QuestionAndUsersAnswerModel with ID:" + id));
-
     }
 
     private boolean validateUserInfoResultAuthorities(UserModel user, ResultsModel resultsModel) {
@@ -85,7 +88,6 @@ public class ResultsService {
         if (!roomAuthoritiesValidator.validateUserRoomInfoAuthorities(user, room)) {
             throw new PermissionDeniedException(user.getName() + " is not authorized to get results for room: " + room.getRoomName() + " with id: " + room.getId() + ".");
         }
-
         return resultsRepository.findByRoomId(roomId);
     }
 
@@ -98,105 +100,96 @@ public class ResultsService {
         return result;
     }
 
-    private QuestionModel validateQuestionOrderNumberAndGetQuestion(int questionOrdNum, QuizModel quiz,  Set<QuestionAndUsersAnswerModel> qaaSet) throws QuestionNotFoundException, AnswerAlreadyExists {
+    private QuestionModel validateQuestionOrderNumberAndGetQuestion(
+            int questionOrdNum,
+            QuizModel quiz,
+            Set<QuestionAndUsersAnswerModel> qaaSet
+    ) throws QuestionNotFoundException, AnswerAlreadyExists {
         if (questionOrdNum > quiz.getQuestions().size() || questionOrdNum <= 0) {
-            throw new QuestionNotFoundException("Question ord num out of bounds or not provided: " + questionOrdNum + " " + quiz.getId());
+            throw new QuestionNotFoundException("Question order number: " + questionOrdNum + " for quiz with id " + quiz.getId() + " is out of bounds or was not provided.");
         }
-        Optional<QuestionModel> question = Optional.ofNullable(quiz.getSingleQuestionByOrdNum(questionOrdNum));
-
-        if (question.isEmpty()) {
-            throw new QuestionNotFoundException("Invalid question Order Number " + questionOrdNum);
+        QuestionModel question;
+        try {
+            question = quiz.getSingleQuestionByOrdNum(questionOrdNum);
+        } catch (QuestionNotFoundException e) {
+            throw new QuestionNotFoundException("Question with order number: " + questionOrdNum + " for quiz with id: " + quiz.getId() + " was not found.");
         }
 
         boolean alreadyContainsQuestion = qaaSet.stream()
                 .anyMatch(tempQaa -> tempQaa.getQuestionOrdNum() == questionOrdNum);
-
         if (alreadyContainsQuestion) {
-            throw new AnswerAlreadyExists("Repeated question!");
+            throw new AnswerAlreadyExists("Question with order number: " + questionOrdNum + " has been repeated.");
         }
 
-        return  question.get();
+        return question;
     }
 
-    private AnswerModel validateOrdNumAndGetAnswer(int ansOrdNum, QuestionModel question ) throws AnswerNotFoundException {
+    private AnswerModel validateOrdNumAndGetAnswer(int ansOrdNum, QuestionModel question) throws AnswerNotFoundException {
         if (ansOrdNum > question.getAnswers().size() || ansOrdNum <= 0) {
-            throw new AnswerNotFoundException("Answer ord num out of bounds or not provided " + ansOrdNum + " " + question.getOrdNum());
+            throw new AnswerNotFoundException("Answer order number: " + ansOrdNum + " for question with order number: " + question.getOrdNum() + " is out of bounds or was not provided.");
         }
-
-        Optional<AnswerModel> answer = Optional.ofNullable(question.getSingleAnswerByOrdNum(ansOrdNum));
-
-        if (answer.isEmpty()) {
-            throw new AnswerNotFoundException("Invalid answer ord num");
+        AnswerModel answer;
+        try {
+            answer = question.getSingleAnswerByOrdNum(ansOrdNum);
+        } catch (AnswerNotFoundException e) {
+            throw new AnswerNotFoundException("Answer with order number: " + ansOrdNum + " for question with order number: " + question.getOrdNum() + " was not found.");
         }
-
-        return answer.get();
+        return answer;
     }
 
 
     public ResultsModel createResults(ResultsDto newResults, String token) throws QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists, AnswerNotFoundException {
         var user = tokenService.getUserFromToken(token);
-
-        ResultsModel resultsModel = new ResultsModel();
-        resultsModel.setOwner(user);
-
+        ResultsModel resultsModel = new ResultsModel(clock.instant(), user);
+        Set<QuizResultsModel> quizResults = newResults.quizzesResults();
         long roomScore = 0;
-        for (QuizResultsModel quizResult : newResults.quizzesResults()) {
-            Optional<QuizModel> quiz = this.quizRepository.findById(quizResult.getQuizId());
-
-            if (quiz.isEmpty()) {
-                throw new QuizNotFoundException("quiz is empty");
-            }
-
-            quizResult.setQuiz(quiz.get());
+        for (QuizResultsModel quizResult : quizResults) {
+            QuizModel quiz = quizRepository.findById(quizResult.getQuizId()).orElseThrow(() -> new QuizNotFoundException("Quiz with id: " + quizResult.getQuizId() + " was not found."));
+            quizResult.setQuiz(quiz);
 
             Set<QuestionAndUsersAnswerModel> qaaSet = new HashSet<>();
-
             long quizScore = 0;
             for (QuestionAndUsersAnswerModel qaa : quizResult.getQuestionsAndAnswers()) {
-                int questionOrdNum = (int) qaa.getQuestionOrdNum();
-
-                var question = validateQuestionOrderNumberAndGetQuestion(questionOrdNum, quiz.get(), qaaSet);
-
-                int ansOrdNum = (int) qaa.getUserAnswerOrdNum();
+                int questionOrdNum = qaa.getQuestionOrdNum();
+                var question = validateQuestionOrderNumberAndGetQuestion(questionOrdNum, quiz, qaaSet);
+                int ansOrdNum = qaa.getUserAnswerOrdNum();
 
                 if (ansOrdNum > question.getAnswers().size() || ansOrdNum <= 0) {
                     throw new AnswerNotFoundException("Answer ord num out of bounds or not provided " + ansOrdNum + " " + questionOrdNum + " " + quizResult.getQuizId());
                 }
 
                 AnswerModel answer = validateOrdNumAndGetAnswer(ansOrdNum, question);
-
                 qaa.setQuestion(question);
                 qaa.setAnswer(answer);
-
                 quizScore += answer.getScore();
-
-                this.questionAndUsersAnswerRepository.save(qaa);
-
+                questionAndUsersAnswerRepository.save(qaa);
                 qaaSet.add(qaa);
             }
             quizResult.setScore(quizScore);
             roomScore += quizScore;
-            this.quizResultsRepository.save(quizResult);
+            quizResultsRepository.save(quizResult);
         }
         resultsModel.setQuizzesResults(newResults.quizzesResults());
         resultsModel.setScore(roomScore);
-        this.resultsRepository.save(resultsModel);
-
-        return resultsModel;
-    }
-
-    public ResultsModel createResultsForRoom(ResultsDto newResults, long roomId, String token) throws RoomNotFoundException, AnswerNotFoundException, QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists {
-        var resultsModel = createResults(newResults, token);
-        var room = roomRepository.findById(roomId).orElseThrow(() -> new RoomNotFoundException("no room with ID:" + roomId));
-
-        resultsModel.setRoom(room);
         resultsRepository.save(resultsModel);
 
         return resultsModel;
     }
 
+    public ResultsModel createResultsForRoom(ResultsDto newResults, long roomId, String token)
+            throws RoomNotFoundException, AnswerNotFoundException, QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists, TimeExceededException {
+        var room = roomRepository.findById(roomId).orElseThrow(() -> new RoomNotFoundException("Room with id: " + roomId + " was not found."));
+        if (clock.instant().isAfter(room.getEndTime())) {
+            throw new TimeExceededException("Time for sending results for room with id: " + roomId + " has already passed.");
+        }
+        var resultsModel = createResults(newResults, token);
+        resultsModel.setRoom(room);
+        resultsRepository.save(resultsModel);
+        return resultsModel;
+    }
+
     public void deleteSingleResult(ResultsModel result) {
-        this.resultsRepository.delete(result);
+        resultsRepository.delete(result);
     }
 
     public void deleteAllResults(List<ResultsModel> results) {
@@ -205,22 +198,16 @@ public class ResultsService {
 
     public QuestionAndUsersAnswerModel updateQuestionAndUsersAnswer(QuestionAndUsersAnswerPatchDto questionAndUsersAnswerPatchDto) throws AnswerNotFoundException, QuizNotFoundException, QuestionNotFoundException {
         var originalQuestionAndUsersAnswer = getQaaById(questionAndUsersAnswerPatchDto.id());
-        var quiz = quizRepository.findById(questionAndUsersAnswerPatchDto.quizId());
-
-        if (quiz.isEmpty()) {
-            throw new QuizNotFoundException("no quiz with id=" + questionAndUsersAnswerPatchDto.quizId());
-        }
-        originalQuestionAndUsersAnswer.update(questionAndUsersAnswerPatchDto, quiz.get());
-
+        var quiz = quizRepository.findById(questionAndUsersAnswerPatchDto.quizId()).orElseThrow(() -> new QuizNotFoundException("Quiz with id: " + questionAndUsersAnswerPatchDto.quizId() + " was not found."));
+        originalQuestionAndUsersAnswer.update(questionAndUsersAnswerPatchDto, quiz);
         questionAndUsersAnswerRepository.save(originalQuestionAndUsersAnswer);
-
         return originalQuestionAndUsersAnswer;
     }
 
     public QuizResultsModel updateQuizResults(QuizResultsPatchDto quizResultsPatchDto) throws AnswerNotFoundException, QuizNotFoundException {
         var originalQuizResults = getQuizResultsWithId(quizResultsPatchDto.quizResultsId());
         var quiz = quizResultsPatchDto.quizId() != null ?
-                quizRepository.findById(quizResultsPatchDto.quizId()).orElseThrow(() -> new QuizNotFoundException("no quiz with id=" + quizResultsPatchDto.quizId()))
+                quizRepository.findById(quizResultsPatchDto.quizId()).orElseThrow(() -> new QuizNotFoundException("Quiz with id: " + quizResultsPatchDto.quizId() + " was not found."))
                 : null;
         originalQuizResults.update(quizResultsPatchDto, quiz);
         quizResultsRepository.save(originalQuizResults);
@@ -230,10 +217,10 @@ public class ResultsService {
     public ResultsModel updateResults(ResultsPatchDto resultsPatchDto) throws ResultNotFoundException, RoomNotFoundException {
         var originalResults = getResultsWithId(resultsPatchDto.resultsId());
         var room = resultsPatchDto.roomId() != null ?
-                roomRepository.findById(resultsPatchDto.roomId()).orElseThrow(() -> new RoomNotFoundException("no room with id=" + resultsPatchDto.roomId()))
+                roomRepository.findById(resultsPatchDto.roomId()).orElseThrow(() -> new RoomNotFoundException("Room with id: " + resultsPatchDto.roomId() + " was not found."))
                 : null;
         var owner = resultsPatchDto.ownerId() != null ?
-                userRepository.findById(resultsPatchDto.ownerId()).orElseThrow(() -> new UsernameNotFoundException("no user with id=" + resultsPatchDto.roomId()))
+                userRepository.findById(resultsPatchDto.ownerId()).orElseThrow(() -> new UsernameNotFoundException("User with id: " + resultsPatchDto.roomId() + " was not found."))
                 : null;
 
         originalResults.update(resultsPatchDto, owner, room);

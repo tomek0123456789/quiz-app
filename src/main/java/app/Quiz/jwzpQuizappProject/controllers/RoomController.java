@@ -6,6 +6,7 @@ import app.Quiz.jwzpQuizappProject.exceptions.answers.AnswerNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.auth.PermissionDeniedException;
 import app.Quiz.jwzpQuizappProject.exceptions.questions.QuestionNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.quizzes.QuizNotFoundException;
+import app.Quiz.jwzpQuizappProject.exceptions.results.TimeExceededException;
 import app.Quiz.jwzpQuizappProject.exceptions.rooms.InvalidRoomDataException;
 import app.Quiz.jwzpQuizappProject.exceptions.rooms.RoomNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.users.UserNotFoundException;
@@ -142,7 +143,7 @@ public class RoomController {
             @PathVariable long id,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @RequestBody ResultsDto results
-    ) throws RoomNotFoundException, AnswerNotFoundException, QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists {
+    ) throws RoomNotFoundException, AnswerNotFoundException, QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists, TimeExceededException {
         String userEmail = tokenService.getEmailFromToken(token);
         log.info("User with email: " + userEmail + " tries to create results for a room with id: " + id + ".");
         var createdResults = resultsService.createResultsForRoom(results, id, token);
