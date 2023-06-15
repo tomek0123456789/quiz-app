@@ -128,7 +128,7 @@ public class RoomServiceTest {
         userRoom1.setOwner(user);
         rooms.add(userRoom1);
         when(tokenService.getUserFromToken(token)).thenReturn(user);
-        when(roomRepository.findAllByOwner(user)).thenReturn(rooms);
+        when(roomRepository.findAllByOwnerOrParticipantsContaining(user, user)).thenReturn(rooms);
 
         List<RoomModel> result = roomService.getUserRooms(token);
 

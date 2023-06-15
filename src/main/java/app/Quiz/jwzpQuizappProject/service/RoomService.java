@@ -64,7 +64,7 @@ public class RoomService {
 
     public List<RoomModel> getUserRooms(String token) {
         var user = tokenService.getUserFromToken(token);
-        return roomRepository.findAllByParticipantsContaining(user);
+        return roomRepository.findAllByOwnerOrParticipantsContaining(user, user);
     }
 
     public List<RoomModel> getAllRooms(String token) throws PermissionDeniedException {
@@ -166,11 +166,11 @@ public class RoomService {
 
     public void addQuizToRoom(long roomId, long quizId, String token) throws RoomNotFoundException, QuizNotFoundException, PermissionDeniedException {
         var user = tokenService.getUserFromToken(token);
-        var quiz = quizRepository.findById(quizId).orElseThrow(() -> new QuizNotFoundException("Quiz with id: " + quizId + " was not found."));
         var room = roomRepository.findById(roomId).orElseThrow(() -> getPreparedRoomNotFoundException(roomId));
         if (!roomAuthoritiesValidator.validateUserRoomEditAuthorities(user, room.getOwnerId())) {
             throwPermissionDeniedException(user.getName(), roomId);
         }
+        var quiz = quizRepository.findById(quizId).orElseThrow(() -> new QuizNotFoundException("Quiz with id: " + quizId + " was not found."));
 
         room.addQuiz(quiz);
         quiz.addRoom(room);
