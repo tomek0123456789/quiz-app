@@ -6,6 +6,8 @@ import app.Quiz.jwzpQuizappProject.exceptions.answers.AnswerNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.auth.PermissionDeniedException;
 import app.Quiz.jwzpQuizappProject.exceptions.questions.QuestionNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.quizzes.QuizNotFoundException;
+import app.Quiz.jwzpQuizappProject.exceptions.results.TimeExceededException;
+import app.Quiz.jwzpQuizappProject.exceptions.rooms.InvalidRoomDataException;
 import app.Quiz.jwzpQuizappProject.exceptions.rooms.RoomNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.users.UserNotFoundException;
 import app.Quiz.jwzpQuizappProject.models.results.ResultsDto;
@@ -54,7 +56,7 @@ public class RoomController {
     public ResponseEntity<RoomModel> createRoom(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @RequestBody RoomDto roomDto
-    ) {
+    ) throws InvalidRoomDataException {
         String userEmail = tokenService.getEmailFromToken(token);
         log.info("User with email: " + userEmail + " tries to create a room.");
         var createdRoom = roomService.createRoom(roomDto, token);
@@ -141,7 +143,7 @@ public class RoomController {
             @PathVariable long id,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @RequestBody ResultsDto results
-    ) throws RoomNotFoundException, AnswerNotFoundException, QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists {
+    ) throws RoomNotFoundException, AnswerNotFoundException, QuestionNotFoundException, QuizNotFoundException, AnswerAlreadyExists, TimeExceededException {
         String userEmail = tokenService.getEmailFromToken(token);
         log.info("User with email: " + userEmail + " tries to create results for a room with id: " + id + ".");
         var createdResults = resultsService.createResultsForRoom(results, id, token);
@@ -153,12 +155,12 @@ public class RoomController {
     public List<RoomModel> getAllRooms(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token
     ) {
-        log.info("User with email: " + tokenService.getEmailFromToken(token) + " gets all rooms.");
+        log.info("User with email: " + tokenService.getEmailFromToken(token) + " gets all rooms he's in.");
         return roomService.getUserRooms(token);
     }
 
     @PatchMapping("/{id}/quizzes/{quizId}")
-    public ResponseEntity<?> addQuizToRoom(
+    public ResponseEntity<String> addQuizToRoom(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @PathVariable long id,
             @PathVariable long quizId

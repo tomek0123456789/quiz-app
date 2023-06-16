@@ -5,7 +5,6 @@ import app.Quiz.jwzpQuizappProject.exceptions.questions.QuestionNotFoundExceptio
 import app.Quiz.jwzpQuizappProject.models.answers.AnswerModel;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
@@ -23,7 +22,7 @@ public class QuestionAndUsersAnswerModel {
     @Transient
 //    @JsonIgnore
     @JsonProperty("questionOrdNum")
-    long questionOrdNum;            // to jest ordNumber, nie ID! dzieki temu nie musimyu sprawdzac czy question nalezy do quizu
+    int questionOrdNum;            // to jest ordNumber, nie ID! dzieki temu nie musimyu sprawdzac czy question nalezy do quizu
 
     @ManyToOne
     @JoinColumn(name = "answer")
@@ -32,7 +31,7 @@ public class QuestionAndUsersAnswerModel {
     @Transient
 //    @JsonIgnore
     @JsonProperty("userAnswerOrdNum")
-    long userAnswerOrdNum;       // to jest ordNumber, nie ID! dzieki temu nie musimyu sprawdzac czy answer nalezy do question
+    int userAnswerOrdNum;       // to jest ordNumber, nie ID! dzieki temu nie musimyu sprawdzac czy answer nalezy do question
 
     public QuestionAndUsersAnswerModel() {
         userAnswerOrdNum = -1;      // gdy odpowiednie pola nie beda podane w JSONie, to bedzie mozna
@@ -43,6 +42,7 @@ public class QuestionAndUsersAnswerModel {
     public void setQuestion(QuestionModel question) {
         this.question = question;
     }
+
     public QuestionModel getQuestion() {
         return question;
     }
@@ -63,29 +63,29 @@ public class QuestionAndUsersAnswerModel {
         this.answer = answer;
     }
 
-    public long getUserAnswerOrdNum() {
+    public int getUserAnswerOrdNum() {
         return userAnswerOrdNum;
     }
 
-    public void setUserAnswerOrdNum(long userAnswerOrdNum) {
+    public void setUserAnswerOrdNum(int userAnswerOrdNum) {
         this.userAnswerOrdNum = userAnswerOrdNum;
     }
 
-    public long getQuestionOrdNum() {
+    public int getQuestionOrdNum() {
         return questionOrdNum;
     }
 
-    public void setQuestionOrdNum(long questionOrdNum) {
+    public void setQuestionOrdNum(int questionOrdNum) {
         this.questionOrdNum = questionOrdNum;
     }
 
     public void update(QuestionAndUsersAnswerPatchDto questionAndUsersAnswerPatchDto, QuizModel quiz) throws QuestionNotFoundException, AnswerNotFoundException {
-        if(questionAndUsersAnswerPatchDto.questionOrdNum() != null){
+        if (questionAndUsersAnswerPatchDto.questionOrdNum() != null) {
             question = quiz.getSingleQuestionByOrdNum(questionAndUsersAnswerPatchDto.questionOrdNum());
             questionOrdNum = questionAndUsersAnswerPatchDto.questionOrdNum();
         }
 
-        if(questionAndUsersAnswerPatchDto.userAnswerOrdNum() != null){
+        if (questionAndUsersAnswerPatchDto.userAnswerOrdNum() != null) {
             answer = question.getSingleAnswerByOrdNum(questionAndUsersAnswerPatchDto.userAnswerOrdNum());
             userAnswerOrdNum = questionAndUsersAnswerPatchDto.questionOrdNum();
         }

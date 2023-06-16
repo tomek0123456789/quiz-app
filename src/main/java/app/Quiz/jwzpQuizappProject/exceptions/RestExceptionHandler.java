@@ -10,6 +10,8 @@ import app.Quiz.jwzpQuizappProject.exceptions.questions.QuestionNotFoundExceptio
 import app.Quiz.jwzpQuizappProject.exceptions.questions.QuestionsLimitException;
 import app.Quiz.jwzpQuizappProject.exceptions.quizzes.QuizNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.results.ResultNotFoundException;
+import app.Quiz.jwzpQuizappProject.exceptions.results.TimeExceededException;
+import app.Quiz.jwzpQuizappProject.exceptions.rooms.InvalidRoomDataException;
 import app.Quiz.jwzpQuizappProject.exceptions.rooms.RoomNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.users.UserAlreadyExistsException;
 import app.Quiz.jwzpQuizappProject.exceptions.users.UserNotFoundException;
@@ -59,7 +61,11 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(new ExceptionDto(e.getMessage()), HttpStatus.CONFLICT);
     }
 
-    @ExceptionHandler(QuestionsLimitException.class)
+    @ExceptionHandler({
+            QuestionsLimitException.class,
+            InvalidRoomDataException.class,
+            TimeExceededException.class,
+    })
     protected ResponseEntity<Object> handleLimit(Exception e) {
         log.error(e.getMessage());
         return new ResponseEntity<>(new ExceptionDto(e.getMessage()), HttpStatus.BAD_REQUEST);

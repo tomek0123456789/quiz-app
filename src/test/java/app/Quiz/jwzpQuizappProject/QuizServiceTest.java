@@ -15,10 +15,12 @@ import app.Quiz.jwzpQuizappProject.models.quizzes.QuizDto;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizPatchDto;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizStatus;
+import app.Quiz.jwzpQuizappProject.models.results.QuestionAndUsersAnswerModel;
+import app.Quiz.jwzpQuizappProject.models.results.QuizResultsModel;
+import app.Quiz.jwzpQuizappProject.models.rooms.RoomModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
-import app.Quiz.jwzpQuizappProject.repositories.AnswerRepository;
-import app.Quiz.jwzpQuizappProject.repositories.QuestionRepository;
-import app.Quiz.jwzpQuizappProject.repositories.QuizRepository;
+import app.Quiz.jwzpQuizappProject.models.users.UserRole;
+import app.Quiz.jwzpQuizappProject.repositories.*;
 import app.Quiz.jwzpQuizappProject.service.CategoryService;
 import app.Quiz.jwzpQuizappProject.service.QuizService;
 import app.Quiz.jwzpQuizappProject.service.TokenService;
@@ -57,6 +59,13 @@ public class QuizServiceTest {
     private CategoryService categoryService;
     @Mock
     private TokenService tokenService;
+
+    @Mock
+    private RoomRepository roomRepository;
+    @Mock
+    private QuizResultsRepository quizResultsRepository;
+    @Mock
+    private QuestionAndUsersAnswerRepository questionAndUsersAnswerRepository;
     @Mock
     private Clock clock;
 
@@ -64,7 +73,7 @@ public class QuizServiceTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         quizService = new QuizService(
-               answerRepository, questionRepository, quizRepository, categoryService, tokenService, clock
+               answerRepository, questionRepository, quizRepository, categoryService, tokenService, roomRepository, quizResultsRepository, questionAndUsersAnswerRepository, clock
         );
     }
 
@@ -77,7 +86,7 @@ public class QuizServiceTest {
 
         when(quizRepository.findById(quizId)).thenReturn(Optional.of(quiz));
 
-        QuizModel result = quizService.getSingleQuiz(quizId);
+        QuizModel result = quizService.getSingleQuiz(quizId, token);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(quizId,result.getId());
@@ -91,27 +100,9 @@ public class QuizServiceTest {
 
         when(quizRepository.findById(quizId)).thenReturn(Optional.empty());
 
-        assertThrows(QuizNotFoundException.class, () -> quizService.getSingleQuiz(quizId));
+        assertThrows(QuizNotFoundException.class, () -> quizService.getSingleQuiz(quizId, token));
 
         verify(quizRepository, times(1)).findById(quizId);
-    }
-
-    @Test
-    public void testGetMultipleQuizzes_withNoFilters_shouldReturnAllQuizzes() {
-        List<QuizModel> quizzes = List.of(
-                new QuizModel(),
-                new QuizModel(),
-                new QuizModel()
-        );
-
-        when(quizRepository.findAll()).thenReturn(quizzes);
-
-        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.empty(), Optional.empty(), Optional.empty());
-
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(quizzes.size(), result.size());
-
-        verify(quizRepository, times(1)).findAll();
     }
 
     @Test
@@ -119,13 +110,13 @@ public class QuizServiceTest {
         String titlePart = "Java";
         List<QuizModel> quizzes = List.of(
                 new QuizModel(1L, "Java Basics"),
-                new QuizModel(2L, "Java Advanced"),
-                new QuizModel(3L, "Python Basics")
+                new QuizModel(2L, "Java Advanced")
         );
 
-        when(quizRepository.findAllByTitleContaining(titlePart)).thenReturn(quizzes.subList(0, 2));
+        when(quizRepository.findAllByTitleContaining(titlePart)).thenReturn(quizzes);
+        when(tokenService.getUserFromToken(token)).thenReturn(new UserModel());
 
-        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.of(titlePart), Optional.empty(), Optional.empty());
+        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.of(titlePart), Optional.empty(),token);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(2, result.size());
@@ -145,8 +136,10 @@ public class QuizServiceTest {
         );
 
         when(quizRepository.findAllByCategoryName(categoryName)).thenReturn(quizzes.subList(0, 2));
+        when(tokenService.getUserFromToken(token)).thenReturn(new UserModel());
 
-        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.empty(), Optional.of(categoryName), Optional.empty());
+
+        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.empty(), Optional.of(categoryName),token);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(2, result.size());
@@ -156,24 +149,6 @@ public class QuizServiceTest {
         verify(quizRepository, times(1)).findAllByCategoryName(categoryName);
     }
 
-    @Test
-    public void testGetMultipleQuizzes_withValidQuizzesFilter_shouldReturnValidQuizzes() {
-        List<QuizModel> quizzes = List.of(
-                new QuizModel(1L, "Java Basics", QuizStatus.VALID),
-                new QuizModel(3L, "Java Advanced", QuizStatus.VALID)
-        );
-
-        when(quizRepository.findAllByQuizStatus(QuizStatus.VALID)).thenReturn(quizzes.subList(0, 2));
-
-        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.empty(), Optional.empty(), Optional.of(true));
-
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(2, result.size());
-        Assertions.assertEquals(1L, result.get(0).getId());
-        Assertions.assertEquals(3L, result.get(1).getId());
-
-        verify(quizRepository, times(1)).findAllByQuizStatus(QuizStatus.VALID);
-    }
 
     @Test
     public void testGetMultipleQuizzes_withTitlePartAndCategoryNameFilters_shouldReturnQuizzesWithMatchingTitlePartAndCategoryName() {
@@ -187,8 +162,10 @@ public class QuizServiceTest {
         );
 
         when(quizRepository.findAllByTitleContainingAndCategoryName(titlePart, categoryName)).thenReturn(quizzes.subList(0, 2));
+        when(tokenService.getUserFromToken(token)).thenReturn(new UserModel());
 
-        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.of(titlePart), Optional.of(categoryName), Optional.empty());
+
+        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.of(titlePart), Optional.of(categoryName),token);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(2, result.size());
@@ -199,63 +176,70 @@ public class QuizServiceTest {
     }
 
     @Test
-    public void testGetMultipleQuizzes_withTitlePartAndValidQuizzesFilters_shouldReturnQuizzesWithMatchingTitlePartAndValidQuizzes() {
-        String titlePart = "Java";
-        List<QuizModel> quizzes = List.of(
-                new QuizModel(1L, "Java Basics", QuizStatus.VALID),
-                new QuizModel(4L, "Java Basics", QuizStatus.VALID)
-        );
+    public void testGetSingleQuiz_QuizFound_ReturnsQuizModel() throws QuizNotFoundException {
+        long quizId = 1L;
+        String token = "token";
+        UserModel user = new UserModel();
+        QuizModel quiz = new QuizModel();
+        quiz.setId(quizId);
+        quiz.setOwner(user);
 
-        when(quizRepository.findAllByTitleContainingAndQuizStatus(titlePart, QuizStatus.VALID)).thenReturn(quizzes);
+        when(tokenService.getUserFromToken(token)).thenReturn(user);
+        when(quizRepository.findById(quizId)).thenReturn(Optional.of(quiz));
 
-        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.of(titlePart), Optional.empty(), Optional.of(true));
+        QuizModel result = quizService.getSingleQuiz(quizId, token);
 
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(2, result.size());
-        Assertions.assertEquals(1L, result.get(0).getId());
-        Assertions.assertEquals(4L, result.get(1).getId());
+        assertEquals(quizId, result.getId());
+        assertEquals(user, result.getOwner());
 
-        verify(quizRepository, times(1)).findAllByTitleContainingAndQuizStatus(titlePart, QuizStatus.VALID);
+        verify(tokenService).getUserFromToken(token);
+        verify(quizRepository).findById(quizId);
     }
 
     @Test
-    public void testGetMultipleQuizzes_withCategoryNameAndValidQuizzesFilters_shouldReturnQuizzesWithMatchingCategoryNameAndValidQuizzes() {
-        String categoryName = "Programming";
-        List<QuizModel> quizzes = List.of(
-                new QuizModel(1L, "Java Basics", new CategoryModel(categoryName), QuizStatus.VALID),
-                new QuizModel(3L, "Java Advanced", new CategoryModel(categoryName), QuizStatus.VALID)
-        );
+    public void testGetSingleQuiz_QuizNotFound_ThrowsQuizNotFoundException() {
+        long quizId = 1L;
+        String token = "token";
 
-        when(quizRepository.findAllByCategoryNameAndQuizStatus(categoryName, QuizStatus.VALID)).thenReturn(quizzes.subList(0, 2));
+        when(tokenService.getUserFromToken(token)).thenReturn(new UserModel());
+        when(quizRepository.findById(quizId)).thenReturn(Optional.empty());
 
-        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.empty(), Optional.of(categoryName), Optional.of(true));
+        assertThrows(QuizNotFoundException.class, () -> quizService.getSingleQuiz(quizId, token));
 
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(2, result.size());
-        Assertions.assertEquals(1L, result.get(0).getId());
-        Assertions.assertEquals(3L, result.get(1).getId());
-
-        verify(quizRepository, times(1)).findAllByCategoryNameAndQuizStatus(categoryName, QuizStatus.VALID);
+        verify(tokenService).getUserFromToken(token);
+        verify(quizRepository).findById(quizId);
     }
 
     @Test
-    public void testGetMultipleQuizzes_withAllFilters_shouldReturnQuizzesWithMatchingTitlePartCategoryNameAndValidQuizzes() {
-        String titlePart = "Java";
-        String categoryName = "Programming";
-        List<QuizModel> quizzes = List.of(
-                new QuizModel(1L, "Java Basics", new CategoryModel(categoryName), QuizStatus.VALID),
-                new QuizModel(3L, "Python Basics", new CategoryModel(categoryName), QuizStatus.VALID)
-        );
+    public void testGetMultipleQuizzes_AdminUser_ReturnsQuizzes() {
+        String token = "token";
+        UserModel adminUser = makeTokenServiceReturnAdmin();
 
-        when(quizRepository.findAllByTitleContainingAndCategoryNameAndQuizStatus(titlePart, categoryName, QuizStatus.VALID)).thenReturn(quizzes.subList(0, 1));
+        when(tokenService.getUserFromToken(token)).thenReturn(adminUser);
+        when(quizRepository.findAll()).thenReturn(List.of(new QuizModel(), new QuizModel()));
 
-        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.of(titlePart), Optional.of(categoryName), Optional.of(true));
+        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.empty(), Optional.empty(), token);
 
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(1, result.size());
-        Assertions.assertEquals(1L, result.get(0).getId());
+        assertEquals(2, result.size());
 
-        verify(quizRepository, times(1)).findAllByTitleContainingAndCategoryNameAndQuizStatus(titlePart, categoryName, QuizStatus.VALID);
+        verify(tokenService).getUserFromToken(token);
+        verify(quizRepository).findAll();
+    }
+
+    @Test
+    public void testGetMultipleQuizzes_NonAdminUser_ReturnsQuizzes() {
+        String token = "token";
+        UserModel adminUser = makeTokenServiceReturnAdmin();
+
+        when(tokenService.getUserFromToken(token)).thenReturn(adminUser);
+        when(quizRepository.findAll()).thenReturn(List.of(new QuizModel(), new QuizModel()));
+
+        List<QuizModel> result = quizService.getMultipleQuizzes(Optional.empty(), Optional.empty(), token);
+
+        assertEquals(2, result.size());
+
+        verify(tokenService).getUserFromToken(token);
+        verify(quizRepository).findAll();
     }
 
     @Test
@@ -309,7 +293,7 @@ public class QuizServiceTest {
     @Test
     public void testUpdateQuiz_withValidQuizIdAndQuizPatchDtoAndToken_shouldReturnUpdatedQuiz() throws QuizNotFoundException, PermissionDeniedException, CategoryNotFoundException {
         long quizId = 1L;
-        QuizPatchDto quizPatchDto = new QuizPatchDto("Updated Title", "Updated Description", 2L);
+        QuizPatchDto quizPatchDto = new QuizPatchDto("Updated Title", "Updated Description", 2L, QuizStatus.VALIDATABLE);
 
         UserModel user = new UserModel();
         CategoryModel category = new CategoryModel();
@@ -341,20 +325,53 @@ public class QuizServiceTest {
     }
 
     @Test
-    public void testDeleteQuiz_withValidQuizIdAndToken_shouldDeleteQuiz() throws QuizNotFoundException, PermissionDeniedException {
+    public void testDeleteQuiz_withValidQuizIdAndTokenNoRoomsAndResults_shouldDeleteQuiz() throws QuizNotFoundException, PermissionDeniedException {
         long quizId = 1L;
         var user = makeTokenServiceReturnUser();
 
         QuizModel quizModel = new QuizModel(quizId, "Quiz 1", new UserModel());
         quizModel.setOwner(user);
 
+        quizModel.setRooms(new HashSet<>());
+
         when(quizRepository.findById(quizId)).thenReturn(Optional.of(quizModel));
+        when(quizResultsRepository.findAllByQuizId(quizId)).thenReturn(new ArrayList<QuizResultsModel>());
 
         quizService.deleteQuiz(quizId, token);
 
         verify(quizRepository, times(1)).findById(quizId);
         verify(quizRepository, times(1)).delete(quizModel);
     }
+
+    @Test
+    public void testDeleteQuiz_withValidQuizIdAndTokenWithRoomsAndResults_shouldDeleteQuiz() throws QuizNotFoundException, PermissionDeniedException {
+        long quizId = 1L;
+        var user = makeTokenServiceReturnUser();
+
+        QuizModel quizModel = new QuizModel(quizId, "Quiz 1", new UserModel());
+        quizModel.setOwner(user);
+
+        var roomModel = new RoomModel();
+        var rooms = new HashSet<RoomModel>();
+        rooms.add(roomModel);
+        quizModel.setRooms(rooms);
+
+        QuestionAndUsersAnswerModel qaa = new QuestionAndUsersAnswerModel();
+        QuizResultsModel quizResult = new QuizResultsModel();
+
+        var qaas = new HashSet<QuestionAndUsersAnswerModel>();
+        qaas.add(qaa);
+        quizResult.setQuestionsAndAnswers(qaas);
+
+        when(quizRepository.findById(quizId)).thenReturn(Optional.of(quizModel));
+        when(quizResultsRepository.findAllByQuizId(quizId)).thenReturn(List.of(quizResult));
+
+        quizService.deleteQuiz(quizId, token);
+
+        verify(quizRepository, times(1)).findById(quizId);
+        verify(quizRepository, times(1)).delete(quizModel);
+    }
+
 
     @Test
     public void testDeleteQuiz_withNonExistingQuizId_shouldThrowQuizNotFoundException() {
@@ -407,7 +424,7 @@ public class QuizServiceTest {
     }
 
     @Test
-    public void testRemoveQuestionFromQuiz_withQuestionOrdinalNumberExceedingQuizQuestionsLimit_shouldThrowQuestionsLimitException() {
+    public void testRemoveQuestionFromQuiz_withQuestionOrdinalNumberExceedingQuizQuestionsLimit_shouldThrowQuestionNotFoundException() {
         long quizId = 1L;
         int questionOrderNumber = 2;
 
@@ -421,7 +438,7 @@ public class QuizServiceTest {
 
         when(quizRepository.findById(quizId)).thenReturn(Optional.of(quizModel));
 
-        assertThrows(QuestionsLimitException.class, () -> quizService.removeQuestionFromQuiz(quizId, questionOrderNumber, token));
+        assertThrows(QuestionNotFoundException.class, () -> quizService.removeQuestionFromQuiz(quizId, questionOrderNumber, token));
 
         verify(quizRepository, times(1)).findById(quizId);
         verifyNoMoreInteractions(questionRepository);
@@ -540,6 +557,18 @@ public class QuizServiceTest {
         long userId = 1;
         var user = new UserModel();
         user.setId(userId);
+
+        when(tokenService.getUserFromToken(token)).thenReturn(user);
+
+        return user;
+
+    }
+
+    private UserModel makeTokenServiceReturnAdmin(){
+        long userId = 1;
+        var user = new UserModel();
+        user.setId(userId);
+        user.setRoles(List.of(UserRole.ADMIN));
 
         when(tokenService.getUserFromToken(token)).thenReturn(user);
 

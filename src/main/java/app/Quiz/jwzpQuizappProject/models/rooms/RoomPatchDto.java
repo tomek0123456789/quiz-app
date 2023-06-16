@@ -1,7 +1,5 @@
 package app.Quiz.jwzpQuizappProject.models.rooms;
 
-import app.Quiz.jwzpQuizappProject.models.users.UserModel;
-
 import java.time.Instant;
 
 public record RoomPatchDto(
@@ -9,5 +7,5 @@ public record RoomPatchDto(
         String roomName,
         Instant startTime,
         Instant endTime
-)
-{ }
+) {
+}

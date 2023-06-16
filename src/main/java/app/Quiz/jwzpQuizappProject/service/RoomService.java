@@ -3,15 +3,19 @@ package app.Quiz.jwzpQuizappProject.service;
 import app.Quiz.jwzpQuizappProject.RoomAuthoritiesValidator;
 import app.Quiz.jwzpQuizappProject.exceptions.auth.PermissionDeniedException;
 import app.Quiz.jwzpQuizappProject.exceptions.quizzes.QuizNotFoundException;
+import app.Quiz.jwzpQuizappProject.exceptions.rooms.InvalidRoomDataException;
 import app.Quiz.jwzpQuizappProject.exceptions.rooms.RoomNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.users.UserNotFoundException;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
+import app.Quiz.jwzpQuizappProject.models.quizzes.QuizStatus;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomDto;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomModel;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomPatchDto;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomPutDto;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
-import app.Quiz.jwzpQuizappProject.repositories.*;
+import app.Quiz.jwzpQuizappProject.repositories.QuizRepository;
+import app.Quiz.jwzpQuizappProject.repositories.RoomRepository;
+import app.Quiz.jwzpQuizappProject.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -64,7 +68,7 @@ public class RoomService {
 
     public List<RoomModel> getUserRooms(String token) {
         var user = tokenService.getUserFromToken(token);
-        return roomRepository.findAllByOwner(user);
+        return roomRepository.findAllByOwnerOrParticipantsContaining(user, user);
     }
 
     public List<RoomModel> getAllRooms(String token) throws PermissionDeniedException {
@@ -75,8 +79,11 @@ public class RoomService {
         return roomRepository.findAll();
     }
 
-    public RoomModel createRoom(RoomDto roomDto, String token) {
+    public RoomModel createRoom(RoomDto roomDto, String token) throws InvalidRoomDataException {
         var user = tokenService.getUserFromToken(token);
+        if (roomDto.startTime().isAfter(roomDto.endTime())) {
+            throw new InvalidRoomDataException("Room start date is after room end date.");
+        }
         var room = new RoomModel(roomDto.name(), user, roomDto.startTime(), roomDto.endTime());
         roomRepository.save(room);
         return room;
@@ -152,7 +159,7 @@ public class RoomService {
         var userToRemove = userRepository.findById(userToRemoveId).orElseThrow(() -> new UserNotFoundException("User you wanted to add with id:" + userToRemoveId + " was not found."));
         var room = roomRepository.findById(roomId).orElseThrow(() -> getPreparedRoomNotFoundException(roomId));
         if (!roomAuthoritiesValidator.validateUserRoomEditAuthorities(userSendingRequest, room.getOwnerId())
-             || !roomAuthoritiesValidator.validateUserRoomRemoveUserAuthorities(userSendingRequest, userToRemove)
+                || !roomAuthoritiesValidator.validateUserRoomRemoveUserAuthorities(userSendingRequest, userToRemove)
         ) {
             throwPermissionDeniedException(userSendingRequest.getName(), roomId);
         }
@@ -166,12 +173,14 @@ public class RoomService {
 
     public void addQuizToRoom(long roomId, long quizId, String token) throws RoomNotFoundException, QuizNotFoundException, PermissionDeniedException {
         var user = tokenService.getUserFromToken(token);
-        var quiz = quizRepository.findById(quizId).orElseThrow(() -> new QuizNotFoundException("Quiz with id: " + quizId + " was not found."));
         var room = roomRepository.findById(roomId).orElseThrow(() -> getPreparedRoomNotFoundException(roomId));
         if (!roomAuthoritiesValidator.validateUserRoomEditAuthorities(user, room.getOwnerId())) {
             throwPermissionDeniedException(user.getName(), roomId);
         }
-
+        var quiz = quizRepository.findById(quizId).orElseThrow(() -> new QuizNotFoundException("Quiz with id: " + quizId + " was not found."));
+        if (quiz.getQuizStatus() == QuizStatus.INVALID || quiz.getQuizStatus() == QuizStatus.VALIDATABLE) {
+            throw new QuizNotFoundException("Quiz with id: " + quizId + " was not found.");
+        }
         room.addQuiz(quiz);
         quiz.addRoom(room);
         roomRepository.save(room);

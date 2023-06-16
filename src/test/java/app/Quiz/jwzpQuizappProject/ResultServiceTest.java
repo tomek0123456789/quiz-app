@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -51,6 +52,8 @@ public class ResultServiceTest {
 
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private Clock clock;
 
     @BeforeEach
     void setUp() {
@@ -63,105 +66,8 @@ public class ResultServiceTest {
                 tokenService,
                 roomAuthoritiesValidator,
                 roomRepository,
-                userRepository
-        );
-    }
-
-    @Test
-    public  void getMyResultsForQuiz(){
-        long userId = 1;
-        var authorizedUser = new UserModel();
-        authorizedUser.setId(userId);
-
-        long quizId = 1;
-        QuizModel quizModel = new QuizModel();
-        quizModel.setId(quizId);
-
-        when(tokenService.getUserFromToken(token)).thenReturn(authorizedUser);
-
-        var result = new ResultsModel();
-        result.setOwner(authorizedUser);
-        QuizResultsModel quizResults1 = new QuizResultsModel();
-        quizResults1.setQuiz(quizModel);
-        var quizzesResults = new HashSet<QuizResultsModel>();
-        quizzesResults.add(quizResults1);
-        result.setQuizzesResults(quizzesResults);
-
-        when(resultsRepository.findAllByOwnerAndQuizzesResultsId(userId, quizId)).thenReturn(quizzesResults);
-
-        var myResults = this.resultsService.getMyResultsForQuiz(quizId, token);
-
-        assertEquals(1, myResults.size());
-        assertEquals(quizzesResults, myResults);
-    }
-
-    @Test
-    public void getMyBestResultForQuiz_DifferentScores_returnsOneResult(){
-        long userId = 1;
-        var authorizedUser = new UserModel();
-        authorizedUser.setId(userId);
-
-        long quizId = 1;
-        QuizModel quizModel = new QuizModel();
-        quizModel.setId(quizId);
-
-        when(tokenService.getUserFromToken(token)).thenReturn(authorizedUser);
-
-        QuizResultsModel quizResults1 = new QuizResultsModel();
-        quizResults1.setQuiz(quizModel);
-        quizResults1.setScore(0);
-
-        QuizResultsModel quizResultWithBetterScore = new QuizResultsModel();
-        quizResultWithBetterScore.setQuiz(quizModel);
-        quizResultWithBetterScore.setScore(1);
-
-        var results = new HashSet<QuizResultsModel>();
-        results.add(quizResults1);
-        results.add(quizResultWithBetterScore);
-
-        when(resultsRepository.findAllByOwnerAndQuizzesResultsId(userId, quizId)).thenReturn(results);
-
-        var bestResult = resultsService.getMyBestResultForQuiz(token, quizId);
-
-        assertEquals(quizResultWithBetterScore, bestResult);
-    }
-
-    @Test
-    public void getMyBestResultForQuiz_DrawInScores_returnsOneResult(){
-        long userId = 1;
-        var authorizedUser = new UserModel();
-        authorizedUser.setId(userId);
-
-        long quizId = 1;
-        QuizModel quizModel = new QuizModel();
-        quizModel.setId(quizId);
-        
-        int bestScore = 1;
-
-        when(tokenService.getUserFromToken(token)).thenReturn(authorizedUser);
-
-        QuizResultsModel quizResultWithScoreBestScore = new QuizResultsModel();
-        quizResultWithScoreBestScore.setQuiz(quizModel);
-        quizResultWithScoreBestScore.setScore(bestScore);
-
-        QuizResultsModel anotherQuizResultWithScoreBestScore = new QuizResultsModel();
-        anotherQuizResultWithScoreBestScore.setQuiz(quizModel);
-        anotherQuizResultWithScoreBestScore.setScore(bestScore);
-
-        QuizResultsModel quizResultWithScore0 = new QuizResultsModel();
-        quizResultWithScore0.setQuiz(quizModel);
-        quizResultWithScore0.setScore(1);
-
-        var results = new HashSet<QuizResultsModel>();
-        results.add(quizResultWithScore0);
-        results.add(quizResultWithScoreBestScore);
-        results.add(anotherQuizResultWithScoreBestScore);
-
-        when(resultsRepository.findAllByOwnerAndQuizzesResultsId(userId, quizId)).thenReturn(results);
-
-        var bestResult = resultsService.getMyBestResultForQuiz(token, quizId);
-
-        assertEquals(bestScore, bestResult.getScore());
+                userRepository,
+                clock);
     }
 
     @Test
@@ -579,7 +485,7 @@ public class ResultServiceTest {
 
         QuestionAndUsersAnswerModel originalQuestionAndUsersAnswer = new QuestionAndUsersAnswerModel();
         originalQuestionAndUsersAnswer.setId(1L);
-        originalQuestionAndUsersAnswer.setUserAnswerOrdNum(1L);
+        originalQuestionAndUsersAnswer.setUserAnswerOrdNum(1);
 
         QuizModel quiz = new QuizModel();
         quiz.setId(2L);

@@ -3,8 +3,6 @@ package app.Quiz.jwzpQuizappProject.models.rooms;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Future;
-//import org.hibernate.internal.util.collections.Stack;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -25,7 +23,7 @@ public class RoomModel {
     Instant startTime;
     Instant endTime;
 
-    @ManyToMany(fetch = FetchType.LAZY,  cascade = {
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {
             CascadeType.PERSIST,
             CascadeType.MERGE
     })
@@ -33,6 +31,7 @@ public class RoomModel {
 
     public RoomModel() {
         this.participants = new HashSet<>();
+        this.quizzes = new HashSet<>();
     }
 
     public RoomModel(String roomName, UserModel owner, Instant startTime, Instant endTime) {
@@ -63,12 +62,15 @@ public class RoomModel {
     public Set<UserModel> getParticipants() {
         return participants;
     }
+
     public void addParticipant(UserModel participant) {
         participants.add(participant);
     }
+
     public void removeParticipant(UserModel user) {
         this.participants.remove(user);
     }
+
     public void setParticipants(Set<UserModel> participants) {
         this.participants = participants;
     }
@@ -80,9 +82,11 @@ public class RoomModel {
     public void setOwner(UserModel owner) {
         this.owner = owner;
     }
+
     public long getOwnerId() {
         return owner.getId();
     }
+
     public Instant getStartTime() {
         return startTime;
     }
@@ -108,20 +112,23 @@ public class RoomModel {
     }
 
     // uzywam tego na froncie!!
-    public long getMaxScore(){
+    public long getMaxScore() {
         long maxscore = 0;
-        for(var quiz : quizzes){
+        for (var quiz : quizzes) {
             maxscore += quiz.getQuestions().size();
         }
 
         return maxscore;
     }
+
     public boolean isPastFinishTime(Instant currentTime) {
         return currentTime.isAfter(endTime);
     }
-    public void addQuiz(QuizModel quiz){
+
+    public void addQuiz(QuizModel quiz) {
         quizzes.add(quiz);
     }
+
     public void removeQuiz(QuizModel quiz) {
         quizzes.remove(quiz);
     }
@@ -135,8 +142,8 @@ public class RoomModel {
 
     public void updateWithPatchDto(RoomPatchDto roomPatchDto) {
         this.roomName = roomPatchDto.roomName() != null ? roomPatchDto.roomName() : this.roomName;
-        this.startTime = roomPatchDto.startTime()!= null ? roomPatchDto.startTime() : this.startTime;
-        this.endTime = roomPatchDto.endTime()!= null ? roomPatchDto.endTime() : this.endTime;
+        this.startTime = roomPatchDto.startTime() != null ? roomPatchDto.startTime() : this.startTime;
+        this.endTime = roomPatchDto.endTime() != null ? roomPatchDto.endTime() : this.endTime;
     }
 
     @Override
@@ -148,7 +155,6 @@ public class RoomModel {
                 ", owner=" + owner +
                 ", startTime=" + startTime +
                 ", endTime=" + endTime +
-                ", quizzes=" + quizzes +
                 '}';
     }
 }

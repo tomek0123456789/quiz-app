@@ -3,18 +3,17 @@ package app.Quiz.jwzpQuizappProject.models.results;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.micrometer.common.lang.Nullable;
 import jakarta.persistence.*;
 import org.springframework.lang.NonNull;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-public class ResultsModel{
+public class ResultsModel {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
@@ -23,7 +22,7 @@ public class ResultsModel{
     @ManyToOne
     UserModel owner;
     @NonNull
-    LocalDateTime createdAt;
+    Instant createdAt;
     @ManyToOne
     RoomModel room;
     long score;
@@ -31,12 +30,18 @@ public class ResultsModel{
     @JsonCreator
     public ResultsModel(@JsonProperty("quizzesResults") Set<QuizResultsModel> quizesResults) {
         this.quizzesResults = quizesResults;
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = Instant.now();
     }
 
     public ResultsModel() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = Instant.now();
         this.quizzesResults = Collections.emptySet();
+    }
+
+    public ResultsModel(Instant createdAt, UserModel owner) {
+        this.createdAt = createdAt;
+        this.owner = owner;
+        this.quizzesResults = new HashSet<>();
     }
 
     public long getId() {
@@ -76,11 +81,11 @@ public class ResultsModel{
     }
 
     @NonNull
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(@NonNull LocalDateTime createdAt) {
+    public void setCreatedAt(@NonNull Instant createdAt) {
         this.createdAt = createdAt;
     }
 
@@ -103,7 +108,7 @@ public class ResultsModel{
         this.room = room;
     }
 
-    public void update(ResultsPatchDto resultsPatchDto, UserModel owner,RoomModel room){
+    public void update(ResultsPatchDto resultsPatchDto, UserModel owner, RoomModel room) {
         this.owner = owner != null ? owner : this.owner;
         this.room = room != null ? room : this.room;
         this.score = resultsPatchDto.score() != null ? resultsPatchDto.score() : this.score;

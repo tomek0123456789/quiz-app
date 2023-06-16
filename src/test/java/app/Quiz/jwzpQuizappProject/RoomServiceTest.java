@@ -1,6 +1,7 @@
 package app.Quiz.jwzpQuizappProject;
 
 import app.Quiz.jwzpQuizappProject.exceptions.auth.PermissionDeniedException;
+import app.Quiz.jwzpQuizappProject.exceptions.rooms.InvalidRoomDataException;
 import app.Quiz.jwzpQuizappProject.exceptions.rooms.RoomNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.users.UserNotFoundException;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
@@ -128,7 +129,7 @@ public class RoomServiceTest {
         userRoom1.setOwner(user);
         rooms.add(userRoom1);
         when(tokenService.getUserFromToken(token)).thenReturn(user);
-        when(roomRepository.findAllByOwner(user)).thenReturn(rooms);
+        when(roomRepository.findAllByOwnerOrParticipantsContaining(user, user)).thenReturn(rooms);
 
         List<RoomModel> result = roomService.getUserRooms(token);
 
@@ -162,7 +163,7 @@ public class RoomServiceTest {
 
 
     @Test
-    public void testCreateRoom_Success() {
+    public void testCreateRoom_Success() throws InvalidRoomDataException {
         String token = "token";
         UserModel user =  makeTokenServiceReturnUser();
         RoomDto roomDto = new RoomDto("Room 1", Instant.now(), Instant.now().plusSeconds(3600));

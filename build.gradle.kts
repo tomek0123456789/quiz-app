@@ -34,7 +34,8 @@ dependencies {
 	testImplementation("pl.pragmatists:JUnitParams:1.1.1")	//for @Parameters
 //	testImplementation ("org.springframework.boot:spring-boot-starter-test")
 	testImplementation ("org.springframework.security:spring-security-test")
-	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+
 
 }
 

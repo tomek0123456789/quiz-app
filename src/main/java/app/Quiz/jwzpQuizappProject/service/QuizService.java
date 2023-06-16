@@ -12,7 +12,6 @@ import app.Quiz.jwzpQuizappProject.models.answers.AnswerDto;
 import app.Quiz.jwzpQuizappProject.models.answers.AnswerModel;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionDto;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
-import app.Quiz.jwzpQuizappProject.models.questions.QuestionStatus;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizDto;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizPatchDto;
@@ -24,7 +23,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class QuizService {
@@ -34,17 +35,22 @@ public class QuizService {
     private final QuizRepository quizRepository;
     private final CategoryService categoryService;
     private final TokenService tokenService;
+    private final RoomRepository roomRepository;
+    private final QuizResultsRepository quizResultsRepository;
+    private final QuestionAndUsersAnswerRepository questionAndUsersAnswerRepository;
     private final Clock clock;
     private final int QUESTIONS_LIMIT = 50;
-    private final int VALID_QUESTION_LIMIT = 2;
     private final int ANSWERS_LIMIT = 4;
 
-    public QuizService(AnswerRepository answerRepository, QuestionRepository questionRepository, QuizRepository quizRepository, CategoryService categoryService, TokenService tokenService, Clock clock) {
+    public QuizService(AnswerRepository answerRepository, QuestionRepository questionRepository, QuizRepository quizRepository, CategoryService categoryService, TokenService tokenService, RoomRepository roomRepository, QuizResultsRepository quizResultsRepository, QuestionAndUsersAnswerRepository questionAndUsersAnswerRepository, Clock clock) {
         this.answerRepository = answerRepository;
         this.questionRepository = questionRepository;
         this.quizRepository = quizRepository;
         this.categoryService = categoryService;
         this.tokenService = tokenService;
+        this.roomRepository = roomRepository;
+        this.quizResultsRepository = quizResultsRepository;
+        this.questionAndUsersAnswerRepository = questionAndUsersAnswerRepository;
         this.clock = clock;
     }
     private boolean checkQuizOwnership(Long userId, long quizOwnerId) {
@@ -76,27 +82,34 @@ public class QuizService {
 
     ////////////////////////
 
-    public QuizModel getSingleQuiz(Long quizId) throws QuizNotFoundException {
-        return quizRepository.findById(quizId).orElseThrow(() -> getPreparedQuizNotFoundException(quizId));
+    public QuizModel getSingleQuiz(long quizId, String token) throws QuizNotFoundException {
+        var user = tokenService.getUserFromToken(token);
+        var quiz = quizRepository.findById(quizId).orElseThrow(() -> getPreparedQuizNotFoundException(quizId));
+        if (quiz.getOwner() != user && !user.isAdmin() && quiz.getQuizStatus() != QuizStatus.VALID) {
+            throw getPreparedQuizNotFoundException(quizId);
+        }
+        return quiz;
     }
     public List<QuizModel> getMultipleQuizzes(
-            // todo start from here
             Optional<String> titlePart,
             Optional<String> categoryName,
-            Optional<Boolean> onlyValidQuizzes
+            String token
     ) {
-
-        String predicate = String.valueOf(titlePart.isPresent() ? 1 : 0) + (categoryName.isPresent() ? 1 : 0) + (onlyValidQuizzes.isPresent() ? 1 : 0);
+        String predicate = String.valueOf(titlePart.isPresent() ? 1 : 0) + (categoryName.isPresent() ? 1 : 0);
+        if (tokenService.getUserFromToken(token).isAdmin()) {
+            return switch (predicate) {
+                case "01" -> quizRepository.findAllByCategoryName(categoryName.get());
+                case "10" -> quizRepository.findAllByTitleContaining(titlePart.get());
+                case "11" -> quizRepository.findAllByTitleContainingAndCategoryName(titlePart.get(), categoryName.get());
+                default -> quizRepository.findAll();
+            };
+        }
 
         return switch (predicate) {
-            case "001" -> quizRepository.findAllByQuizStatus(QuizStatus.VALID);
-            case "010" -> quizRepository.findAllByCategoryName(categoryName.get());
-            case "011" -> quizRepository.findAllByCategoryNameAndQuizStatus(categoryName.get(), QuizStatus.VALID);
-            case "100" -> quizRepository.findAllByTitleContaining(titlePart.get());
-            case "101" -> quizRepository.findAllByTitleContainingAndQuizStatus(titlePart.get(), QuizStatus.VALID);
-            case "110" -> quizRepository.findAllByTitleContainingAndCategoryName(titlePart.get(), categoryName.get());
-            case "111" -> quizRepository.findAllByTitleContainingAndCategoryNameAndQuizStatus(titlePart.get(), categoryName.get(), QuizStatus.VALID);
-            default -> quizRepository.findAll();
+            case "01" -> quizRepository.findByCategoryNameAndQuizStatus(categoryName.get(), QuizStatus.VALID);
+            case "10" -> quizRepository.findAllByTitleContainingAndQuizStatus(titlePart.get(), QuizStatus.VALID);
+            case "11" -> quizRepository.findAllByTitleContainingAndCategoryNameAndQuizStatus(titlePart.get(), categoryName.get(), QuizStatus.VALID);
+            default -> quizRepository.findAllByQuizStatus(QuizStatus.VALID);
         };
     }
     public List<QuizModel> getUserQuizzes(String token){
@@ -122,6 +135,9 @@ public class QuizService {
         if (quizPatchDto.categoryId() != null) {
             quiz.setCategory(categoryService.getSingleCategory(quizPatchDto.categoryId()));
         }
+        if (quizPatchDto.status() != null && quizPatchDto.status() != QuizStatus.INVALID) {
+            quiz.setQuizStatus(quizPatchDto.status());
+        }
         //todo maybe reflection? doesn't scale well in case more fields were added
         quizRepository.save(quiz);
         return quiz;
@@ -131,11 +147,33 @@ public class QuizService {
         // validate if category exists
         categoryService.getSingleCategory(quiz.getCategory().getId());
         quiz.setQuestions(Collections.emptyList());
+        quiz.setQuizStatus(QuizStatus.INVALID);
         return quizRepository.save(quiz);
     }
 
     public void deleteQuiz(long quizId, String token) throws PermissionDeniedException, QuizNotFoundException {
         var quizToDelete = validateUserAgainstQuiz(token, quizId);
+
+        quizToDelete.getRooms().forEach(roomModel -> {
+            roomModel.removeQuiz(quizToDelete);
+            quizToDelete.removeRoom(roomModel);
+            roomRepository.save(roomModel);
+        });
+
+        var results = quizResultsRepository.findAllByQuizId(quizToDelete.getId());
+
+        results.forEach(res -> {
+            res.setQuiz(null);
+
+            res.getQuestionsAndAnswers().forEach(qaa ->{
+                qaa.setAnswer(null);
+                qaa.setQuestion(null);
+                questionAndUsersAnswerRepository.save(qaa);
+            });
+
+            quizResultsRepository.save(res);
+        });
+
         quizRepository.delete(quizToDelete);
     }
 
@@ -155,17 +193,10 @@ public class QuizService {
 
     public void removeQuestionFromQuiz(long quizId, int questionOrdinalNumber, String token) throws PermissionDeniedException, QuestionsLimitException, QuizNotFoundException, QuestionNotFoundException {
         var quiz = validateUserAgainstQuiz(token, quizId);
-        var quizQuestionsSize = quiz.questionsSize();
-        // todo is it necessary since quiz.removeQuestion throws when it doesn't find a valid quiz?
-        //  the message is more informative than just not found
-        //  if so, add to removeAnswerFromQuestion
-        if (questionOrdinalNumber > quizQuestionsSize) {
-            throw new QuestionsLimitException("You tried to delete question no. " + questionOrdinalNumber + ", but this quiz has only " + quizQuestionsSize + " questions.");
-        }
         QuestionModel question;
         try {
             question = quiz.removeQuestion(questionOrdinalNumber);
-        } catch (NoSuchElementException e) {
+        } catch (QuestionNotFoundException e) {
             throw new QuestionNotFoundException("Question with ordinal number: " + questionOrdinalNumber + "  was not found in quiz with id: " + quizId + ".");
         }
         questionRepository.delete(question);
@@ -190,10 +221,9 @@ public class QuizService {
         var answer = new AnswerModel(question.nextAnswerOrdinalNumber(), answerDto.text(), answerDto.score(), clock.instant(), question.getId());
         answerRepository.save(answer);
         question.addAnswer(answer);
-        if (question.answersSize() >= VALID_QUESTION_LIMIT) {
-            question.setQuestionStatus(QuestionStatus.VALID);
-        }
         questionRepository.save(question);
+        quiz.updateQuizStatus();
+        quizRepository.save(quiz);
         return answer;
     }
 
@@ -210,10 +240,9 @@ public class QuizService {
             throw new AnswerNotFoundException("Answer with ordinal number: " + answerOrdinalNumber + " in question with ordinal number: " + questionOrdinalNumber + " in quiz with id: " + quizId + " was not found.");
         }
         question.removeAnswer(answer);
-        if (question.answersSize() < VALID_QUESTION_LIMIT) {
-            question.setQuestionStatus(QuestionStatus.INVALID);
-        }
         answerRepository.delete(answer);
         questionRepository.save(question);
+        quiz.updateQuizStatus();
+        quizRepository.save(quiz);
     }
 }

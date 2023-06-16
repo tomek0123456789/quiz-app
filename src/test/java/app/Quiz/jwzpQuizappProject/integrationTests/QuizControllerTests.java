@@ -11,6 +11,7 @@ import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizDto;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizPatchDto;
+import app.Quiz.jwzpQuizappProject.models.quizzes.QuizStatus;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserRole;
 import app.Quiz.jwzpQuizappProject.repositories.UserRepository;
@@ -47,6 +48,7 @@ import java.util.stream.Collectors;
 
 import static app.Quiz.jwzpQuizappProject.integrationTests.IntTestsHelper.asJsonString;
 import static org.mockito.ArgumentMatchers.anyChar;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.springSecurity;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -67,21 +69,27 @@ public class QuizControllerTests {
     @MockBean
     private QuizService quizService;
 
+    @MockBean
+    private TokenService tokenService;
+
+
     private String token = "Baerer token";
 
     @Test
     @WithMockUser()
-    public void testGetSingleQuiz_ShouldReturnQuiz() throws Exception {
+    public void testGetSingleValidQuiz_ShouldReturnQuiz() throws Exception {
         QuizModel quiz = new QuizModel();
         quiz.setId(1L);
         quiz.setTitle("Quiz 1");
+        quiz.setQuizStatus(QuizStatus.VALID);
 
-        when(quizService.getSingleQuiz(1L)).thenReturn(quiz);
+        when(quizService.getSingleQuiz(eq(1L), eq(token))).thenReturn(quiz);
+        when(tokenService.getEmailFromToken(eq(token))).thenReturn("test@test.com");
 
         mockMvc.perform(get("/quizzes/1").with(csrf())
-                .header(HttpHeaders.AUTHORIZATION, token));
-
-        verify(quizService).getSingleQuiz(1L);
+                        .header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.title").value("Quiz 1"));
     }
 
     @Test
@@ -91,12 +99,12 @@ public class QuizControllerTests {
         quiz.setId(1L);
         quiz.setTitle("Quiz 1");
 
-        when(quizService.getMultipleQuizzes(Optional.empty(),Optional.empty(),Optional.empty())).thenReturn(new ArrayList<QuizModel>());
+        when(quizService.getMultipleQuizzes(eq(Optional.empty()), eq(Optional.empty()), eq(token))).thenReturn(new ArrayList<QuizModel>());
+        when(tokenService.getEmailFromToken(eq(token))).thenReturn("test@test.com");
 
         mockMvc.perform(get("/quizzes").with(csrf())
                 .header(HttpHeaders.AUTHORIZATION, token)).andExpect(status().isOk());
 
-        verify(quizService).getMultipleQuizzes(Optional.empty(),Optional.empty(),Optional.empty());
     }
 
     @Test
@@ -108,33 +116,13 @@ public class QuizControllerTests {
 
         Optional<String> name = Optional.of("a");
         Optional<String> categoryName = Optional.empty();
-        Optional<Boolean> valid = Optional.empty();
 
-        when(quizService.getMultipleQuizzes(name, categoryName, valid)).thenReturn(new ArrayList<QuizModel>());
+        when(quizService.getMultipleQuizzes(name, categoryName, token)).thenReturn(new ArrayList<QuizModel>());
 
         mockMvc.perform(get("/quizzes?name=a").with(csrf())
                 .header(HttpHeaders.AUTHORIZATION, token)).andExpect(status().isOk());
 
-        verify(quizService).getMultipleQuizzes(name, categoryName, valid);
-    }
-
-    @Test
-    @WithMockUser()
-    public void testGetMultipleQuizzes_WithNameAndCategoryNameParam_ShouldReturnQuizzes() throws Exception {
-        QuizModel quiz = new QuizModel();
-        quiz.setId(1L);
-        quiz.setTitle("Quiz 1");
-
-        Optional<String> name = Optional.of("a");
-        Optional<String> categoryName = Optional.of("b");
-        Optional<Boolean> valid = Optional.empty();
-
-        when(quizService.getMultipleQuizzes(name, categoryName, valid)).thenReturn(new ArrayList<QuizModel>());
-
-        mockMvc.perform(get("/quizzes?name=a&category=b").with(csrf())
-                .header(HttpHeaders.AUTHORIZATION, token)).andExpect(status().isOk());
-
-        verify(quizService).getMultipleQuizzes(name, categoryName, valid);
+        verify(quizService).getMultipleQuizzes(name, categoryName, token);
     }
 
 
@@ -147,14 +135,13 @@ public class QuizControllerTests {
 
         Optional<String> name = Optional.of("a");
         Optional<String> categoryName = Optional.of("b");
-        Optional<Boolean> valid = Optional.of(true);
 
-        when(quizService.getMultipleQuizzes(name, categoryName, valid)).thenReturn(new ArrayList<QuizModel>());
+        when(quizService.getMultipleQuizzes(name, categoryName, token)).thenReturn(new ArrayList<QuizModel>());
 
         mockMvc.perform(get("/quizzes?name=a&category=b&onlyValidQuizzes=true").with(csrf())
                 .header(HttpHeaders.AUTHORIZATION, token)).andExpect(status().isOk());
 
-        verify(quizService).getMultipleQuizzes(name, categoryName, valid);
+        verify(quizService).getMultipleQuizzes(name, categoryName, token);
     }
 
     @Test
@@ -166,13 +153,12 @@ public class QuizControllerTests {
 
         Optional<String> name = Optional.empty();
         Optional<String> categoryName = Optional.of("b");
-        Optional<Boolean> valid = Optional.of(true);
 
-        when(quizService.getMultipleQuizzes(name, categoryName, valid)).thenReturn(new ArrayList<QuizModel>());
+        when(quizService.getMultipleQuizzes(name, categoryName, token)).thenReturn(new ArrayList<QuizModel>());
 
         mockMvc.perform(get("/quizzes?category=b&onlyValidQuizzes=true").with(csrf())
                 .header(HttpHeaders.AUTHORIZATION, token)).andExpect(status().isOk());
-        verify(quizService).getMultipleQuizzes(name, categoryName, valid);
+        verify(quizService).getMultipleQuizzes(name, categoryName, token);
     }
 
     @Test
@@ -212,10 +198,10 @@ public class QuizControllerTests {
         when(quizService.addQuiz(quizDto, token)).thenReturn(createdQuiz);
 
         mockMvc.perform(post("/quizzes")
-                        .with(csrf())
-                        .header(HttpHeaders.AUTHORIZATION, token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(asJsonString(quizDto)));
+                .with(csrf())
+                .header(HttpHeaders.AUTHORIZATION, token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJsonString(quizDto)));
 
         verify(quizService).addQuiz(quizDto, token);
     }
@@ -240,7 +226,7 @@ public class QuizControllerTests {
         long quizId = 1L;
         String token = "valid_token";
 
-        QuizPatchDto quizPatchDto = new QuizPatchDto("Updated Quiz", "desc", 1L);
+        QuizPatchDto quizPatchDto = new QuizPatchDto("Updated Quiz", "desc", 1L, QuizStatus.VALIDATABLE);
 
         QuizModel updatedQuiz = new QuizModel();
         updatedQuiz.setId(quizId);
@@ -292,8 +278,8 @@ public class QuizControllerTests {
         String token = "valid_token";
 
         mockMvc.perform(delete("/quizzes/{quizId}/questions/{questionOrdNum}", quizId, questionOrdNum)
-                .with(csrf()) // Dodanie CSRF Tokena do żądania
-                .header(HttpHeaders.AUTHORIZATION, token))
+                        .with(csrf()) // Dodanie CSRF Tokena do żądania
+                        .header(HttpHeaders.AUTHORIZATION, token))
                 .andExpect(status().isNoContent());
 
         verify(quizService).removeQuestionFromQuiz(quizId, questionOrdNum, token);

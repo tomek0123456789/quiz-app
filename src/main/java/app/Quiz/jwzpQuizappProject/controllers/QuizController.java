@@ -48,21 +48,19 @@ public class QuizController {
             @PathVariable long quizId
     ) throws QuizNotFoundException {
         log.info("User with email: " + tokenService.getEmailFromToken(token) + " gets quiz with id: " + quizId + ".");
-        return quizService.getSingleQuiz(quizId);
+        return quizService.getSingleQuiz(quizId, token);
     }
 
     @GetMapping
     public List<QuizModel> getMultipleQuizzes(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @RequestParam(value = "name", required = false) Optional<String> titlePart,
-            @RequestParam(value = "category", required = false) Optional<String> categoryName,
-            @RequestParam(value = "onlyValidQuizzes", required = false) Optional<Boolean> onlyValidQuizzes
+            @RequestParam(value = "category", required = false) Optional<String> categoryName
     ) {
         log.info("User with email: " + tokenService.getEmailFromToken(token) + " gets quizzes with parameters: " +
                 "{titlePart: " + titlePart.orElse("\"\"") +
-                ", categoryName: " + categoryName.orElse("\"\"") +
-                ", onlyValidQuizzes: " + onlyValidQuizzes.orElse(false) + "}.");
-        return quizService.getMultipleQuizzes(titlePart, categoryName, onlyValidQuizzes);
+                ", categoryName: " + categoryName.orElse("\"\"") + "}.");
+        return quizService.getMultipleQuizzes(titlePart, categoryName, token);
     }
 
     @GetMapping("/my")
@@ -94,6 +92,7 @@ public class QuizController {
         log.info("User with email: " + userEmail + " deleted a quiz with id: " + quizId + ".");
         return new ResponseEntity<>("Successfully deleted a quiz with id: " + quizId + ".", HttpStatus.NO_CONTENT);
     }
+
     @PutMapping
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public QuizModel updateQuiz(

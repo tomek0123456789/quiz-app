@@ -68,7 +68,7 @@ public class UserController {
     }
 
     @PutMapping
-    public ResponseEntity<?> updateUser(
+    public ResponseEntity<String> updateUser(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @RequestBody UserDto user
     ) throws UserNotFoundException, PermissionDeniedException {

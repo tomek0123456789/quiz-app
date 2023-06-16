@@ -18,6 +18,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import static app.Quiz.jwzpQuizappProject.config.Constants.VALIDATABLE_QUIZ_QUESTIONS_NUMBER_LIMIT;
+
 @Entity
 @Table(name = "quizzes")
 public class QuizModel {
@@ -44,14 +46,12 @@ public class QuizModel {
     @JoinColumn(name = "category")
     CategoryModel category;
     // do jakich pokoi nalezy quiz
-    @ManyToMany(fetch = FetchType.LAZY,  cascade = {
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {
             CascadeType.PERSIST,
             CascadeType.MERGE
     })
     @JsonIgnore //to prevent infinite recursion
     Set<RoomModel> rooms;
-    @JsonIgnore
-    int validQuestions;
 
     public QuizModel(@NonNull String title, @NonNull String description, UserModel owner, CategoryModel category, Instant createdAt) {
         this.title = title;
@@ -60,19 +60,18 @@ public class QuizModel {
         this.createdAt = createdAt;
         this.category = category;
         this.quizStatus = QuizStatus.INVALID;
-        this.validQuestions = 0;
         this.questions = Collections.emptyList();
         this.rooms = Collections.emptySet();
     }
+
     public QuizModel() {
-        this.questions = new ArrayList<QuestionModel>();
+        this.questions = new ArrayList<>();
     }
 
     public QuizModel(long id, String title) {
         this.id = id;
         this.title = title;
         this.questions = new ArrayList<>();
-
     }
 
     public QuizModel(long id, String title, CategoryModel category) {
@@ -80,7 +79,6 @@ public class QuizModel {
         this.title = title;
         this.category = category;
         this.questions = new ArrayList<>();
-
     }
 
     public QuizModel(long id, String title, QuizStatus status) {
@@ -108,107 +106,148 @@ public class QuizModel {
     }
 
 
-    public void addRoom(RoomModel room){
+    public void addRoom(RoomModel room) {
         rooms.add(room);
     }
-    public void removeRoom(RoomModel room){
+
+    public void removeRoom(RoomModel room) {
         rooms.remove(room);
     }
+
     public Long getId() {
         return id;
     }
+
     public void setId(Long id) {
         this.id = id;
     }
+
     @NonNull
     public String getTitle() {
         return title;
     }
+
     public void setTitle(@NonNull String name) {
         this.title = name;
     }
+
     @NonNull
     public String getDescription() {
         return description;
     }
+
     public void setDescription(@NonNull String description) {
         this.description = description;
     }
+
     public long getOwnerId() {
         return owner.getId();
     }
+
     public void setOwner(UserModel owner) {
         this.owner = owner;
     }
+
     @NonNull
     public Instant getCreatedAt() {
         return createdAt;
     }
+
     public void setCreatedAt(@NonNull Instant createdAt) {
         this.createdAt = createdAt;
     }
+
     public UserModel getOwner() {
         return owner;
     }
+
     public List<QuestionModel> getQuestions() {
         return questions;
     }
+
     public int questionsSize() {
         return questions.size();
     }
+
     public int nextQuestionOrdinalNumber() {
         return questions.size() + 1;
     }
-    public void setQuestions(List<QuestionModel> questions) {
-        this.questions = new ArrayList<>();
-        questions.forEach(this::addQuestion);
-    }
-    public void addQuestion(QuestionModel question) {
-        if(this.questions == null){
-            this.questions = new ArrayList<QuestionModel>();
-        }
-        questions.add(question);
-        if (question.getQuestionStatus() == QuestionStatus.VALID) {
-            validQuestions++;
-        }
-        if (validQuestions >= 2) {
-            quizStatus = QuizStatus.VALID;
-        }
-    }
+
     public QuestionModel getSingleQuestionByOrdNum(int questionOrdNum) throws QuestionNotFoundException {
         return questions.stream()
                 .filter(q -> q.getOrdNum() == questionOrdNum)
                 .findFirst()
                 .orElseThrow(QuestionNotFoundException::new);
     }
+
+    public void setQuestions(List<QuestionModel> questions) {
+        this.questions = questions;
+        updateQuiz();
+    }
+
+    public void addQuestion(QuestionModel question) {
+        if (questions == null) {
+            questions = new ArrayList<>();
+        }
+        questions.add(question);
+        updateQuiz();
+    }
+
     public QuestionModel removeQuestion(int questionOrdNum) throws QuestionNotFoundException {
         var question = getSingleQuestionByOrdNum(questionOrdNum);
         questions.remove(question);
-        setQuestionOrderNumbers();
+        updateQuiz();
         return question;
     }
-    public Set<RoomModel> getRooms() {
-        return rooms;
+
+    private void updateQuiz() {
+        setQuestionOrderNumbers();
+        updateQuizStatus();
     }
-    public void setRooms(Set<RoomModel> rooms) {
-        this.rooms = rooms;
+
+    public void updateQuizStatus() {
+        int validQuestions = 0;
+        for (QuestionModel question : questions) {
+            if (question.getQuestionStatus() == QuestionStatus.VALID) {
+                validQuestions++;
+            } else {
+                quizStatus = QuizStatus.INVALID;
+                return;
+            }
+        }
+        if (validQuestions >= VALIDATABLE_QUIZ_QUESTIONS_NUMBER_LIMIT) {
+            quizStatus = QuizStatus.VALIDATABLE;
+        }
     }
-    public void setCategory(CategoryModel category) {
-        this.category = category;
-    }
-    public CategoryModel getCategory() {
-        return category;
-    }
-    public QuizStatus getQuizStatus() {
-        return quizStatus;
-    }
-    public void setQuizStatus(QuizStatus quizStatus) {
-        this.quizStatus = quizStatus;
-    }
+
     private void setQuestionOrderNumbers() {
         for (int i = 0; i < questionsSize(); i++) {
             questions.get(i).setOrdNum(i + 1);
         }
+    }
+
+    public Set<RoomModel> getRooms() {
+        return rooms;
+    }
+
+    public void setRooms(Set<RoomModel> rooms) {
+        this.rooms = rooms;
+    }
+
+    public void setCategory(CategoryModel category) {
+        this.category = category;
+    }
+
+    public CategoryModel getCategory() {
+        return category;
+    }
+
+    public QuizStatus getQuizStatus() {
+        return quizStatus;
+    }
+
+    public void setQuizStatus(QuizStatus quizStatus) {
+        this.quizStatus = quizStatus;
     }
 
     @Override
