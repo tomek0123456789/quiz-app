@@ -148,7 +148,6 @@ public class RoomModel {
                 ", owner=" + owner +
                 ", startTime=" + startTime +
                 ", endTime=" + endTime +
-                ", quizzes=" + quizzes +
                 '}';
     }
 }

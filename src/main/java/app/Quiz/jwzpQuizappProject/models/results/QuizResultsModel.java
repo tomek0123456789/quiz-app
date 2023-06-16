@@ -14,7 +14,7 @@ public class QuizResultsModel {
     @GeneratedValue(strategy = GenerationType.AUTO)
     long id;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "quiz")
     QuizModel quiz;
 

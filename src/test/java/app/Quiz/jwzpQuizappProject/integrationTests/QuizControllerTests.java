@@ -87,7 +87,7 @@ public class QuizControllerTests {
         when(tokenService.getEmailFromToken(eq(token))).thenReturn("test@test.com");
 
         mockMvc.perform(get("/quizzes/1").with(csrf())
-                .header(HttpHeaders.AUTHORIZATION, token))
+                        .header(HttpHeaders.AUTHORIZATION, token))
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.title").value("Quiz 1"));
     }
@@ -99,7 +99,7 @@ public class QuizControllerTests {
         quiz.setId(1L);
         quiz.setTitle("Quiz 1");
 
-        when(quizService.getMultipleQuizzes(eq(Optional.empty()),eq(Optional.empty()), eq(token))).thenReturn(new ArrayList<QuizModel>());
+        when(quizService.getMultipleQuizzes(eq(Optional.empty()), eq(Optional.empty()), eq(token))).thenReturn(new ArrayList<QuizModel>());
         when(tokenService.getEmailFromToken(eq(token))).thenReturn("test@test.com");
 
         mockMvc.perform(get("/quizzes").with(csrf())
@@ -198,10 +198,10 @@ public class QuizControllerTests {
         when(quizService.addQuiz(quizDto, token)).thenReturn(createdQuiz);
 
         mockMvc.perform(post("/quizzes")
-                        .with(csrf())
-                        .header(HttpHeaders.AUTHORIZATION, token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(asJsonString(quizDto)));
+                .with(csrf())
+                .header(HttpHeaders.AUTHORIZATION, token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJsonString(quizDto)));
 
         verify(quizService).addQuiz(quizDto, token);
     }
@@ -278,8 +278,8 @@ public class QuizControllerTests {
         String token = "valid_token";
 
         mockMvc.perform(delete("/quizzes/{quizId}/questions/{questionOrdNum}", quizId, questionOrdNum)
-                .with(csrf()) // Dodanie CSRF Tokena do żądania
-                .header(HttpHeaders.AUTHORIZATION, token))
+                        .with(csrf()) // Dodanie CSRF Tokena do żądania
+                        .header(HttpHeaders.AUTHORIZATION, token))
                 .andExpect(status().isNoContent());
 
         verify(quizService).removeQuestionFromQuiz(quizId, questionOrdNum, token);
