@@ -17,9 +17,7 @@ import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizPatchDto;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizStatus;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
-import app.Quiz.jwzpQuizappProject.repositories.AnswerRepository;
-import app.Quiz.jwzpQuizappProject.repositories.QuestionRepository;
-import app.Quiz.jwzpQuizappProject.repositories.QuizRepository;
+import app.Quiz.jwzpQuizappProject.repositories.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -37,16 +35,22 @@ public class QuizService {
     private final QuizRepository quizRepository;
     private final CategoryService categoryService;
     private final TokenService tokenService;
+    private final RoomRepository roomRepository;
+    private final QuizResultsRepository quizResultsRepository;
+    private final QuestionAndUsersAnswerRepository questionAndUsersAnswerRepository;
     private final Clock clock;
     private final int QUESTIONS_LIMIT = 50;
     private final int ANSWERS_LIMIT = 4;
 
-    public QuizService(AnswerRepository answerRepository, QuestionRepository questionRepository, QuizRepository quizRepository, CategoryService categoryService, TokenService tokenService, Clock clock) {
+    public QuizService(AnswerRepository answerRepository, QuestionRepository questionRepository, QuizRepository quizRepository, CategoryService categoryService, TokenService tokenService, RoomRepository roomRepository, QuizResultsRepository quizResultsRepository, QuestionAndUsersAnswerRepository questionAndUsersAnswerRepository, Clock clock) {
         this.answerRepository = answerRepository;
         this.questionRepository = questionRepository;
         this.quizRepository = quizRepository;
         this.categoryService = categoryService;
         this.tokenService = tokenService;
+        this.roomRepository = roomRepository;
+        this.quizResultsRepository = quizResultsRepository;
+        this.questionAndUsersAnswerRepository = questionAndUsersAnswerRepository;
         this.clock = clock;
     }
     private boolean checkQuizOwnership(Long userId, long quizOwnerId) {
@@ -102,7 +106,7 @@ public class QuizService {
         }
 
         return switch (predicate) {
-            case "01" -> quizRepository.findAllByCategoryNameAndQuizStatus(categoryName.get(), QuizStatus.VALID);
+            case "01" -> quizRepository.findByCategoryNameAndQuizStatus(categoryName.get(), QuizStatus.VALID);
             case "10" -> quizRepository.findAllByTitleContainingAndQuizStatus(titlePart.get(), QuizStatus.VALID);
             case "11" -> quizRepository.findAllByTitleContainingAndCategoryNameAndQuizStatus(titlePart.get(), categoryName.get(), QuizStatus.VALID);
             default -> quizRepository.findAllByQuizStatus(QuizStatus.VALID);
@@ -149,6 +153,27 @@ public class QuizService {
 
     public void deleteQuiz(long quizId, String token) throws PermissionDeniedException, QuizNotFoundException {
         var quizToDelete = validateUserAgainstQuiz(token, quizId);
+
+        quizToDelete.getRooms().forEach(roomModel -> {
+            roomModel.removeQuiz(quizToDelete);
+            quizToDelete.removeRoom(roomModel);
+            roomRepository.save(roomModel);
+        });
+
+        var results = quizResultsRepository.findAllByQuizId(quizToDelete.getId());
+
+        results.forEach(res -> {
+            res.setQuiz(null);
+
+            res.getQuestionsAndAnswers().forEach(qaa ->{
+                qaa.setAnswer(null);
+                qaa.setQuestion(null);
+                questionAndUsersAnswerRepository.save(qaa);
+            });
+
+            quizResultsRepository.save(res);
+        });
+
         quizRepository.delete(quizToDelete);
     }
 

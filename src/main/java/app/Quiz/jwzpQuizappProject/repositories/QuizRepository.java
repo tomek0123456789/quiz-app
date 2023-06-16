@@ -22,7 +22,7 @@ public interface QuizRepository extends JpaRepository<QuizModel, Long> {
 
     List<QuizModel> findAllByTitleContainingAndQuizStatus(String titlePart, QuizStatus quizStatus);
 
-    List<QuizModel> findAllByCategoryNameAndQuizStatus(String categoryName, QuizStatus quizStatus);
+    List<QuizModel> findByCategoryNameAndQuizStatus(String categoryName, QuizStatus quizStatus);
 
     List<QuizModel> findAllByTitleContainingAndCategoryNameAndQuizStatus(String titlePart, String categoryName, QuizStatus quizStatus);
 }

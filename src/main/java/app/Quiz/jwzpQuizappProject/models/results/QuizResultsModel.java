@@ -68,14 +68,6 @@ public class QuizResultsModel {
         this.quizId = quizId;
     }
 
-//    public Set<ResultsModel> getResults() {
-//        return results;
-//    }
-//
-//    public void setResults(Set<ResultsModel> results) {
-//        this.results = results;
-//    }
-
     public long getScore() {
         return score;
     }
