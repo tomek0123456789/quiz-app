@@ -351,12 +351,17 @@ public class QuizServiceTest {
         QuizModel quizModel = new QuizModel(quizId, "Quiz 1", new UserModel());
         quizModel.setOwner(user);
 
-        var RoomModel = new RoomModel();
-        quizModel.setRooms(Set.of(RoomModel));
+        var roomModel = new RoomModel();
+        var rooms = new HashSet<RoomModel>();
+        rooms.add(roomModel);
+        quizModel.setRooms(rooms);
 
         QuestionAndUsersAnswerModel qaa = new QuestionAndUsersAnswerModel();
         QuizResultsModel quizResult = new QuizResultsModel();
-        quizResult.setQuestionsAndAnswers(Set.of(qaa));
+
+        var qaas = new HashSet<QuestionAndUsersAnswerModel>();
+        qaas.add(qaa);
+        quizResult.setQuestionsAndAnswers(qaas);
 
         when(quizRepository.findById(quizId)).thenReturn(Optional.of(quizModel));
         when(quizResultsRepository.findAllByQuizId(quizId)).thenReturn(List.of(quizResult));
