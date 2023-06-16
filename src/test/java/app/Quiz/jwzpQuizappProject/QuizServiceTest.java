@@ -15,11 +15,12 @@ import app.Quiz.jwzpQuizappProject.models.quizzes.QuizDto;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizPatchDto;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizStatus;
+import app.Quiz.jwzpQuizappProject.models.results.QuestionAndUsersAnswerModel;
+import app.Quiz.jwzpQuizappProject.models.results.QuizResultsModel;
+import app.Quiz.jwzpQuizappProject.models.rooms.RoomModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import app.Quiz.jwzpQuizappProject.models.users.UserRole;
-import app.Quiz.jwzpQuizappProject.repositories.AnswerRepository;
-import app.Quiz.jwzpQuizappProject.repositories.QuestionRepository;
-import app.Quiz.jwzpQuizappProject.repositories.QuizRepository;
+import app.Quiz.jwzpQuizappProject.repositories.*;
 import app.Quiz.jwzpQuizappProject.service.CategoryService;
 import app.Quiz.jwzpQuizappProject.service.QuizService;
 import app.Quiz.jwzpQuizappProject.service.TokenService;
@@ -58,6 +59,13 @@ public class QuizServiceTest {
     private CategoryService categoryService;
     @Mock
     private TokenService tokenService;
+
+    @Mock
+    private RoomRepository roomRepository;
+    @Mock
+    private QuizResultsRepository quizResultsRepository;
+    @Mock
+    private QuestionAndUsersAnswerRepository questionAndUsersAnswerRepository;
     @Mock
     private Clock clock;
 
@@ -65,7 +73,7 @@ public class QuizServiceTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         quizService = new QuizService(
-               answerRepository, questionRepository, quizRepository, categoryService, tokenService, clock
+               answerRepository, questionRepository, quizRepository, categoryService, tokenService, roomRepository, quizResultsRepository, questionAndUsersAnswerRepository, clock
         );
     }
 
@@ -317,20 +325,48 @@ public class QuizServiceTest {
     }
 
     @Test
-    public void testDeleteQuiz_withValidQuizIdAndToken_shouldDeleteQuiz() throws QuizNotFoundException, PermissionDeniedException {
+    public void testDeleteQuiz_withValidQuizIdAndTokenNoRoomsAndResults_shouldDeleteQuiz() throws QuizNotFoundException, PermissionDeniedException {
         long quizId = 1L;
         var user = makeTokenServiceReturnUser();
 
         QuizModel quizModel = new QuizModel(quizId, "Quiz 1", new UserModel());
         quizModel.setOwner(user);
 
+        quizModel.setRooms(new HashSet<>());
+
         when(quizRepository.findById(quizId)).thenReturn(Optional.of(quizModel));
+        when(quizResultsRepository.findAllByQuizId(quizId)).thenReturn(new ArrayList<QuizResultsModel>());
 
         quizService.deleteQuiz(quizId, token);
 
         verify(quizRepository, times(1)).findById(quizId);
         verify(quizRepository, times(1)).delete(quizModel);
     }
+
+    @Test
+    public void testDeleteQuiz_withValidQuizIdAndTokenWithRoomsAndResults_shouldDeleteQuiz() throws QuizNotFoundException, PermissionDeniedException {
+        long quizId = 1L;
+        var user = makeTokenServiceReturnUser();
+
+        QuizModel quizModel = new QuizModel(quizId, "Quiz 1", new UserModel());
+        quizModel.setOwner(user);
+
+        var RoomModel = new RoomModel();
+        quizModel.setRooms(Set.of(RoomModel));
+
+        QuestionAndUsersAnswerModel qaa = new QuestionAndUsersAnswerModel();
+        QuizResultsModel quizResult = new QuizResultsModel();
+        quizResult.setQuestionsAndAnswers(Set.of(qaa));
+
+        when(quizRepository.findById(quizId)).thenReturn(Optional.of(quizModel));
+        when(quizResultsRepository.findAllByQuizId(quizId)).thenReturn(List.of(quizResult));
+
+        quizService.deleteQuiz(quizId, token);
+
+        verify(quizRepository, times(1)).findById(quizId);
+        verify(quizRepository, times(1)).delete(quizModel);
+    }
+
 
     @Test
     public void testDeleteQuiz_withNonExistingQuizId_shouldThrowQuizNotFoundException() {

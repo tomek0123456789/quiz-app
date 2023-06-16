@@ -31,6 +31,7 @@ public class RoomModel {
 
     public RoomModel() {
         this.participants = new HashSet<>();
+        this.quizzes = new HashSet<>();
     }
 
     public RoomModel(String roomName, UserModel owner, Instant startTime, Instant endTime) {
