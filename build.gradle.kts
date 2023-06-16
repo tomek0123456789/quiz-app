@@ -34,6 +34,8 @@ dependencies {
 	testImplementation("pl.pragmatists:JUnitParams:1.1.1")	//for @Parameters
 //	testImplementation ("org.springframework.boot:spring-boot-starter-test")
 	testImplementation ("org.springframework.security:spring-security-test")
+	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+
 
 }
 

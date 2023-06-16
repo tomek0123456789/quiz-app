@@ -12,19 +12,22 @@ import app.Quiz.jwzpQuizappProject.models.answers.AnswerDto;
 import app.Quiz.jwzpQuizappProject.models.answers.AnswerModel;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionDto;
 import app.Quiz.jwzpQuizappProject.models.questions.QuestionModel;
-import app.Quiz.jwzpQuizappProject.models.questions.QuestionStatus;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizDto;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizPatchDto;
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizStatus;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
-import app.Quiz.jwzpQuizappProject.repositories.*;
+import app.Quiz.jwzpQuizappProject.repositories.AnswerRepository;
+import app.Quiz.jwzpQuizappProject.repositories.QuestionRepository;
+import app.Quiz.jwzpQuizappProject.repositories.QuizRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class QuizService {

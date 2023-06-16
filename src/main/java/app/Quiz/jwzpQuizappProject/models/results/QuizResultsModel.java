@@ -1,7 +1,6 @@
 package app.Quiz.jwzpQuizappProject.models.results;
 
 import app.Quiz.jwzpQuizappProject.models.quizzes.QuizModel;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
@@ -23,10 +22,6 @@ public class QuizResultsModel {
 
     @OneToMany(orphanRemoval = true, cascade = CascadeType.PERSIST)
     Set<QuestionAndUsersAnswerModel> questionsAndAnswers;
-
-//    @ManyToMany
-//    @JsonIgnore
-//    Set<ResultsModel> results;
 
     long score;
 
@@ -57,11 +52,11 @@ public class QuizResultsModel {
         this.questionsAndAnswers = questionsAndAnswers;
     }
 
-    public void deleteQuestionsAndAnswers(QuestionAndUsersAnswerModel qaa){
+    public void deleteQuestionsAndAnswers(QuestionAndUsersAnswerModel qaa) {
         this.questionsAndAnswers.remove(qaa);
     }
 
-    public void addQAA(QuestionAndUsersAnswerModel qaa){
+    public void addQAA(QuestionAndUsersAnswerModel qaa) {
         this.questionsAndAnswers.add(qaa);
     }
 
@@ -89,7 +84,7 @@ public class QuizResultsModel {
         this.score = score;
     }
 
-    public void update(QuizResultsPatchDto quizResultsPatchDto, QuizModel quizModel){
+    public void update(QuizResultsPatchDto quizResultsPatchDto, QuizModel quizModel) {
         this.quizId = quizResultsPatchDto.quizId() != null ? quizResultsPatchDto.quizId() : this.quizId;
         this.quiz = quizModel != null ? quizModel : this.quiz;
         this.score = quizResultsPatchDto.score() != null ? quizResultsPatchDto.score() : this.score;

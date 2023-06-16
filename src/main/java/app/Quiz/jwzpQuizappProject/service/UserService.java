@@ -50,7 +50,7 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User with email: " + email + " was not found."));
     }
 
-//    why no salt?
+    //    why no salt?
 //    https://stackoverflow.com/a/71813446
 //    https://docs.spring.io/spring-security/site/docs/3.2.0.RC1/reference/html/crypto.html (last section, 25.4)
     public void saveUser(RegisterDto registerDto) throws UserAlreadyExistsException {

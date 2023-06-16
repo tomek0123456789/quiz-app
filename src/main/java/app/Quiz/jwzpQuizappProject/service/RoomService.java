@@ -159,7 +159,7 @@ public class RoomService {
         var userToRemove = userRepository.findById(userToRemoveId).orElseThrow(() -> new UserNotFoundException("User you wanted to add with id:" + userToRemoveId + " was not found."));
         var room = roomRepository.findById(roomId).orElseThrow(() -> getPreparedRoomNotFoundException(roomId));
         if (!roomAuthoritiesValidator.validateUserRoomEditAuthorities(userSendingRequest, room.getOwnerId())
-             || !roomAuthoritiesValidator.validateUserRoomRemoveUserAuthorities(userSendingRequest, userToRemove)
+                || !roomAuthoritiesValidator.validateUserRoomRemoveUserAuthorities(userSendingRequest, userToRemove)
         ) {
             throwPermissionDeniedException(userSendingRequest.getName(), roomId);
         }

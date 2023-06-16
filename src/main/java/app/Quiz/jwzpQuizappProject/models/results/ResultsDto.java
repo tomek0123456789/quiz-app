@@ -6,12 +6,13 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 public record ResultsDto(
-    Set<QuizResultsModel> quizzesResults,
+        Set<QuizResultsModel> quizzesResults,
 
-    UserModel owner,
+        UserModel owner,
 
-    LocalDateTime createdAt,
+        LocalDateTime createdAt,
 
-    long score
+        long score
 
-) {}
+) {
+}
