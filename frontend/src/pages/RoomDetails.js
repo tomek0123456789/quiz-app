@@ -49,7 +49,6 @@ const RoomDetails = () => {
     const fetchQuizzes = async () => {
         if (allQuizzes.length > 0) return;
         try {
-            // Fetch valid quizzes only? Or all? Usually we want valid ones for rooms.
             // Using /quizzes which returns valid ones by default for non-admins
             const res = await api.get('/quizzes'); 
             setAllQuizzes(res.data);

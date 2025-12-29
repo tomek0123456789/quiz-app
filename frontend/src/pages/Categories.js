@@ -58,7 +58,6 @@ const Categories = () => {
             const response = await api.put(`/categories/${id}`, { categoryName: editName });
             
             // Backend returns the updated object or the new one if created.
-            // Let's update the local list.
             setCategories(categories.map(cat => cat.id === id ? response.data : cat));
             
             setSuccess('Category updated.');

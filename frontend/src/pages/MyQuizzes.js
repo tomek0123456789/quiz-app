@@ -43,7 +43,6 @@ const MyQuizzes = () => {
     const handleValidate = async (quizId) => {
         if (window.confirm('Are you sure you want to validate this quiz? This will make it public.')) {
             try {
-                // Assuming your new endpoint is a PATCH request
                 await api.patch(`/quizzes/${quizId}/validate`);
                 // Refetch the data to get the updated status and maintain order
                 fetchMyQuizzes(); 

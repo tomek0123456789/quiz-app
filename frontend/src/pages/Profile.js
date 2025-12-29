@@ -27,8 +27,7 @@ const Profile = () => {
             
             // Refresh local user data
             // Since backend doesn't return the updated user on PUT /users, we assume success or fetch /me
-            // But if email changes, token claims might be invalid if they rely on it?
-            // Token uses email as subject. If email changes, token IS invalid.
+            // Token uses email as subject. If email changes, token is invalid.
             if (formData.email !== user.email) {
                 alert('Email updated. Please login again.');
                 logout();

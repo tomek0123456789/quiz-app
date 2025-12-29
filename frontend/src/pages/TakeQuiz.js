@@ -70,7 +70,7 @@ const TakeQuiz = () => {
             } else {
                 await api.post('/results', payload);
                 alert("Results submitted!");
-                navigate('/results'); // We need to create this page later
+                navigate('/results');
             }
 
         } catch (err) {
