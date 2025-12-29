@@ -6,6 +6,9 @@ Grupa quizowa będzie mogła zaplanować rozpoczęcie rywalizacji, a pokój quiz
 Po zakończeniu spotkania będzie możliwość zobaczenia rankigów rywalizacji.
 Użytkownicy będą mogli rozwiązywać quizy stworzone i udostępnione przez innych uzytkowników. 
 
+## ENV:
+- w `application.properties` własność `app.debug=true`
+
 Endpointy
 | path | Method | Desc |
 | :---         |     :---:      |          ---: |
