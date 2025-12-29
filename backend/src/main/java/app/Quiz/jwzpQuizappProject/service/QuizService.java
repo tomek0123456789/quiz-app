@@ -177,6 +177,12 @@ public class QuizService {
         quizRepository.delete(quizToDelete);
     }
 
+    public QuizModel validateQuiz(long quizId, String token) throws PermissionDeniedException, QuizNotFoundException {
+        var quiz = validateUserAgainstQuiz(token, quizId);
+        quiz.validateQuiz();
+        return quizRepository.save(quiz);
+    }
+
     // questions
 
     public QuestionModel addQuestionToQuiz(long quizId, QuestionDto questionDto, String token) throws PermissionDeniedException, QuestionsLimitException, QuizNotFoundException {

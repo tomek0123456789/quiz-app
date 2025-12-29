@@ -119,6 +119,18 @@ public class QuizController {
         return updatedQuiz;
     }
 
+    @PatchMapping("/{quizId}/validate")
+    public QuizModel validateQuiz(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @PathVariable long quizId
+    ) throws QuizNotFoundException, PermissionDeniedException {
+        String userEmail = tokenService.getEmailFromToken(token);
+        log.info("User with email: " + userEmail + " tries to *validate* a quiz with id: " + quizId + ".");
+        var validatedQuiz = quizService.validateQuiz(quizId, token);
+        log.info("User with email: " + userEmail + " *validated* a quiz with id: " + quizId + ".");
+        return validatedQuiz;
+    }
+
     //////  QUESTION    //////
 
     @PostMapping("/{quizId}/questions")

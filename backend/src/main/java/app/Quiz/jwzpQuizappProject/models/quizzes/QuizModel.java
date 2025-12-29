@@ -220,6 +220,12 @@ public class QuizModel {
         }
     }
 
+    public void validateQuiz() {
+        if (quizStatus == QuizStatus.VALIDATABLE) {
+            quizStatus = QuizStatus.VALID;
+        }
+    }
+
     private void setQuestionOrderNumbers() {
         for (int i = 0; i < questionsSize(); i++) {
             questions.get(i).setOrdNum(i + 1);
