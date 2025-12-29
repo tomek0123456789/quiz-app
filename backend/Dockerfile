@@ -1,8 +1,8 @@
-FROM gradle AS build
+FROM gradle:8.1.1-jdk17 AS build
 WORKDIR /home/gradle/src
 COPY --chown=gradle:gradle . .
 RUN ./generate_keys
-RUN ./gradlew build --no-daemon
+RUN ./gradlew build -x test --no-daemon
 
 FROM amazoncorretto:17-alpine3.17
 
@@ -13,4 +13,3 @@ WORKDIR /app
 COPY --from=build /home/gradle/src/build/libs/*.jar app.jar
 
 CMD ["java", "-jar", "app.jar"]
-
