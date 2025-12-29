@@ -17,6 +17,7 @@ import app.Quiz.jwzpQuizappProject.models.users.UserModel;
 import app.Quiz.jwzpQuizappProject.repositories.*;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.util.*;
@@ -256,5 +257,42 @@ public class ResultsService {
         resultsRepository.delete(results);
     }
 
+    @Transactional
+    public List<UserRoomResultDto> getLeaderboardForRoom(long roomId, String token) throws RoomNotFoundException, PermissionDeniedException {
+        var user = tokenService.getUserFromToken(token);
+        var room = roomRepository.findById(roomId).orElseThrow(() -> new RoomNotFoundException("Room with id: " + roomId + " was not found."));
 
+        if (!roomAuthoritiesValidator.validateUserRoomInfoAuthorities(user, room)) {
+            throw new PermissionDeniedException(user.getName() + " is not authorized to get leaderboard for room: " + room.getRoomName() + ".");
+        }
+
+        List<ResultsModel> allResults = resultsRepository.findByRoomId(roomId);
+
+        Map<UserModel, List<ResultsModel>> resultsByUser = allResults.stream()
+                .collect(Collectors.groupingBy(ResultsModel::getOwner));
+
+        List<UserRoomResultDto> leaderboard = new ArrayList<>();
+
+        for (var entry : resultsByUser.entrySet()) {
+            UserModel participant = entry.getKey();
+            List<ResultsModel> userResults = entry.getValue();
+
+            long totalScore = userResults.stream()
+                    .flatMap(r -> r.getQuizzesResults().stream())
+                    .collect(Collectors.groupingBy(
+                            qr -> qr.getQuiz().getId(),
+                            Collectors.maxBy(Comparator.comparingLong(QuizResultsModel::getScore))
+                    ))
+                    .values().stream()
+                    .filter(Optional::isPresent)
+                    .mapToLong(opt -> opt.get().getScore())
+                    .sum();
+
+            leaderboard.add(new UserRoomResultDto(participant.getId(), participant.getName(), totalScore));
+        }
+
+        leaderboard.sort((a, b) -> Long.compare(b.totalScore(), a.totalScore()));
+
+        return leaderboard;
+    }
 }

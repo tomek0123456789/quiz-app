@@ -12,6 +12,7 @@ import app.Quiz.jwzpQuizappProject.exceptions.rooms.RoomNotFoundException;
 import app.Quiz.jwzpQuizappProject.exceptions.users.UserNotFoundException;
 import app.Quiz.jwzpQuizappProject.models.results.ResultsDto;
 import app.Quiz.jwzpQuizappProject.models.results.ResultsModel;
+import app.Quiz.jwzpQuizappProject.models.results.UserRoomResultDto;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomDto;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomModel;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomPatchDto;
@@ -136,6 +137,15 @@ public class RoomController {
     ) throws RoomNotFoundException, PermissionDeniedException {
         log.info("User with email: " + tokenService.getEmailFromToken(token) + " gets results from a room with id: " + id + ".");
         return resultsService.getResultsForRoom(id, token);
+    }
+
+    @GetMapping("/{id}/leaderboard")
+    public List<UserRoomResultDto> getRoomLeaderboard(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @PathVariable long id
+    ) throws RoomNotFoundException, PermissionDeniedException {
+        log.info("User with email: " + tokenService.getEmailFromToken(token) + " gets leaderboard for room with id: " + id + ".");
+        return resultsService.getLeaderboardForRoom(id, token);
     }
 
     @PostMapping("/{id}/results")
