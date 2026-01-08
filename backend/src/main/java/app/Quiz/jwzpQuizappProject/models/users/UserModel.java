@@ -9,6 +9,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -45,6 +46,7 @@ public class UserModel {
         this.status = UserStatus.ACTIVE;
         this.roles = List.of(UserRole.USER);
         this.password = password;
+        this.roomParticipation = new HashSet<>();
     }
 
     public UserModel(Long id, @NonNull String name, @NonNull String email,
@@ -57,6 +59,7 @@ public class UserModel {
         this.status = status;
         this.roles = roles;
         this.password = password;
+        this.roomParticipation = new HashSet<>();
     }
 
     public UserModel() {
@@ -65,7 +68,8 @@ public class UserModel {
         this.createdAt = Instant.now();
         this.status = UserStatus.ACTIVE;
         this.roles = List.of(UserRole.USER, UserRole.ADMIN);
-        this.password = new BCryptPasswordEncoder().encode("admin");;
+        this.password = new BCryptPasswordEncoder().encode("admin");
+        this.roomParticipation = new HashSet<>();
     }
 
     public long getId() {

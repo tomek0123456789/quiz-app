@@ -86,7 +86,10 @@ public class RoomServiceTest {
         long roomId = 1L;
         Instant roomStartTime = Instant.parse("2018-04-29T10:15:31.00Z");
         UserModel user = new UserModel();
+        UserModel owner = new UserModel();
+        owner.setId(2L);
         RoomModel room = new RoomModel();
+        room.setOwner(owner);
         room.setStartTime(roomStartTime);
 
         var quizzesInRoom = new HashSet<QuizModel>();
@@ -99,6 +102,7 @@ public class RoomServiceTest {
         when(tokenService.getUserFromToken(token)).thenReturn(user);
         when(roomRepository.findById(roomId)).thenReturn(Optional.of(room));
         when(roomAuthoritiesValidator.validateUserRoomInfoAuthorities(user, room)).thenReturn(true);
+        when(roomAuthoritiesValidator.validateUserRoomEditAuthorities(user, owner.getId())).thenReturn(false);
 
         Instant currentTime = Instant.parse("2018-04-29T10:15:30.00Z");
         when(clock.instant()).thenReturn(currentTime);

@@ -183,6 +183,9 @@ public class ResultsService {
         if (clock.instant().isAfter(room.getEndTime())) {
             throw new TimeExceededException("Time for sending results for room with id: " + roomId + " has already passed.");
         }
+        if (clock.instant().isBefore(room.getStartTime())) {
+            throw new TimeExceededException("Room with id: " + roomId + " has not started yet.");
+        }
         var resultsModel = createResults(newResults, token);
         resultsModel.setRoom(room);
         resultsRepository.save(resultsModel);

@@ -162,8 +162,11 @@ const RoomDetails = () => {
                             <ul className="list-group list-group-flush">
                                 {room.participants && room.participants.map(p => (
                                     <li key={p.id} className="list-group-item d-flex justify-content-between align-items-center">
-                                        {p.name} <small className="text-muted">({p.email})</small>
-                                        {canManage && (
+                                        <span>
+                                            {p.name} <small className="text-muted">({p.email})</small>
+                                            {p.status !== 'ACTIVE' && <span className="badge bg-warning text-dark ms-2">Deactivated</span>}
+                                        </span>
+                                        {canManage && p.id !== room.owner?.id && (
                                             <button className="btn btn-sm btn-outline-danger" onClick={() => removeParticipant(p.id)}>Remove</button>
                                         )}
                                     </li>
@@ -185,7 +188,11 @@ const RoomDetails = () => {
                                         onChange={(e) => setUserSearch(e.target.value)}
                                     />
                                     <ul className="list-group" style={{maxHeight: '300px', overflowY: 'auto'}}>
-                                        {allUsers.filter(u => u.name.toLowerCase().includes(userSearch.toLowerCase()) && !room.participants.some(rp => rp.id === u.id))
+                                        {allUsers.filter(u => 
+                                            u.status === 'ACTIVE' &&
+                                            u.name.toLowerCase().includes(userSearch.toLowerCase()) && 
+                                            !room.participants.some(rp => rp.id === u.id)
+                                        )
                                             .map(u => (
                                                 <li key={u.id} className="list-group-item d-flex justify-content-between align-items-center">
                                                     {u.name}
@@ -215,12 +222,14 @@ const RoomDetails = () => {
                                         </div>
                                         <div>
                                             {/* Link to play if active */}
-                                            <button 
-                                                className="btn btn-sm btn-primary"
-                                                onClick={() => navigate(`/quizzes/${q.id}?roomId=${id}`)}
-                                            >
-                                                Play
-                                            </button>
+                                            {isActive && (
+                                                <button 
+                                                    className="btn btn-sm btn-primary"
+                                                    onClick={() => navigate(`/quizzes/${q.id}?roomId=${id}`)}
+                                                >
+                                                    Play
+                                                </button>
+                                            )}
                                             {canManage && (
                                                 <button className="btn btn-sm btn-outline-danger ms-2" onClick={() => removeQuiz(q.id)}>Remove</button>
                                             )}

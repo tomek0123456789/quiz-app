@@ -13,6 +13,7 @@ import app.Quiz.jwzpQuizappProject.models.rooms.RoomModel;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomPatchDto;
 import app.Quiz.jwzpQuizappProject.models.rooms.RoomPutDto;
 import app.Quiz.jwzpQuizappProject.models.users.UserModel;
+import app.Quiz.jwzpQuizappProject.models.users.UserStatus;
 import app.Quiz.jwzpQuizappProject.repositories.QuizRepository;
 import app.Quiz.jwzpQuizappProject.repositories.RoomRepository;
 import app.Quiz.jwzpQuizappProject.repositories.UserRepository;
@@ -60,7 +61,7 @@ public class RoomService {
             throwPermissionDeniedException(user.getName(), roomId);
         }
 
-        if (clock.instant().isBefore(room.getStartTime())) {
+        if (clock.instant().isBefore(room.getStartTime()) && !roomAuthoritiesValidator.validateUserRoomEditAuthorities(user, room.getOwnerId())) {
             room.setQuizzes(Collections.emptySet());    // if room hasn't started, erase (temporarily) quizzes
         }
         return room;
@@ -85,7 +86,10 @@ public class RoomService {
             throw new InvalidRoomDataException("Room start date is after room end date.");
         }
         var room = new RoomModel(roomDto.name(), user, roomDto.startTime(), roomDto.endTime());
+        room.addParticipant(user);
+        user.addRoomParticipation(room);
         roomRepository.save(room);
+        userRepository.save(user);
         return room;
     }
 
@@ -148,6 +152,9 @@ public class RoomService {
         }
 
         var userToAdd = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User you wanted to add with id: " + userId + " was not found."));
+        if (userToAdd.getStatus() != UserStatus.ACTIVE) {
+            throw new UserNotFoundException("User with id: " + userId + " is not active.");
+        }
         room.addParticipant(userToAdd);
         userToAdd.addRoomParticipation(room);
         roomRepository.save(room);
@@ -158,8 +165,13 @@ public class RoomService {
         var userSendingRequest = tokenService.getUserFromToken(token);
         var userToRemove = userRepository.findById(userToRemoveId).orElseThrow(() -> new UserNotFoundException("User you wanted to add with id:" + userToRemoveId + " was not found."));
         var room = roomRepository.findById(roomId).orElseThrow(() -> getPreparedRoomNotFoundException(roomId));
+
+        if (room.getOwnerId() == userToRemove.getId()) {
+            throw new PermissionDeniedException("Owner cannot be removed from the room.");
+        }
+
         if (!roomAuthoritiesValidator.validateUserRoomEditAuthorities(userSendingRequest, room.getOwnerId())
-                || !roomAuthoritiesValidator.validateUserRoomRemoveUserAuthorities(userSendingRequest, userToRemove)
+                && !roomAuthoritiesValidator.validateUserRoomRemoveUserAuthorities(userSendingRequest, userToRemove)
         ) {
             throwPermissionDeniedException(userSendingRequest.getName(), roomId);
         }

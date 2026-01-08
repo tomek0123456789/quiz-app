@@ -6,7 +6,8 @@ const Navbar = () => {
     const { user, logout, isAuthenticated, hasRole } = useAuth();
     const navigate = useNavigate();
 
-    const handleLogout = () => {
+    const handleLogout = (e) => {
+        e.preventDefault();
         logout();
         navigate('/login');
     };
@@ -38,9 +39,14 @@ const Navbar = () => {
                                     <Link className="nav-link" to="/results">My Results</Link>
                                 </li>
                                 {isAdmin() && (
-                                    <li className="nav-item">
-                                        <Link className="nav-link" to="/categories">Categories</Link>
-                                    </li>
+                                    <>
+                                        <li className="nav-item">
+                                            <Link className="nav-link" to="/categories">Categories</Link>
+                                        </li>
+                                        <li className="nav-item">
+                                            <Link className="nav-link" to="/users">Users</Link>
+                                        </li>
+                                    </>
                                 )}
                             </>
                         )}
@@ -52,7 +58,7 @@ const Navbar = () => {
                                     <Link className="nav-link" to="/profile">{user.name}</Link>
                                 </li>
                                 <li className="nav-item">
-                                    <button className="btn btn-outline-light btn-sm ms-2" onClick={handleLogout}>Logout</button>
+                                    <button type="button" className="btn btn-outline-light btn-sm ms-2" onClick={handleLogout}>Logout</button>
                                 </li>
                             </>
                         ) : (

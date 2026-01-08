@@ -16,6 +16,7 @@ import RoomDetails from './pages/RoomDetails';
 import TakeQuiz from './pages/TakeQuiz';
 import MyResults from './pages/MyResults';
 import Profile from './pages/Profile';
+import Users from './pages/Users';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
@@ -50,6 +51,7 @@ function App() {
                 {/* Note: Backend UserRole enum serializes to 'ADMIN', not 'ROLE_ADMIN' by default */}
                 <Route element={<ProtectedRoute roles={['ADMIN', 'ROLE_ADMIN']} />}>
                     <Route path="/categories" element={<Categories />} />
+                    <Route path="/users" element={<Users />} />
                 </Route>
 
                 {/* Catch all */}

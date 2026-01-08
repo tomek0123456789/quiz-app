@@ -39,8 +39,8 @@ public class RoomModel {
         this.owner = owner;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.participants = Collections.emptySet();
-        this.quizzes = Collections.emptySet();
+        this.participants = new HashSet<>();
+        this.quizzes = new HashSet<>();
     }
 
     public long getId() {

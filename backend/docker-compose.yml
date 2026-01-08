@@ -20,20 +20,20 @@ services:
       - 8080:8080
     expose:
       - 8080
-  frontend:
-    build: ../frontend
-    container_name: frontend
-    depends_on:
-      - backend
-    ports:
-      - "5173:5173"
-    environment:
-      - PORT=5173
-      - WATCHPACK_POLLING=true
-    stdin_open: true
-    tty: true
-    volumes:
-      - ../frontend:/app:Z
-      - /app/node_modules
+#  frontend:
+#    build: ../frontend
+#    container_name: frontend
+#    depends_on:
+#      - backend
+#    ports:
+#      - "5173:5173"
+#    environment:
+#      - PORT=5173
+#      - WATCHPACK_POLLING=true
+#    stdin_open: true
+#    tty: true
+#    volumes:
+#      - ../frontend:/app:Z
+#      - /app/node_modules
 networks:
   spring-postgres: {}
